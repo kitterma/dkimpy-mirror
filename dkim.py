@@ -552,6 +552,10 @@ def verify(message, debuglog=None):
     if not s:
         return False
     a = re.split(r"\s*;\s*", s)
+    # Trailing ';' on signature record is valid, see RFC 4871 3.2
+    #  tag-list  =  tag-spec 0*( ";" tag-spec ) [ ";" ]
+    if a[-1] == '':
+        a.pop(-1)
     pub = {}
     for f in a:
         m = re.match(r"(\w+)=(.*)", f)
