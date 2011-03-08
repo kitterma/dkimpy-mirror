@@ -17,8 +17,12 @@
 # 3. This notice may not be removed or altered from any source distribution.
 # 
 # Copyright (c) 2008 Greg Hewgill http://hewgill.com
+#
+# This has been modified from the original software.
+# Copyright (c) 2011 Scott Kitterman <scott@kitterman.com>
 
 from distutils.core import setup
+import os
 
 version = "0.3"
 
@@ -35,4 +39,10 @@ Identified Mail) email signing and verification.""",
     license = "BSD-like",
     py_modules = ["dkim"],
     scripts = ["dkimsign.py", "dkimverify.py", "dkimsend.sh"],
+    data_files = [(os.path.join('share', 'man', 'man1'),
+        ['man/dkimsign.1']), (os.path.join('share', 'man', 'man1'),
+        ['man/dkimverify.1'])],
 )
+
+if os.name != 'posix':
+    data_files = ''
