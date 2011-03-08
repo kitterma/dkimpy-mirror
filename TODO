@@ -1,0 +1,8 @@
+Handle multiple DKIM-Signature header lines, ie. more than just the first one.
+
+It should be possible to remove the dependency on dnspython by using something
+like dig.
+
+Better debug logging output.
+
+General code cleanup.

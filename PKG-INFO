@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: pydkim
+Version: 0.3
+Summary: DKIM (DomainKeys Identified Mail)
+Home-page: http://hewgill.com/pydkim/
+Author: Greg Hewgill
+Author-email: greg@hewgill.com
+License: BSD-like
+Description: pydkim is a Python library that implements DKIM (DomainKeys
+        Identified Mail) email signing and verification.
+Platform: UNKNOWN
