@@ -6,7 +6,6 @@ import time
 import dns.resolver
 
 from dkim.crypto import (
-    EMSA_PKCS1_v1_5_encode,
     parse_private_key,
     parse_public_key,
     RSASSA_PKCS1_v1_5_sign,
