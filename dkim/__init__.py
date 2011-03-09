@@ -94,6 +94,7 @@ def _remove(s, t):
     assert i >= 0
     return s[:i] + s[i+len(t):]
 
+
 def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
     dinfo = asn1_build(
         (SEQUENCE, [
@@ -102,7 +103,7 @@ def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
                 (NULL, None),
             ]),
             (OCTET_STRING, digest),
-        ])
+        ]),
     )
     if len(dinfo)+3 > modlen:
         raise ParameterError("Hash too large for modulus")
@@ -139,6 +140,22 @@ def parse_public_key(data):
     pk = {
         'modulus': pkd[0][0],
         'publicExponent': pkd[0][1],
+    }
+    return pk
+
+
+def parse_private_key(data):
+    pka = asn1_parse(ASN1_RSAPrivateKey, data)
+    pk = {
+        'version': pka[0][0],
+        'modulus': pka[0][1],
+        'publicExponent': pka[0][2],
+        'privateExponent': pka[0][3],
+        'prime1': pka[0][4],
+        'prime2': pka[0][5],
+        'exponent1': pka[0][6],
+        'exponent2': pka[0][7],
+        'coefficient': pka[0][8],
     }
     return pk
 
@@ -416,19 +433,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         raise KeyFormatError(str(e))
     if debuglog is not None:
         print >>debuglog, " ".join("%02x" % ord(x) for x in pkdata)
-    pka = asn1_parse(ASN1_RSAPrivateKey, pkdata)
-    pk = {
-        'version': pka[0][0],
-        'modulus': pka[0][1],
-        'publicExponent': pka[0][2],
-        'privateExponent': pka[0][3],
-        'prime1': pka[0][4],
-        'prime2': pka[0][5],
-        'exponent1': pka[0][6],
-        'exponent2': pka[0][7],
-        'coefficient': pka[0][8],
-    }
-
+    pk = parse_private_key(pkdata)
     if identity is not None and not identity.endswith(domain):
         raise ParameterError("identity must end with domain")
 
