@@ -77,10 +77,16 @@ class TestParseTagValue(unittest.TestCase):
             {'foo': 'bar', 'baz': 'foo=bar'},
             parse_tag_value('foo=bar;baz=foo=bar'))
 
-    def test_no_value(self):
+    def test_missing_value_is_an_error(self):
         self.assertRaises(
             InvalidTagValueList,
             parse_tag_value, 'foo=bar;baz')
+
+    def test_duplicate_tag_is_an_error(self):
+        self.assertRaises(
+            InvalidTagValueList,
+            parse_tag_value, 'foo=bar;foo=baz')
+
 
 if __name__ == '__main__':
     unittest.main()

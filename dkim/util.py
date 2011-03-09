@@ -42,5 +42,7 @@ def parse_tag_value(tag_list):
             key, value = tag_spec.split('=', 1)
         except ValueError:
             raise InvalidTagValueList()
+        if key.strip() in tags:
+            raise InvalidTagValueList()
         tags[key.strip()] = value.strip()
     return tags
