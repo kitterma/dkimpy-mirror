@@ -291,7 +291,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
 
     sig2 = RSASSA_PKCS1_v1_5_sign(
         d, HASHID_SHA256, pk['privateExponent'], pk['modulus'])
-    sig += base64.b64encode(''.join(sig2))
+    sig += base64.b64encode(sig2)
 
     return sig + "\r\n"
 
