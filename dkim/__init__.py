@@ -143,6 +143,54 @@ def parse_public_key(data):
     return pk
 
 
+def validate_signature_fields(sig, debuglog=None):
+    mandatory_fields = ('v', 'a', 'b', 'bh', 'd', 'h', 's')
+    for field in mandatory_fields:
+        if field not in sig:
+            if debuglog is not None:
+                print >>debuglog, "signature missing %s=" % field
+            return False
+
+    if sig['v'] != "1":
+        if debuglog is not None:
+            print >>debuglog, "v= value is not 1 (%s)" % sig['v']
+        return False
+    if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['b']) is None:
+        if debuglog is not None:
+            print >>debuglog, "b= value is not valid base64 (%s)" % sig['b']
+        return False
+    if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['bh']) is None:
+        if debuglog is not None:
+            print >>debuglog, "bh= value is not valid base64 (%s)" % sig['bh']
+        return False
+    if 'i' in sig and (not sig['i'].endswith(sig['d']) or sig['i'][-len(sig['d'])-1] not in "@."):
+        if debuglog is not None:
+            print >>debuglog, "i= domain is not a subdomain of d= (i=%s d=%d)" % (sig['i'], sig['d'])
+        return False
+    if 'l' in sig and re.match(r"\d{,76}$", sig['l']) is None:
+        if debuglog is not None:
+            print >>debuglog, "l= value is not a decimal integer (%s)" % sig['l']
+        return False
+    if 'q' in sig and sig['q'] != "dns/txt":
+        if debuglog is not None:
+            print >>debuglog, "q= value is not dns/txt (%s)" % sig['q']
+        return False
+    if 't' in sig and re.match(r"\d+$", sig['t']) is None:
+        if debuglog is not None:
+            print >>debuglog, "t= value is not a decimal integer (%s)" % sig['t']
+        return False
+    if 'x' in sig:
+        if re.match(r"\d+$", sig['x']) is None:
+            if debuglog is not None:
+                print >>debuglog, "x= value is not a decimal integer (%s)" % sig['x']
+            return False
+        if int(sig['x']) < int(sig['t']):
+            if debuglog is not None:
+                print >>debuglog, "x= value is less than t= value (x=%s t=%s)" % (sig['x'], sig['t'])
+            return False
+    return True
+
+
 INTEGER = 0x02
 BIT_STRING = 0x03
 OCTET_STRING = 0x04
@@ -466,50 +514,8 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     if debuglog is not None:
         print >>debuglog, "sig:", sig
 
-    mandatory_fields = ('v', 'a', 'b', 'bh', 'd', 'h', 's')
-    for field in mandatory_fields:
-        if field not in sig:
-            if debuglog is not None:
-                print >>debuglog, "signature missing %s=" % field
-            return False
-
-    if sig['v'] != "1":
-        if debuglog is not None:
-            print >>debuglog, "v= value is not 1 (%s)" % sig['v']
+    if not validate_signature_fields(sig, debuglog):
         return False
-    if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['b']) is None:
-        if debuglog is not None:
-            print >>debuglog, "b= value is not valid base64 (%s)" % sig['b']
-        return False
-    if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['bh']) is None:
-        if debuglog is not None:
-            print >>debuglog, "bh= value is not valid base64 (%s)" % sig['bh']
-        return False
-    if 'i' in sig and (not sig['i'].endswith(sig['d']) or sig['i'][-len(sig['d'])-1] not in "@."):
-        if debuglog is not None:
-            print >>debuglog, "i= domain is not a subdomain of d= (i=%s d=%d)" % (sig['i'], sig['d'])
-        return False
-    if 'l' in sig and re.match(r"\d{,76}$", sig['l']) is None:
-        if debuglog is not None:
-            print >>debuglog, "l= value is not a decimal integer (%s)" % sig['l']
-        return False
-    if 'q' in sig and sig['q'] != "dns/txt":
-        if debuglog is not None:
-            print >>debuglog, "q= value is not dns/txt (%s)" % sig['q']
-        return False
-    if 't' in sig and re.match(r"\d+$", sig['t']) is None:
-        if debuglog is not None:
-            print >>debuglog, "t= value is not a decimal integer (%s)" % sig['t']
-        return False
-    if 'x' in sig:
-        if re.match(r"\d+$", sig['x']) is None:
-            if debuglog is not None:
-                print >>debuglog, "x= value is not a decimal integer (%s)" % sig['x']
-            return False
-        if int(sig['x']) < int(sig['t']):
-            if debuglog is not None:
-                print >>debuglog, "x= value is less than t= value (x=%s t=%s)" % (sig['x'], sig['t'])
-            return False
 
     m = re.match("(\w+)(?:/(\w+))?$", sig['c'])
     if m is None:
