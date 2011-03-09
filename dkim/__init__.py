@@ -94,6 +94,20 @@ def _remove(s, t):
     assert i >= 0
     return s[:i] + s[i+len(t):]
 
+def EMSA_PKCS1_v1_5_encode(digest, modlen):
+    dinfo = asn1_build(
+        (SEQUENCE, [
+            (SEQUENCE, [
+                (OBJECT_IDENTIFIER, HASHID_SHA256),
+                (NULL, None),
+            ]),
+            (OCTET_STRING, digest),
+        ])
+    )
+    if len(dinfo)+3 > modlen:
+        raise ParameterError("Hash too large for modulus")
+    return "\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo
+
 INTEGER = 0x02
 BIT_STRING = 0x03
 OCTET_STRING = 0x04
@@ -379,19 +393,9 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     if debuglog is not None:
         print >>debuglog, "sign digest:", " ".join("%02x" % ord(x) for x in d)
 
-    dinfo = asn1_build(
-        (SEQUENCE, [
-            (SEQUENCE, [
-                (OBJECT_IDENTIFIER, HASHID_SHA256),
-                (NULL, None),
-            ]),
-            (OCTET_STRING, d),
-        ])
-    )
     modlen = len(int2str(pk['modulus']))
-    if len(dinfo)+3 > modlen:
-        raise ParameterError("Hash too large for modulus")
-    sig2 = int2str(pow(str2int("\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo), pk['privateExponent'], pk['modulus']), modlen)
+    encoded = EMSA_PKCS1_v1_5_encode(d, modlen)
+    sig2 = int2str(pow(str2int(encoded), pk['privateExponent'], pk['modulus']), modlen)
     sig += base64.b64encode(''.join(sig2))
 
     return sig + "\r\n"
