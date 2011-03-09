@@ -23,6 +23,11 @@ import time
 
 import dns.resolver
 
+from dkim.util import (
+    InvalidTagValueList,
+    parse_tag_value,
+    )
+
 __all__ = [
     "Simple",
     "Relaxed",
@@ -498,19 +503,10 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
         return False
 
     # Currently, we only validate the first DKIM-Signature line found.
-
-    a = re.split(r"\s*;\s*", sigheaders[0][1].strip())
-    if debuglog is not None:
-        print >>debuglog, "a:", a
-    sig = {}
-    for x in a:
-        if x:
-            m = re.match(r"(\w+)\s*=\s*(.*)", x, re.DOTALL)
-            if m is None:
-                if debuglog is not None:
-                    print >>debuglog, "invalid format of signature part: %s" % x
-                return False
-            sig[m.group(1)] = m.group(2)
+    try:
+        sig = parse_tag_value(sigheaders[0][1])
+    except InvalidTagValueList:
+        return False
     if debuglog is not None:
         print >>debuglog, "sig:", sig
 
@@ -575,20 +571,10 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     s = dnsfunc(sig['s']+"._domainkey."+sig['d']+".")
     if not s:
         return False
-    a = re.split(r"\s*;\s*", s)
-    # Trailing ';' on signature record is valid, see RFC 4871 3.2
-    #  tag-list  =  tag-spec 0*( ";" tag-spec ) [ ";" ]
-    if a[-1] == '':
-        a.pop(-1)
-    pub = {}
-    for f in a:
-        m = re.match(r"(\w+)=(.*)", f)
-        if m is not None:
-            pub[m.group(1)] = m.group(2)
-        else:
-            if debuglog is not None:
-                print >>debuglog, "invalid format in _domainkey txt record"
-            return False
+    try:
+        pub = parse_tag_value(s)
+    except InvalidTagValueList:
+        return False
     pk = parse_public_key(base64.b64decode(pub['p']))
     modlen = len(int2str(pk['modulus']))
     if debuglog is not None:
