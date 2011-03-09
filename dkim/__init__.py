@@ -94,11 +94,11 @@ def _remove(s, t):
     assert i >= 0
     return s[:i] + s[i+len(t):]
 
-def EMSA_PKCS1_v1_5_encode(digest, modlen):
+def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
     dinfo = asn1_build(
         (SEQUENCE, [
             (SEQUENCE, [
-                (OBJECT_IDENTIFIER, HASHID_SHA256),
+                (OBJECT_IDENTIFIER, hashid),
                 (NULL, None),
             ]),
             (OCTET_STRING, digest),
@@ -394,7 +394,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         print >>debuglog, "sign digest:", " ".join("%02x" % ord(x) for x in d)
 
     modlen = len(int2str(pk['modulus']))
-    encoded = EMSA_PKCS1_v1_5_encode(d, modlen)
+    encoded = EMSA_PKCS1_v1_5_encode(d, modlen, HASHID_SHA256)
     sig2 = int2str(pow(str2int(encoded), pk['privateExponent'], pk['modulus']), modlen)
     sig += base64.b64encode(''.join(sig2))
 
