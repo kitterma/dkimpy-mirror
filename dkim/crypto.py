@@ -21,6 +21,8 @@ __all__ = [
     'EMSA_PKCS1_v1_5_encode',
     'parse_private_key',
     'parse_public_key',
+    'RSASSA_PKCS1_v1_5_sign',
+    'RSASSA_PKCS1_v1_5_verify',
     ]
 
 from dkim.asn1 import (
@@ -108,3 +110,51 @@ def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
         raise Exception("Hash too large for modulus") # XXX: DKIMException
     return "\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo
 
+
+def str2int(s):
+    """Convert an octet string to an integer.
+
+    Octet string assumed to represent a positive integer.
+    """
+    r = 0
+    for c in s:
+        r = (r << 8) | ord(c)
+    return r
+
+
+def int2str(n, length = -1):
+    """Convert an integer to an octet string. Number must be positive.
+
+    @param n: Number to convert.
+    @param length: Minimum length, or -1 to return the smallest number of
+        bytes that represent the integer.
+    """
+
+    assert n >= 0
+    r = []
+    while length < 0 or len(r) < length:
+        r.append(chr(n & 0xff))
+        n >>= 8
+        if length < 0 and n == 0:
+            break
+    r.reverse()
+    assert length < 0 or len(r) == length
+    return ''.join(r)
+
+
+def perform_rsa(input, exponent, modulus, modlen):
+    return int2str(pow(str2int(input), exponent, modulus), modlen)
+
+
+def RSASSA_PKCS1_v1_5_sign(digest, hashid, private_exponent, modulus):
+    modlen = len(int2str(modulus))
+    encoded_digest = EMSA_PKCS1_v1_5_encode(digest, modlen, hashid)
+    return perform_rsa(encoded_digest, private_exponent, modulus, modlen)
+
+
+def RSASSA_PKCS1_v1_5_verify(digest, hashid, signature, public_exponent,
+                             modulus):
+    modlen = len(int2str(modulus))
+    encoded_digest = EMSA_PKCS1_v1_5_encode(digest, modlen, hashid)
+    signed_digest = perform_rsa(signature, public_exponent, modulus, modlen)
+    return encoded_digest == signed_digest
