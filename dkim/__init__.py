@@ -629,11 +629,3 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     assert len(v) == len(sig2)
     # Byte-by-byte compare of signatures
     return not [1 for x in zip(v, sig2) if x[0] != x[1]]
-
-if __name__ == "__main__":
-    message = """From: greg@hewgill.com\r\nSubject: test\r\n message\r\n\r\nHi.\r\n\r\nWe lost the game. Are you hungry yet?\r\n\r\nJoe.\r\n"""
-    print rfc822_parse(message)
-    sig = sign(message, "greg", "hewgill.com", open("/home/greg/.domainkeys/rsa.private").read())
-    print sig
-    print verify(sig+message)
-    #print sign(open("/home/greg/tmp/message").read(), "greg", "hewgill.com", open("/home/greg/.domainkeys/rsa.private").read())
