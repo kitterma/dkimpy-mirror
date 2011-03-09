@@ -152,6 +152,9 @@ def validate_signature_fields(sig, debuglog=None):
             return False
     return True
 
+def perform_rsa(input, exponent, modulus, modlen):
+    return int2str(pow(str2int(input), exponent, modulus), modlen)
+
 # These values come from RFC 3447, section 9.2 Notes, page 43.
 HASHID_SHA1 = "\x2b\x0e\x03\x02\x1a"
 HASHID_SHA256 = "\x60\x86\x48\x01\x65\x03\x04\x02\x01"
@@ -315,7 +318,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
 
     modlen = len(int2str(pk['modulus']))
     encoded = EMSA_PKCS1_v1_5_encode(d, modlen, HASHID_SHA256)
-    sig2 = int2str(pow(str2int(encoded), pk['privateExponent'], pk['modulus']), modlen)
+    sig2 = perform_rsa(encoded, pk['privateExponent'], pk['modulus'], modlen)
     sig += base64.b64encode(''.join(sig2))
 
     return sig + "\r\n"
@@ -446,7 +449,8 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
         print >>debuglog, "sig2:", " ".join("%02x" % ord(x) for x in sig2)
         print >>debuglog, sig['b']
         print >>debuglog, re.sub(r"\s+", "", sig['b'])
-    v = int2str(pow(str2int(base64.b64decode(re.sub(r"\s+", "", sig['b']))), pk['publicExponent'], pk['modulus']), modlen)
+    signature = base64.b64decode(re.sub(r"\s+", "", sig['b']))
+    v = perform_rsa(signature, pk['publicExponent'], pk['modulus'], modlen)
     if debuglog is not None:
         print >>debuglog, "v:", " ".join("%02x" % ord(x) for x in v)
     assert len(v) == len(sig2)
