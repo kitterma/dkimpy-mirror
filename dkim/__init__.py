@@ -131,6 +131,18 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
         hasher.update(":")
         hasher.update(x[1])
 
+
+def parse_public_key(data):
+    x = asn1_parse(ASN1_Object, data)
+    # Not sure why the [1:] is necessary to skip a byte.
+    pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
+    pk = {
+        'modulus': pkd[0][0],
+        'publicExponent': pkd[0][1],
+    }
+    return pk
+
+
 INTEGER = 0x02
 BIT_STRING = 0x03
 OCTET_STRING = 0x04
@@ -592,13 +604,7 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
             if debuglog is not None:
                 print >>debuglog, "invalid format in _domainkey txt record"
             return False
-    x = asn1_parse(ASN1_Object, base64.b64decode(pub['p']))
-    # Not sure why the [1:] is necessary to skip a byte.
-    pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
-    pk = {
-        'modulus': pkd[0][0],
-        'publicExponent': pkd[0][1],
-    }
+    pk = parse_public_key(base64.b64decode(pub['p']))
     modlen = len(int2str(pk['modulus']))
     if debuglog is not None:
         print >>debuglog, "modlen:", modlen
