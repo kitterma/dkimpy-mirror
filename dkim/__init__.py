@@ -466,41 +466,24 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     if debuglog is not None:
         print >>debuglog, "sig:", sig
 
-    if 'v' not in sig:
-        if debuglog is not None:
-            print >>debuglog, "signature missing v="
-        return False
+    mandatory_fields = ('v', 'a', 'b', 'bh', 'd', 'h', 's')
+    for field in mandatory_fields:
+        if field not in sig:
+            if debuglog is not None:
+                print >>debuglog, "signature missing %s=" % field
+            return False
+
     if sig['v'] != "1":
         if debuglog is not None:
             print >>debuglog, "v= value is not 1 (%s)" % sig['v']
-        return False
-    if 'a' not in sig:
-        if debuglog is not None:
-            print >>debuglog, "signature missing a="
-        return False
-    if 'b' not in sig:
-        if debuglog is not None:
-            print >>debuglog, "signature missing b="
         return False
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['b']) is None:
         if debuglog is not None:
             print >>debuglog, "b= value is not valid base64 (%s)" % sig['b']
         return False
-    if 'bh' not in sig:
-        if debuglog is not None:
-            print >>debuglog, "signature missing bh="
-        return False
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['bh']) is None:
         if debuglog is not None:
             print >>debuglog, "bh= value is not valid base64 (%s)" % sig['bh']
-        return False
-    if 'd' not in sig:
-        if debuglog is not None:
-            print >>debuglog, "signature missing d="
-        return False
-    if 'h' not in sig:
-        if debuglog is not None:
-            print >>debuglog, "signature missing h="
         return False
     if 'i' in sig and (not sig['i'].endswith(sig['d']) or sig['i'][-len(sig['d'])-1] not in "@."):
         if debuglog is not None:
@@ -513,10 +496,6 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     if 'q' in sig and sig['q'] != "dns/txt":
         if debuglog is not None:
             print >>debuglog, "q= value is not dns/txt (%s)" % sig['q']
-        return False
-    if 's' not in sig:
-        if debuglog is not None:
-            print >>debuglog, "signature missing s="
         return False
     if 't' in sig and re.match(r"\d+$", sig['t']) is None:
         if debuglog is not None:
