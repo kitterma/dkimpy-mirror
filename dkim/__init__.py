@@ -108,6 +108,29 @@ def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
         raise ParameterError("Hash too large for modulus")
     return "\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo
 
+
+def hash_headers(hasher, canonicalize_headers, headers, include_headers,
+                 sigheaders, sig):
+    sign_headers = []
+    lastindex = {}
+    for h in include_headers:
+        i = lastindex.get(h, len(headers))
+        while i > 0:
+            i -= 1
+            if h.lower() == headers[i][0].lower():
+                sign_headers.append(headers[i])
+                break
+        lastindex[h] = i
+    # The call to _remove() assumes that the signature b= only appears
+    # once in the signature header
+    cheaders = canonicalize_headers.canonicalize_headers(
+        [(sigheaders[0][0], _remove(sigheaders[0][1], sig['b']))])
+    sign_headers += [(x[0], x[1].rstrip()) for x in cheaders]
+    for x in sign_headers:
+        hasher.update(x[0])
+        hasher.update(":")
+        hasher.update(x[1])
+
 INTEGER = 0x02
 BIT_STRING = 0x03
 OCTET_STRING = 0x04
@@ -581,28 +604,9 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
         print >>debuglog, "modlen:", modlen
 
     include_headers = re.split(r"\s*:\s*", sig['h'])
-    if debuglog is not None:
-        print >>debuglog, "include_headers:", include_headers
-    sign_headers = []
-    lastindex = {}
-    for h in include_headers:
-        i = lastindex.get(h, len(headers))
-        while i > 0:
-            i -= 1
-            if h.lower() == headers[i][0].lower():
-                sign_headers.append(headers[i])
-                break
-        lastindex[h] = i
-    # The call to _remove() assumes that the signature b= only appears once in the signature header
-    sign_headers += [(x[0], x[1].rstrip()) for x in canonicalize_headers.canonicalize_headers([(sigheaders[0][0], _remove(sigheaders[0][1], sig['b']))])]
-    if debuglog is not None:
-        print >>debuglog, "verify headers:", sign_headers
-
     h = hasher()
-    for x in sign_headers:
-        h.update(x[0])
-        h.update(":")
-        h.update(x[1])
+    hash_headers(
+        h, canonicalize_headers, headers, include_headers, sigheaders, sig)
     d = h.digest()
     if debuglog is not None:
         print >>debuglog, "verify digest:", " ".join("%02x" % ord(x) for x in d)
