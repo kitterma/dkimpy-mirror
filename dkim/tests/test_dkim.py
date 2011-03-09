@@ -77,6 +77,11 @@ class TestParseTagValue(unittest.TestCase):
             {'foo': 'bar', 'baz': 'foo=bar'},
             parse_tag_value('foo=bar;baz=foo=bar'))
 
+    def test_whitespace_is_stripped(self):
+        self.assertEqual(
+            {'foo': 'bar', 'baz': 'f oo=bar'},
+            parse_tag_value('   foo  \t= bar;\tbaz=  f oo=bar  '))
+
     def test_missing_value_is_an_error(self):
         self.assertRaises(
             InvalidTagValueList,
