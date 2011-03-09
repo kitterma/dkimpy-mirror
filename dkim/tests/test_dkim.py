@@ -2,6 +2,10 @@ import os.path
 import unittest
 
 import dkim
+from dkim.util import (
+    InvalidTagValueList,
+    parse_tag_value,
+    )
 
 
 def read_test_data(filename):
@@ -49,6 +53,34 @@ class TestSignAndVerify(unittest.TestCase):
         res = dkim.verify(sig + self.message + "foo", dnsfunc=self.dnsfunc)
         self.assertFalse(res)
 
+
+class TestParseTagValue(unittest.TestCase):
+    """Tag=Value parsing tests."""
+
+    def test_single(self):
+        self.assertEqual(
+            {'foo': 'bar'},
+            parse_tag_value('foo=bar'))
+
+    def test_trailing_separator_ignored(self):
+        self.assertEqual(
+            {'foo': 'bar'},
+            parse_tag_value('foo=bar;'))
+
+    def test_multiple(self):
+        self.assertEqual(
+            {'foo': 'bar', 'baz': 'foo'},
+            parse_tag_value('foo=bar;baz=foo'))
+
+    def test_value_with_equals(self):
+        self.assertEqual(
+            {'foo': 'bar', 'baz': 'foo=bar'},
+            parse_tag_value('foo=bar;baz=foo=bar'))
+
+    def test_no_value(self):
+        self.assertRaises(
+            InvalidTagValueList,
+            parse_tag_value, 'foo=bar;baz')
 
 if __name__ == '__main__':
     unittest.main()
