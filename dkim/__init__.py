@@ -606,23 +606,10 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     d = h.digest()
     if debuglog is not None:
         print >>debuglog, "verify digest:", " ".join("%02x" % ord(x) for x in d)
-
-    dinfo = asn1_build(
-        (SEQUENCE, [
-            (SEQUENCE, [
-                (OBJECT_IDENTIFIER, hashid),
-                (NULL, None),
-            ]),
-            (OCTET_STRING, d),
-        ])
-    )
-    if debuglog is not None:
-        print >>debuglog, "dinfo:", " ".join("%02x" % ord(x) for x in dinfo)
-    if len(dinfo)+3 > modlen:
-        if debuglog is not None:
-            print >>debuglog, "Hash too large for modulus"
+    try:
+        sig2 = EMSA_PKCS1_v1_5_encode(d, modlen, hashid)
+    except ParameterError:
         return False
-    sig2 = "\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo
     if debuglog is not None:
         print >>debuglog, "sig2:", " ".join("%02x" % ord(x) for x in sig2)
         print >>debuglog, sig['b']
