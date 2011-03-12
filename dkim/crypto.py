@@ -69,6 +69,7 @@ ASN1_RSAPrivateKey = [
 
 
 class DigestTooLarge(Exception):
+    """The digest is too large to fit within the requested length."""
     pass
 
 
@@ -127,7 +128,7 @@ def EMSA_PKCS1_v1_5_encode(digest, mlen, hashid):
             (OCTET_STRING, digest),
         ]))
     if len(dinfo)+3 > mlen:
-        raise Exception("Hash too large for modulus") # XXX: DKIMException
+        raise DigestTooLarge()
     return "\x00\x01"+"\xff"*(mlen-len(dinfo)-3)+"\x00"+dinfo
 
 
