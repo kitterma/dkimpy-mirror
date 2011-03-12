@@ -20,6 +20,11 @@ import os.path
 import unittest
 
 import dkim
+from dkim.util import (
+    DuplicateTag,
+    InvalidTagSpec,
+    parse_tag_value,
+    )
 
 
 def read_test_data(filename):
@@ -66,6 +71,45 @@ class TestSignAndVerify(unittest.TestCase):
         sig = dkim.sign(self.message, "test", "example.com", self.key)
         res = dkim.verify(sig + self.message + "foo", dnsfunc=self.dnsfunc)
         self.assertFalse(res)
+
+
+class TestParseTagValue(unittest.TestCase):
+    """Tag=Value parsing tests."""
+
+    def test_single(self):
+        self.assertEqual(
+            {'foo': 'bar'},
+            parse_tag_value('foo=bar'))
+
+    def test_trailing_separator_ignored(self):
+        self.assertEqual(
+            {'foo': 'bar'},
+            parse_tag_value('foo=bar;'))
+
+    def test_multiple(self):
+        self.assertEqual(
+            {'foo': 'bar', 'baz': 'foo'},
+            parse_tag_value('foo=bar;baz=foo'))
+
+    def test_value_with_equals(self):
+        self.assertEqual(
+            {'foo': 'bar', 'baz': 'foo=bar'},
+            parse_tag_value('foo=bar;baz=foo=bar'))
+
+    def test_whitespace_is_stripped(self):
+        self.assertEqual(
+            {'foo': 'bar', 'baz': 'f oo=bar'},
+            parse_tag_value('   foo  \t= bar;\tbaz=  f oo=bar  '))
+
+    def test_missing_value_is_an_error(self):
+        self.assertRaisesRegexp(
+            InvalidTagSpec, 'baz',
+            parse_tag_value, 'foo=bar;baz')
+
+    def test_duplicate_tag_is_an_error(self):
+        self.assertRaisesRegexp(
+            DuplicateTag, 'foo',
+            parse_tag_value, 'foo=bar;foo=baz')
 
 
 if __name__ == '__main__':
