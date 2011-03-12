@@ -21,6 +21,17 @@ To build and install pydkim:
 
     python setup.py install
 
+TESTING
+
+To run pydkim's test suite:
+
+    PYTHONPATH=. python dkim/tests/test_dkim.py
+
+Alternatively, if you have testrepository installed:
+
+    testr init
+    testr run
+
 USAGE
 
 The pydkim library offers one module called dkim. The sign() function takes an

@@ -396,7 +396,7 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
 
     return sig + "\r\n"
 
-def verify(message, debuglog=None):
+def verify(message, debuglog=None, dnsfunc=dnstxt):
     """Verify a DKIM signature on an RFC822 formatted message.
 
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
@@ -548,7 +548,7 @@ def verify(message, debuglog=None):
             print >>debuglog, "body hash mismatch (got %s, expected %s)" % (base64.b64encode(bodyhash), sig['bh'])
         return False
 
-    s = dnstxt(sig['s']+"._domainkey."+sig['d']+".")
+    s = dnsfunc(sig['s']+"._domainkey."+sig['d']+".")
     if not s:
         return False
     a = re.split(r"\s*;\s*", s)
@@ -629,11 +629,3 @@ def verify(message, debuglog=None):
     assert len(v) == len(sig2)
     # Byte-by-byte compare of signatures
     return not [1 for x in zip(v, sig2) if x[0] != x[1]]
-
-if __name__ == "__main__":
-    message = """From: greg@hewgill.com\r\nSubject: test\r\n message\r\n\r\nHi.\r\n\r\nWe lost the game. Are you hungry yet?\r\n\r\nJoe.\r\n"""
-    print rfc822_parse(message)
-    sig = sign(message, "greg", "hewgill.com", open("/home/greg/.domainkeys/rsa.private").read())
-    print sig
-    print verify(sig+message)
-    #print sign(open("/home/greg/tmp/message").read(), "greg", "hewgill.com", open("/home/greg/.domainkeys/rsa.private").read())
