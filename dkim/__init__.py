@@ -94,7 +94,16 @@ def _remove(s, t):
     assert i >= 0
     return s[:i] + s[i+len(t):]
 
+
 def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
+    """Encode a digest with EMSA-PKCS1-v1_5.
+
+    Defined in RFC3447 section 9.2.
+
+    @param digest: A digest value to encode.
+    @param modlen: The desired message length.
+    @param hashid: The ID of the hash used to generate the digest.
+    """
     dinfo = asn1_build(
         (SEQUENCE, [
             (SEQUENCE, [
@@ -102,8 +111,7 @@ def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
                 (NULL, None),
             ]),
             (OCTET_STRING, digest),
-        ])
-    )
+        ]))
     if len(dinfo)+3 > modlen:
         raise ParameterError("Hash too large for modulus")
     return "\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo
@@ -133,6 +141,11 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
 
 
 def parse_public_key(data):
+    """Parse an RSA public key.
+
+    @param data: A DER-encoded X.509 subjectPublicKeyInfo
+        containing an RFC3447 RSAPublicKey.
+    """
     x = asn1_parse(ASN1_Object, data)
     # Not sure why the [1:] is necessary to skip a byte.
     pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
