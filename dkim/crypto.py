@@ -18,13 +18,16 @@
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
 __all__ = [
+    'DigestTooLargeError',
     'parse_private_key',
     'parse_public_key',
     'RSASSA_PKCS1_v1_5_sign',
     'RSASSA_PKCS1_v1_5_verify',
+    'UnparsableKeyError',
     ]
 
 from dkim.asn1 import (
+    ASN1FormatError,
     asn1_build,
     asn1_parse,
     BIT_STRING,
@@ -68,8 +71,13 @@ ASN1_RSAPrivateKey = [
 ]
 
 
-class DigestTooLarge(Exception):
+class DigestTooLargeError(Exception):
     """The digest is too large to fit within the requested length."""
+    pass
+
+
+class UnparsableKeyError(Exception):
+    """The data could not be parsed as a key."""
     pass
 
 
@@ -80,9 +88,12 @@ def parse_public_key(data):
         containing an RFC3447 RSAPublicKey.
     @return: RSA public key
     """
-    x = asn1_parse(ASN1_Object, data)
-    # Not sure why the [1:] is necessary to skip a byte.
-    pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
+    try:
+        # Not sure why the [1:] is necessary to skip a byte.
+        x = asn1_parse(ASN1_Object, data)
+        pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
+    except ASN1FormatError, e:
+        raise UnparsableKeyError(str(e))
     pk = {
         'modulus': pkd[0][0],
         'publicExponent': pkd[0][1],
@@ -96,7 +107,10 @@ def parse_private_key(data):
     @param data: DER-encoded RFC3447 RSAPrivateKey.
     @return: RSA private key
     """
-    pka = asn1_parse(ASN1_RSAPrivateKey, data)
+    try:
+        pka = asn1_parse(ASN1_RSAPrivateKey, data)
+    except ASN1FormatError, e:
+        raise UnparsableKeyError(str(e))
     pk = {
         'version': pka[0][0],
         'modulus': pka[0][1],
@@ -128,7 +142,7 @@ def EMSA_PKCS1_v1_5_encode(digest, mlen, hashid):
             (OCTET_STRING, digest),
         ]))
     if len(dinfo)+3 > mlen:
-        raise DigestTooLarge()
+        raise DigestTooLargeError()
     return "\x00\x01"+"\xff"*(mlen-len(dinfo)-3)+"\x00"+dinfo
 
 

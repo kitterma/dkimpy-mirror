@@ -25,10 +25,12 @@ import time
 import dns.resolver
 
 from dkim.crypto import (
+    DigestTooLargeError,
     parse_private_key,
     parse_public_key,
     RSASSA_PKCS1_v1_5_sign,
     RSASSA_PKCS1_v1_5_verify,
+    UnparsableKeyError,
     )
 from dkim.util import (
     InvalidTagValueList,
@@ -273,7 +275,11 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         raise KeyFormatError(str(e))
     if debuglog is not None:
         print >>debuglog, " ".join("%02x" % ord(x) for x in pkdata)
-    pk = parse_private_key(pkdata)
+    try:
+        pk = parse_private_key(pkdata)
+    except UnparsableKeyError, e:
+        raise KeyFormatError(str(e))
+
     if identity is not None and not identity.endswith(domain):
         raise ParameterError("identity must end with domain")
 
@@ -321,8 +327,11 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
     if debuglog is not None:
         print >>debuglog, "sign digest:", " ".join("%02x" % ord(x) for x in d)
 
-    sig2 = RSASSA_PKCS1_v1_5_sign(
-        d, HASHID_SHA256, pk['privateExponent'], pk['modulus'])
+    try:
+        sig2 = RSASSA_PKCS1_v1_5_sign(
+            d, HASHID_SHA256, pk['privateExponent'], pk['modulus'])
+    except DigestTooLargeError:
+        raise ParameterError("digest too large for modulus")
     sig += base64.b64encode(sig2)
 
     return sig + "\r\n"
@@ -414,7 +423,12 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
         pub = parse_tag_value(s)
     except InvalidTagValueList:
         return False
-    pk = parse_public_key(base64.b64decode(pub['p']))
+    try:
+        pk = parse_public_key(base64.b64decode(pub['p']))
+    except UnparsableKeyError, e:
+        if debuglog is not None:
+            print >>debuglog, "could not parse public key: %s" % e
+        return False
 
     include_headers = re.split(r"\s*:\s*", sig['h'])
     h = hasher()
@@ -427,5 +441,7 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     try:
         return RSASSA_PKCS1_v1_5_verify(
             d, hashid, signature, pk['publicExponent'], pk['modulus'])
-    except ParameterError:
+    except DigestTooLargeError:
+        if debuglog is not None:
+            print >>debuglog, "digest too large for modulus"
         return False
