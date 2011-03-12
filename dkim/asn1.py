@@ -41,11 +41,11 @@ class ASN1FormatError(Exception):
 
 
 def asn1_parse(template, data):
-    """Parse a data structure according to ASN.1 template.
+    """Parse a data structure according to an ASN.1 template.
 
-    @param template: A list of tuples comprising the ASN.1 template.
-    @param data: A list of bytes to parse.
-
+    @param template: tuples comprising the ASN.1 template
+    @param data: byte string data to parse
+    @return: decoded structure
     """
 
     r = []
@@ -90,7 +90,11 @@ def asn1_parse(template, data):
 
 
 def asn1_length(n):
-    """Return a string representing a field length in ASN.1 format."""
+    """Return a string representing a field length in ASN.1 format.
+
+    @param n: integer field length
+    @return: ASN.1 field length
+    """
     assert n >= 0
     if n < 0x7f:
         return chr(n)
@@ -102,7 +106,11 @@ def asn1_length(n):
 
 
 def asn1_build(node):
-    """Build an ASN.1 data structure based on pairs of (type, data)."""
+    """Build a DER-encoded ASN.1 data structure.
+
+    @param node: (type, data) tuples comprising the ASN.1 structure
+    @return: DER-encoded ASN.1 byte string
+    """
     if node[0] == OCTET_STRING:
         return chr(OCTET_STRING) + asn1_length(len(node[1])) + node[1]
     if node[0] == NULL:
