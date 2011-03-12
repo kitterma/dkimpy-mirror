@@ -119,6 +119,7 @@ def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
 
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
                  sigheaders, sig):
+    """Sign message header fields."""
     sign_headers = []
     lastindex = {}
     for h in include_headers:
@@ -157,6 +158,14 @@ def parse_public_key(data):
 
 
 def validate_signature_fields(sig, debuglog=None):
+    """Validate DKIM-Signature fields.
+
+    Basic checks for presence and correct formatting of mandatory fields.
+
+    @param sig: A dict mapping field keys to values.
+    @param debuglog: A file-like object to which details will be written
+        on error.
+    """
     mandatory_fields = ('v', 'a', 'b', 'bh', 'd', 'h', 's')
     for field in mandatory_fields:
         if field not in sig:
