@@ -30,6 +30,10 @@ from dkim.crypto import (
     RSASSA_PKCS1_v1_5_sign,
     RSASSA_PKCS1_v1_5_verify,
     )
+from dkim.util import (
+    InvalidTagValueList,
+    parse_tag_value,
+    )
 
 __all__ = [
     "Simple",
@@ -104,6 +108,7 @@ def _remove(s, t):
 
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
                  sigheaders, sig):
+    """Sign message header fields."""
     sign_headers = []
     lastindex = {}
     for h in include_headers:
@@ -126,6 +131,14 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
 
 
 def validate_signature_fields(sig, debuglog=None):
+    """Validate DKIM-Signature fields.
+
+    Basic checks for presence and correct formatting of mandatory fields.
+
+    @param sig: A dict mapping field keys to values.
+    @param debuglog: A file-like object to which details will be written
+        on error.
+    """
     mandatory_fields = ('v', 'a', 'b', 'bh', 'd', 'h', 's')
     for field in mandatory_fields:
         if field not in sig:
@@ -329,19 +342,10 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
         return False
 
     # Currently, we only validate the first DKIM-Signature line found.
-
-    a = re.split(r"\s*;\s*", sigheaders[0][1].strip())
-    if debuglog is not None:
-        print >>debuglog, "a:", a
-    sig = {}
-    for x in a:
-        if x:
-            m = re.match(r"(\w+)\s*=\s*(.*)", x, re.DOTALL)
-            if m is None:
-                if debuglog is not None:
-                    print >>debuglog, "invalid format of signature part: %s" % x
-                return False
-            sig[m.group(1)] = m.group(2)
+    try:
+        sig = parse_tag_value(sigheaders[0][1])
+    except InvalidTagValueList:
+        return False
     if debuglog is not None:
         print >>debuglog, "sig:", sig
 
@@ -406,20 +410,10 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     s = dnsfunc(sig['s']+"._domainkey."+sig['d']+".")
     if not s:
         return False
-    a = re.split(r"\s*;\s*", s)
-    # Trailing ';' on signature record is valid, see RFC 4871 3.2
-    #  tag-list  =  tag-spec 0*( ";" tag-spec ) [ ";" ]
-    if a[-1] == '':
-        a.pop(-1)
-    pub = {}
-    for f in a:
-        m = re.match(r"(\w+)=(.*)", f)
-        if m is not None:
-            pub[m.group(1)] = m.group(2)
-        else:
-            if debuglog is not None:
-                print >>debuglog, "invalid format in _domainkey txt record"
-            return False
+    try:
+        pub = parse_tag_value(s)
+    except InvalidTagValueList:
+        return False
     pk = parse_public_key(base64.b64decode(pub['p']))
 
     include_headers = re.split(r"\s*:\s*", sig['h'])
