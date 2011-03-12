@@ -31,6 +31,8 @@ def parse_tag_value(tag_list):
 
     Interprets the syntax specified by RFC4871 section 3.2.
     Assumes that folding whitespace is already unfolded.
+
+    @param tag_list: A string containing a DKIM Tag=Value list.
     """
     tags = {}
     tag_specs = tag_list.split(';')
