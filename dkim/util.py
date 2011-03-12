@@ -17,12 +17,22 @@
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
 __all__ = [
+    'DuplicateTag',
+    'InvalidTagSpec',
     'InvalidTagValueList',
     'parse_tag_value',
     ]
 
 
 class InvalidTagValueList(Exception):
+    pass
+
+
+class DuplicateTag(InvalidTagValueList):
+    pass
+
+
+class InvalidTagSpec(InvalidTagValueList):
     pass
 
 
@@ -43,8 +53,8 @@ def parse_tag_value(tag_list):
         try:
             key, value = tag_spec.split('=', 1)
         except ValueError:
-            raise InvalidTagValueList()
+            raise InvalidTagSpec(tag_spec)
         if key.strip() in tags:
-            raise InvalidTagValueList()
+            raise DuplicateTag(key.strip())
         tags[key.strip()] = value.strip()
     return tags

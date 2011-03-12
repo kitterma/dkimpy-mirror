@@ -3,7 +3,8 @@ import unittest
 
 import dkim
 from dkim.util import (
-    InvalidTagValueList,
+    DuplicateTag,
+    InvalidTagSpec,
     parse_tag_value,
     )
 
@@ -83,13 +84,13 @@ class TestParseTagValue(unittest.TestCase):
             parse_tag_value('   foo  \t= bar;\tbaz=  f oo=bar  '))
 
     def test_missing_value_is_an_error(self):
-        self.assertRaises(
-            InvalidTagValueList,
+        self.assertRaisesRegexp(
+            InvalidTagSpec, 'baz',
             parse_tag_value, 'foo=bar;baz')
 
     def test_duplicate_tag_is_an_error(self):
-        self.assertRaises(
-            InvalidTagValueList,
+        self.assertRaisesRegexp(
+            DuplicateTag, 'foo',
             parse_tag_value, 'foo=bar;foo=baz')
 
 
