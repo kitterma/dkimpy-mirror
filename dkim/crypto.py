@@ -68,11 +68,16 @@ ASN1_RSAPrivateKey = [
 ]
 
 
+class DigestTooLarge(Exception):
+    pass
+
+
 def parse_public_key(data):
     """Parse an RSA public key.
 
-    @param data: A DER-encoded X.509 subjectPublicKeyInfo
+    @param data: DER-encoded X.509 subjectPublicKeyInfo
         containing an RFC3447 RSAPublicKey.
+    @return: RSA public key
     """
     x = asn1_parse(ASN1_Object, data)
     # Not sure why the [1:] is necessary to skip a byte.
@@ -85,6 +90,11 @@ def parse_public_key(data):
 
 
 def parse_private_key(data):
+    """Parse an RSA private key.
+
+    @param data: DER-encoded RFC3447 RSAPrivateKey.
+    @return: RSA private key
+    """
     pka = asn1_parse(ASN1_RSAPrivateKey, data)
     pk = {
         'version': pka[0][0],
@@ -100,14 +110,13 @@ def parse_private_key(data):
     return pk
 
 
-def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
-    """Encode a digest with EMSA-PKCS1-v1_5.
+def EMSA_PKCS1_v1_5_encode(digest, mlen, hashid):
+    """Encode a digest with RFC3447 EMSA-PKCS1-v1_5.
 
-    Defined in RFC3447 section 9.2.
-
-    @param digest: A digest value to encode.
-    @param modlen: The desired message length.
-    @param hashid: The ID of the hash used to generate the digest.
+    @param digest: digest byte string to encode
+    @param mlen: desired message length
+    @param hashid: ID of the hash used to generate the digest
+    @return: encoded digest byte string
     """
     dinfo = asn1_build(
         (SEQUENCE, [
@@ -117,15 +126,16 @@ def EMSA_PKCS1_v1_5_encode(digest, modlen, hashid):
             ]),
             (OCTET_STRING, digest),
         ]))
-    if len(dinfo)+3 > modlen:
+    if len(dinfo)+3 > mlen:
         raise Exception("Hash too large for modulus") # XXX: DKIMException
-    return "\x00\x01"+"\xff"*(modlen-len(dinfo)-3)+"\x00"+dinfo
+    return "\x00\x01"+"\xff"*(mlen-len(dinfo)-3)+"\x00"+dinfo
 
 
 def str2int(s):
-    """Convert an octet string to an integer.
+    """Convert a byte string to an integer.
 
-    Octet string assumed to represent a positive integer.
+    @param s: byte string representing a positive integer to convert
+    @return: converted integer
     """
     r = 0
     for c in s:
@@ -133,14 +143,14 @@ def str2int(s):
     return r
 
 
-def int2str(n, length = -1):
-    """Convert an integer to an octet string. Number must be positive.
+def int2str(n, length=-1):
+    """Convert an integer to a byte string.
 
-    @param n: Number to convert.
-    @param length: Minimum length, or -1 to return the smallest number of
-        bytes that represent the integer.
+    @param n: positive integer to convert
+    @param length: minimum length
+    @return: converted bytestring, of at least the minimum length if it was
+        specified
     """
-
     assert n >= 0
     r = []
     while length < 0 or len(r) < length:
@@ -153,11 +163,27 @@ def int2str(n, length = -1):
     return ''.join(r)
 
 
-def perform_rsa(input, exponent, modulus, modlen):
-    return int2str(pow(str2int(input), exponent, modulus), modlen)
+def perform_rsa(message, exponent, modulus, mlen):
+    """Perform RSA signing or verification.
+
+    @param message: byte string to operate on
+    @param exponent: public or private key exponent
+    @param modulus: key modulus
+    @param mlen: desired output length
+    @return: byte string result of the operation
+    """
+    return int2str(pow(str2int(message), exponent, modulus), mlen)
 
 
 def RSASSA_PKCS1_v1_5_sign(digest, hashid, private_exponent, modulus):
+    """Sign a digest with RFC3447 RSASSA-PKCS1-v1_5.
+
+    @param digest: digest byte string to sign
+    @param hashid: ID of the hash used to generate the digest
+    @param private_exponent: private key exponent
+    @param modulus: key modulus
+    @return: signed digest byte string
+    """
     modlen = len(int2str(modulus))
     encoded_digest = EMSA_PKCS1_v1_5_encode(digest, modlen, hashid)
     return perform_rsa(encoded_digest, private_exponent, modulus, modlen)
@@ -165,6 +191,15 @@ def RSASSA_PKCS1_v1_5_sign(digest, hashid, private_exponent, modulus):
 
 def RSASSA_PKCS1_v1_5_verify(digest, hashid, signature, public_exponent,
                              modulus):
+    """Verify a digest signed with RFC3447 RSASSA-PKCS1-v1_5.
+
+    @param digest: digest byte string to check
+    @param hashid: ID of the hash used to generate the digest
+    @param signature: signed digest byte string
+    @param public_exponent: public key exponent
+    @param modulus: key modulus
+    @return: True if the signature is valid, False otherwise
+    """
     modlen = len(int2str(modulus))
     encoded_digest = EMSA_PKCS1_v1_5_encode(digest, modlen, hashid)
     signed_digest = perform_rsa(signature, public_exponent, modulus, modlen)
