@@ -15,6 +15,7 @@
 # 3. This notice may not be removed or altered from any source distribution.
 #
 # Copyright (c) 2008 Greg Hewgill http://hewgill.com
+# Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
 __all__ = [
     'asn1_build',
