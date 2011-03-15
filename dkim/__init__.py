@@ -15,6 +15,8 @@
 # 3. This notice may not be removed or altered from any source distribution.
 #
 # Copyright (c) 2008 Greg Hewgill http://hewgill.com
+#
+# This has been modified from the original software.
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
 import base64
