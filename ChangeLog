@@ -1,5 +1,5 @@
 Not yet released
-    - when verifying Relaxed mode signatures, the partial DKIM-Signature
+    - when producing Relaxed mode signatures, the partial DKIM-Signature
       header must be canonicalized before hashing (Martin Pool)
       <https://launchpad.net/bugs/587783>
 
