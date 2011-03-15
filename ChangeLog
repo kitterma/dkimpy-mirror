@@ -1,3 +1,8 @@
+Not yet released
+    - when producing Relaxed mode signatures, the partial DKIM-Signature
+      header must be canonicalized before hashing (Martin Pool)
+      <https://launchpad.net/bugs/587783>
+
 2008-06-25 Version 0.3
 
     - length parameter to sign() is now a boolean
