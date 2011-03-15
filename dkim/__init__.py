@@ -313,18 +313,23 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         ('bh', bodyhash),
         ('b', ""),
     ] if x]
-    sig = "DKIM-Signature: " + "; ".join("%s=%s" % x for x in sigfields)
 
-    sig = fold(sig)
+    sig_value = fold("; ".join("%s=%s" % x for x in sigfields))
+    dkim_header = canonicalize[0].canonicalize_headers([
+        ['DKIM-Signature', ' ' + sig_value]])[0]
+    # the dkim sig is hashed with no trailing crlf, even if the
+    # canonicalization algorithm would add one.
+    if dkim_header[1][-2:] == '\r\n':
+        dkim_header = (dkim_header[0], dkim_header[1][:-2])
+    sign_headers.append(dkim_header)
 
     if debuglog is not None:
-        print >>debuglog, "sign headers:", sign_headers + [("DKIM-Signature", " "+"; ".join("%s=%s" % x for x in sigfields))]
+        print >>debuglog, "sign headers:", sign_headers
     h = hashlib.sha256()
     for x in sign_headers:
         h.update(x[0])
         h.update(":")
         h.update(x[1])
-    h.update(sig)
     d = h.digest()
     if debuglog is not None:
         print >>debuglog, "sign digest:", " ".join("%02x" % ord(x) for x in d)
@@ -334,9 +339,9 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
             d, HASHID_SHA256, pk['privateExponent'], pk['modulus'])
     except DigestTooLargeError:
         raise ParameterError("digest too large for modulus")
-    sig += base64.b64encode(sig2)
+    sig_value += base64.b64encode(sig2)
 
-    return sig + "\r\n"
+    return 'DKIM-Signature: ' + sig_value + "\r\n"
 
 def verify(message, debuglog=None, dnsfunc=dnstxt):
     """Verify a DKIM signature on an RFC822 formatted message.
