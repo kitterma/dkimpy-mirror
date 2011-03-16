@@ -112,5 +112,6 @@ class TestParseTagValue(unittest.TestCase):
             parse_tag_value, 'foo=bar;foo=baz')
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_suite():
+    from unittest import TestLoader
+    return TestLoader().loadTestsFromName(__name__)
