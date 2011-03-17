@@ -25,7 +25,24 @@ from dkim import (
 from dkim.crypto import (
     DigestTooLargeError,
     EMSA_PKCS1_v1_5_encode,
+    int2str,
+    str2int,
     )
+
+
+class TestStrIntConversion(unittest.TestCase):
+
+    def test_str2int(self):
+        self.assertEquals(1234, str2int('\x04\xd2'))
+
+    def test_int2str(self):
+        self.assertEquals('\x04\xd2', int2str(1234))
+
+    def test_int2str_with_length(self):
+        self.assertEquals('\x00\x00\x04\xd2', int2str(1234, 4))
+
+    def test_int2str_fails_on_negative(self):
+        self.assertRaises(AssertionError, int2str, -1)
 
 
 class TestEMSA_PKCS1_v1_5(unittest.TestCase):
