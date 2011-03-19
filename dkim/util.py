@@ -16,8 +16,18 @@
 #
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
+import logging
+try:
+    from logging import NullHandler
+except ImportError:
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+
 __all__ = [
     'DuplicateTag',
+    'get_default_logger',
     'InvalidTagSpec',
     'InvalidTagValueList',
     'parse_tag_value',
@@ -58,3 +68,11 @@ def parse_tag_value(tag_list):
             raise DuplicateTag(key.strip())
         tags[key.strip()] = value.strip()
     return tags
+
+
+def get_default_logger():
+    """Get the default pydkim logger."""
+    logger = logging.getLogger('pydkim')
+    if not logger.handlers:
+        logger.addHandler(NullHandler())
+    return logger
