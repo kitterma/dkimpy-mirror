@@ -17,12 +17,9 @@
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
 import base64
+import hashlib
 import unittest
 
-from dkim import (
-    HASHID_SHA1,
-    HASHID_SHA256,
-    )
 from dkim.crypto import (
     DigestTooLargeError,
     EMSA_PKCS1_v1_5_encode,
@@ -87,28 +84,28 @@ class TestParseKeys(unittest.TestCase):
 class TestEMSA_PKCS1_v1_5(unittest.TestCase):
 
     def test_encode_sha256(self):
-        digest = '0123456789abcdef0123456789abcdef'
+        hash = hashlib.sha256('message')
         self.assertEquals(
             '\x00\x01\xff\xff\xff\xff\xff\xff\xff\xff\x00'
             '010\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04 '
-            + digest,
-            EMSA_PKCS1_v1_5_encode(digest, 62, HASHID_SHA256))
+            + hash.digest(),
+            EMSA_PKCS1_v1_5_encode(hash, 62))
 
     def test_encode_sha1(self):
-        digest = '0123456789abcdef0123'
+        hash = hashlib.sha1('message')
         self.assertEquals(
             '\x00\x01\xff\xff\xff\xff\xff\xff\xff\xff\x00'
             '0!0\x09\x06\x05\x2b\x0e\x03\x02\x1a\x05\x00\x04\x14'
-            + digest,
-            EMSA_PKCS1_v1_5_encode(digest, 46, HASHID_SHA1))
+            + hash.digest(),
+            EMSA_PKCS1_v1_5_encode(hash, 46))
 
     def test_encode_forbids_too_short(self):
         # PKCS#1 requires at least 8 bytes of padding, so there must be
         # at least that much space.
-        digest = '0123456789abcdef0123'
+        hash = hashlib.sha1('message')
         self.assertRaises(
             DigestTooLargeError,
-            EMSA_PKCS1_v1_5_encode, digest, 45, HASHID_SHA1)
+            EMSA_PKCS1_v1_5_encode, hash, 45)
 
 
 class TestRSA(unittest.TestCase):
@@ -136,31 +133,30 @@ class TestRSASSA(unittest.TestCase):
 
     def setUp(self):
         self.key = parse_pem_private_key(read_test_data('test.private'))
+        self.hash = hashlib.sha1(self.test_digest)
 
     test_digest = '0123456789abcdef0123'
     test_signature = (
-        '3702809f62db933a5c3d18c2c76a3470658d2e79868fac98eaaca7e87d0cdc7'
-        'fd091182673ed57c66531835d814ff367ffa3d764e74ca8ab301982d13eabb5'
-        'dbe90e5c46ea223c5d3ee835aa74aaffe06e8018affeb78b5178818cb33656c'
-        'ed462905bc0dc608e354f6ed3d4ec160ce9326ed227ccb0c1e5ba22098e10e6'
-        'c083').decode('hex')
+        'cc8d3647d64dd3bc12984947a27bdfbb565041fcc9db781afb4b60d29d288d8d60de'
+        '9e1916d6f81569c3e72af442538dd6aecb50a6de9a14565fdd679c46ff7842482e15'
+        'e5aa078549621b6f12ca8cd57ecfad95b18e53581e131c6c3c7cd01cb153adeb439d'
+        '2d6ab8b215b19be0e69ef490885004a474eb26d747a219693e8c').decode('hex')
 
     def test_sign_and_verify(self):
         signature = RSASSA_PKCS1_v1_5_sign(
-            self.test_digest, HASHID_SHA1, TEST_KEY_PRIVATE_EXPONENT,
-            TEST_KEY_MODULUS)
+            self.hash, TEST_KEY_PRIVATE_EXPONENT, TEST_KEY_MODULUS)
         self.assertEquals(
             self.test_signature, signature)
         self.assertTrue(
             RSASSA_PKCS1_v1_5_verify(
-                self.test_digest, HASHID_SHA1, signature,
-                TEST_KEY_PUBLIC_EXPONENT, TEST_KEY_MODULUS))
+                self.hash, signature, TEST_KEY_PUBLIC_EXPONENT,
+                TEST_KEY_MODULUS))
 
     def test_invalid_signature(self):
         self.assertFalse(
             RSASSA_PKCS1_v1_5_verify(
-                self.test_digest, HASHID_SHA1, self.test_signature,
-                TEST_KEY_PUBLIC_EXPONENT, TEST_KEY_MODULUS + 1))
+                self.hash, self.test_signature, TEST_KEY_PUBLIC_EXPONENT,
+                TEST_KEY_MODULUS + 1))
 
 
 def test_suite():

@@ -189,10 +189,6 @@ def validate_signature_fields(sig, debuglog=None):
             return False
     return True
 
-# These values come from RFC 3447, section 9.2 Notes, page 43.
-HASHID_SHA1 = "\x2b\x0e\x03\x02\x1a"
-HASHID_SHA256 = "\x60\x86\x48\x01\x65\x03\x04\x02\x01"
-
 def rfc822_parse(message):
     """Parse a message in RFC822 format.
 
@@ -321,13 +317,10 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
         h.update(x[0])
         h.update(":")
         h.update(x[1])
-    d = h.digest()
-    if debuglog is not None:
-        print >>debuglog, "sign digest:", " ".join("%02x" % ord(x) for x in d)
 
     try:
         sig2 = RSASSA_PKCS1_v1_5_sign(
-            d, HASHID_SHA256, pk['privateExponent'], pk['modulus'])
+            h, pk['privateExponent'], pk['modulus'])
     except DigestTooLargeError:
         raise ParameterError("digest too large for modulus")
     sig_value += base64.b64encode(sig2)
@@ -392,10 +385,8 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
 
     if sig['a'] == "rsa-sha1":
         hasher = hashlib.sha1
-        hashid = HASHID_SHA1
     elif sig['a'] == "rsa-sha256":
         hasher = hashlib.sha256
-        hashid = HASHID_SHA256
     else:
         if debuglog is not None:
             print >>debuglog, "Unknown signature algorithm (%s)" % sig['a']
@@ -432,13 +423,10 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     h = hasher()
     hash_headers(
         h, canonicalize_headers, headers, include_headers, sigheaders, sig)
-    d = h.digest()
-    if debuglog is not None:
-        print >>debuglog, "verify digest:", " ".join("%02x" % ord(x) for x in d)
     signature = base64.b64decode(re.sub(r"\s+", "", sig['b']))
     try:
         return RSASSA_PKCS1_v1_5_verify(
-            d, hashid, signature, pk['publicExponent'], pk['modulus'])
+            h, signature, pk['publicExponent'], pk['modulus'])
     except DigestTooLargeError:
         if debuglog is not None:
             print >>debuglog, "digest too large for modulus"

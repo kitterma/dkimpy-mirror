@@ -76,6 +76,13 @@ ASN1_RSAPrivateKey = [
 ]
 
 
+# These values come from RFC 3447, section 9.2 Notes, page 43.
+HASH_ID_MAP = {
+    'sha1': "\x2b\x0e\x03\x02\x1a",
+    'sha256': "\x60\x86\x48\x01\x65\x03\x04\x02\x01",
+    }
+
+
 class DigestTooLargeError(Exception):
     """The digest is too large to fit within the requested length."""
     pass
@@ -146,21 +153,20 @@ def parse_pem_private_key(data):
     return parse_private_key(pkdata)
 
 
-def EMSA_PKCS1_v1_5_encode(digest, mlen, hashid):
+def EMSA_PKCS1_v1_5_encode(hash, mlen):
     """Encode a digest with RFC3447 EMSA-PKCS1-v1_5.
 
-    @param digest: digest byte string to encode
+    @param hash: hash object to encode
     @param mlen: desired message length
-    @param hashid: ID of the hash used to generate the digest
     @return: encoded digest byte string
     """
     dinfo = asn1_build(
         (SEQUENCE, [
             (SEQUENCE, [
-                (OBJECT_IDENTIFIER, hashid),
+                (OBJECT_IDENTIFIER, HASH_ID_MAP[hash.name]),
                 (NULL, None),
             ]),
-            (OCTET_STRING, digest),
+            (OCTET_STRING, hash.digest()),
         ]))
     if len(dinfo)+3 > mlen:
         raise DigestTooLargeError()
@@ -211,32 +217,29 @@ def perform_rsa(message, exponent, modulus, mlen):
     return int2str(pow(str2int(message), exponent, modulus), mlen)
 
 
-def RSASSA_PKCS1_v1_5_sign(digest, hashid, private_exponent, modulus):
+def RSASSA_PKCS1_v1_5_sign(hash, private_exponent, modulus):
     """Sign a digest with RFC3447 RSASSA-PKCS1-v1_5.
 
-    @param digest: digest byte string to sign
-    @param hashid: ID of the hash used to generate the digest
+    @param hash: hash object to sign
     @param private_exponent: private key exponent
     @param modulus: key modulus
     @return: signed digest byte string
     """
     modlen = len(int2str(modulus))
-    encoded_digest = EMSA_PKCS1_v1_5_encode(digest, modlen, hashid)
+    encoded_digest = EMSA_PKCS1_v1_5_encode(hash, modlen)
     return perform_rsa(encoded_digest, private_exponent, modulus, modlen)
 
 
-def RSASSA_PKCS1_v1_5_verify(digest, hashid, signature, public_exponent,
-                             modulus):
+def RSASSA_PKCS1_v1_5_verify(hash, signature, public_exponent, modulus):
     """Verify a digest signed with RFC3447 RSASSA-PKCS1-v1_5.
 
-    @param digest: digest byte string to check
-    @param hashid: ID of the hash used to generate the digest
+    @param hash: hash object to check
     @param signature: signed digest byte string
     @param public_exponent: public key exponent
     @param modulus: key modulus
     @return: True if the signature is valid, False otherwise
     """
     modlen = len(int2str(modulus))
-    encoded_digest = EMSA_PKCS1_v1_5_encode(digest, modlen, hashid)
+    encoded_digest = EMSA_PKCS1_v1_5_encode(hash, modlen)
     signed_digest = perform_rsa(signature, public_exponent, modulus, modlen)
     return encoded_digest == signed_digest
