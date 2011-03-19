@@ -105,7 +105,7 @@ def parse_public_key(data):
         # Not sure why the [1:] is necessary to skip a byte.
         x = asn1_parse(ASN1_Object, data)
         pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
-    except ASN1FormatError, e:
+    except ASN1FormatError as e:
         raise UnparsableKeyError(str(e))
     pk = {
         'modulus': pkd[0][0],
@@ -122,7 +122,7 @@ def parse_private_key(data):
     """
     try:
         pka = asn1_parse(ASN1_RSAPrivateKey, data)
-    except ASN1FormatError, e:
+    except ASN1FormatError as e:
         raise UnparsableKeyError(str(e))
     pk = {
         'version': pka[0][0],
@@ -149,7 +149,7 @@ def parse_pem_private_key(data):
         raise UnparsableKeyError("Private key not found")
     try:
         pkdata = base64.b64decode(m.group(1))
-    except TypeError, e:
+    except TypeError as e:
         raise UnparsableKeyError(str(e))
     return parse_private_key(pkdata)
 

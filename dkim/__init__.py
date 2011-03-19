@@ -265,7 +265,7 @@ def sign(message, selector, domain, privkey, identity=None,
 
     try:
         pk = parse_pem_private_key(privkey)
-    except UnparsableKeyError, e:
+    except UnparsableKeyError as e:
         raise KeyFormatError(str(e))
 
     if identity is not None and not identity.endswith(domain):
@@ -351,7 +351,7 @@ def verify(message, logger=None, dnsfunc=dnstxt):
 
     try:
         validate_signature_fields(sig)
-    except ValidationError, e:
+    except ValidationError as e:
         logger.error("signature fields failed to validate: %s" % e)
         return False
 
@@ -414,7 +414,7 @@ def verify(message, logger=None, dnsfunc=dnstxt):
         return False
     try:
         pk = parse_public_key(base64.b64decode(pub['p']))
-    except UnparsableKeyError, e:
+    except UnparsableKeyError as e:
         logger.error("could not parse public key: %s" % e)
         return False
 
