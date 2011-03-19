@@ -25,8 +25,6 @@ import logging
 import re
 import time
 
-import dns.resolver
-
 from dkim.crypto import (
     DigestTooLargeError,
     parse_pem_private_key,
@@ -218,13 +216,35 @@ def rfc822_parse(message):
     return (headers, b"\r\n".join(lines[i:]))
 
 
-def dnstxt(name):
+
+def dnstxt_dnspython(name):
     """Return a TXT record associated with a DNS name."""
     a = dns.resolver.query(name, dns.rdatatype.TXT)
     for r in a.response.answer:
         if r.rdtype == dns.rdatatype.TXT:
             return b"".join(r.items[0].strings)
     return None
+
+
+def dnstxt_pydns(name):
+    """Return a TXT record associated with a DNS name."""
+    # Older pydns releases don't like a trailing dot.
+    if name.endswith('.'):
+        name = name[:-1]
+    DNS.ParseResolvConf()
+    response = DNS.DnsRequest(name, qtype='txt').req()
+    if not response.answers:
+        return None
+    return response.answers[0]['data'][0]
+
+
+# Prefer dnspython if it's there, otherwise use pydns.
+try:
+    import dns.resolver
+    dnstxt = dnstxt_dnspython
+except ImportError:
+    import DNS
+    dnstxt = dnstxt_pydns
 
 
 def fold(header):
