@@ -101,9 +101,9 @@ def asn1_length(n):
     assert n >= 0
     if n < 0x7f:
         return chr(n)
-    r = ""
+    r = bytearray()
     while n > 0:
-        r = chr(n & 0xff) + r
+        r.insert(n & 0xff)
         n >>= 8
     return r
 
