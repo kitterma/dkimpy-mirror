@@ -26,6 +26,7 @@ from dkim.crypto import (
     DigestTooLargeError,
     EMSA_PKCS1_v1_5_encode,
     int2str,
+    perform_rsa,
     str2int,
     )
 
@@ -70,6 +71,27 @@ class TestEMSA_PKCS1_v1_5(unittest.TestCase):
         self.assertRaises(
             DigestTooLargeError,
             EMSA_PKCS1_v1_5_encode, digest, 45, HASHID_SHA1)
+
+
+class TestRSA(unittest.TestCase):
+
+    message = '\x00\x04\xfb'
+    modulus = 186101
+    modlen = 3
+    public_exponent = 907
+    private_exponent = 2851
+
+    def test_perform(self):
+        signed = perform_rsa(
+            self.message, self.private_exponent, self.modulus, self.modlen)
+        self.assertEquals('\x01\xf1\x40', signed)
+
+    def test_sign_and_verify(self):
+        signed = perform_rsa(
+            self.message, self.private_exponent, self.modulus, self.modlen)
+        unsigned = perform_rsa(
+            signed, self.public_exponent, self.modulus, self.modlen)
+        self.assertEquals(self.message, unsigned)
 
 
 def test_suite():
