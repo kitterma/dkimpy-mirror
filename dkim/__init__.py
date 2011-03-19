@@ -28,7 +28,7 @@ import dns.resolver
 
 from dkim.crypto import (
     DigestTooLargeError,
-    parse_private_key,
+    parse_pem_private_key,
     parse_public_key,
     RSASSA_PKCS1_v1_5_sign,
     RSASSA_PKCS1_v1_5_verify,
@@ -268,17 +268,8 @@ def sign(message, selector, domain, privkey, identity=None, canonicalize=(Simple
 
     (headers, body) = rfc822_parse(message)
 
-    m = re.search("--\n(.*?)\n--", privkey, re.DOTALL)
-    if m is None:
-        raise KeyFormatError("Private key not found")
     try:
-        pkdata = base64.b64decode(m.group(1))
-    except TypeError, e:
-        raise KeyFormatError(str(e))
-    if debuglog is not None:
-        print >>debuglog, " ".join("%02x" % ord(x) for x in pkdata)
-    try:
-        pk = parse_private_key(pkdata)
+        pk = parse_pem_private_key(privkey)
     except UnparsableKeyError, e:
         raise KeyFormatError(str(e))
 

@@ -16,6 +16,7 @@
 #
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
+import base64
 import unittest
 
 from dkim import (
@@ -26,9 +27,28 @@ from dkim.crypto import (
     DigestTooLargeError,
     EMSA_PKCS1_v1_5_encode,
     int2str,
+    parse_pem_private_key,
+    parse_public_key,
     perform_rsa,
     str2int,
     )
+from dkim.tests.test_dkim import read_test_data
+from dkim.util import parse_tag_value
+
+
+TEST_KEY_MODULUS = int(
+    '160190232090260054474895273563294777865179886824815261110923286158270437'
+    '657769966074370477716411064825849317279563494735400250019233722215662302'
+    '997403060159149904218292658425241195497467863155064737257198115261596066'
+    '733086923624062366294295557722551666415445482671442053150678674937682352'
+    '837105556539434741981')
+TEST_KEY_PUBLIC_EXPONENT = 65537
+TEST_KEY_PRIVATE_EXPONENT = int(
+    '219642251791061057038224045690185219631125389170665415924249912174530136'
+    '074693824121380763959239792563755125360354847443780863736947713174228520'
+    '489900956461640273471526152019568303807247290486052565153701534491987040'
+    '131529720476525111651818771481293273124837542067061293644354088836358900'
+    '29771161475005043329')
 
 
 class TestStrIntConversion(unittest.TestCase):
@@ -44,6 +64,21 @@ class TestStrIntConversion(unittest.TestCase):
 
     def test_int2str_fails_on_negative(self):
         self.assertRaises(AssertionError, int2str, -1)
+
+
+class TestParseKeys(unittest.TestCase):
+
+    def test_parse_pem_private_key(self):
+        key = parse_pem_private_key(read_test_data('test.private'))
+        self.assertEquals(key['modulus'], TEST_KEY_MODULUS)
+        self.assertEquals(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
+        self.assertEquals(key['privateExponent'], TEST_KEY_PRIVATE_EXPONENT)
+
+    def test_parse_public_key(self):
+        data = read_test_data('test.txt')
+        key = parse_public_key(base64.b64decode(parse_tag_value(data)['p']))
+        self.assertEquals(key['modulus'], TEST_KEY_MODULUS)
+        self.assertEquals(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
 
 
 class TestEMSA_PKCS1_v1_5(unittest.TestCase):
