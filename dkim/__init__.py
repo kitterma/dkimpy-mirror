@@ -105,6 +105,10 @@ class ParameterError(DKIMException):
     """Input parameter error."""
     pass
 
+class ValidationError(DKIMException):
+    """Validation error."""
+    pass
+
 def _remove(s, t):
     i = s.find(t)
     assert i >= 0
@@ -134,10 +138,11 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
         hasher.update(x[1])
 
 
-def validate_signature_fields(sig, debuglog=None):
+def validate_signature_fields(sig):
     """Validate DKIM-Signature fields.
 
     Basic checks for presence and correct formatting of mandatory fields.
+    Raises a ValidationError if checks fail, otherwise returns None.
 
     @param sig: A dict mapping field keys to values.
     @param debuglog: A file-like object to which details will be written
@@ -146,48 +151,37 @@ def validate_signature_fields(sig, debuglog=None):
     mandatory_fields = ('v', 'a', 'b', 'bh', 'd', 'h', 's')
     for field in mandatory_fields:
         if field not in sig:
-            if debuglog is not None:
-                print >>debuglog, "signature missing %s=" % field
-            return False
+            raise ValidationError("signature missing %s=" % field)
 
     if sig['v'] != "1":
-        if debuglog is not None:
-            print >>debuglog, "v= value is not 1 (%s)" % sig['v']
-        return False
+        raise ValidationError("v= value is not 1 (%s)" % sig['v'])
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['b']) is None:
-        if debuglog is not None:
-            print >>debuglog, "b= value is not valid base64 (%s)" % sig['b']
-        return False
+        raise ValidationError("b= value is not valid base64 (%s)" % sig['b'])
     if re.match(r"[\s0-9A-Za-z+/]+=*$", sig['bh']) is None:
-        if debuglog is not None:
-            print >>debuglog, "bh= value is not valid base64 (%s)" % sig['bh']
-        return False
-    if 'i' in sig and (not sig['i'].endswith(sig['d']) or sig['i'][-len(sig['d'])-1] not in "@."):
-        if debuglog is not None:
-            print >>debuglog, "i= domain is not a subdomain of d= (i=%s d=%d)" % (sig['i'], sig['d'])
-        return False
+        raise ValidationError(
+            "bh= value is not valid base64 (%s)" % sig['bh'])
+    if 'i' in sig and (
+        not sig['i'].endswith(sig['d']) or
+        sig['i'][-len(sig['d'])-1] not in "@."):
+        raise ValidationError(
+            "i= domain is not a subdomain of d= (i=%s d=%d)" %
+            (sig['i'], sig['d']))
     if 'l' in sig and re.match(r"\d{,76}$", sig['l']) is None:
-        if debuglog is not None:
-            print >>debuglog, "l= value is not a decimal integer (%s)" % sig['l']
-        return False
+        raise ValidationError(
+            "l= value is not a decimal integer (%s)" % sig['l'])
     if 'q' in sig and sig['q'] != "dns/txt":
-        if debuglog is not None:
-            print >>debuglog, "q= value is not dns/txt (%s)" % sig['q']
-        return False
+        raise ValidationError("q= value is not dns/txt (%s)" % sig['q'])
     if 't' in sig and re.match(r"\d+$", sig['t']) is None:
-        if debuglog is not None:
-            print >>debuglog, "t= value is not a decimal integer (%s)" % sig['t']
-        return False
+        raise ValidationError(
+            "t= value is not a decimal integer (%s)" % sig['t'])
     if 'x' in sig:
         if re.match(r"\d+$", sig['x']) is None:
-            if debuglog is not None:
-                print >>debuglog, "x= value is not a decimal integer (%s)" % sig['x']
-            return False
+            raise ValidationError(
+                "x= value is not a decimal integer (%s)" % sig['x'])
         if int(sig['x']) < int(sig['t']):
-            if debuglog is not None:
-                print >>debuglog, "x= value is less than t= value (x=%s t=%s)" % (sig['x'], sig['t'])
-            return False
-    return True
+            raise ValidationError(
+                "x= value is less than t= value (x=%s t=%s)" %
+                (sig['x'], sig['t']))
 
 def rfc822_parse(message):
     """Parse a message in RFC822 format.
@@ -349,7 +343,11 @@ def verify(message, debuglog=None, dnsfunc=dnstxt):
     if debuglog is not None:
         print >>debuglog, "sig:", sig
 
-    if not validate_signature_fields(sig, debuglog):
+    try:
+        validate_signature_fields(sig)
+    except ValidationError, e:
+        if debuglog is not None:
+            print >>debuglog, str(e)
         return False
 
     m = re.match("(\w+)(?:/(\w+))?$", sig['c'])
