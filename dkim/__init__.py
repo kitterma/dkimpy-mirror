@@ -423,13 +423,17 @@ def verify(message, logger=None, dnsfunc=dnstxt):
     h.update(body)
     bodyhash = h.digest()
     logger.debug("bh: %s" % base64.b64encode(bodyhash))
-    if bodyhash != base64.b64decode(re.sub(br"\s+", "", sig[b'bh'])):
+    if bodyhash != base64.b64decode(re.sub(br"\s+", b"", sig[b'bh'])):
         logger.error(
             "body hash mismatch (got %s, expected %s)" %
             (base64.b64encode(bodyhash), sig[b'bh']))
         return False
 
-    s = dnsfunc(sig[b's']+b"._domainkey."+sig[b'd']+b".")
+    # dnstxt wants Unicode
+    selector = sig[b's'].decode('latin-1')
+    domain = sig[b'd'].decode('latin-1')
+    name = "%s._domainkey.%s." % (selector, domain)
+    s = dnsfunc(name).encode('utf-8')
     if not s:
         return False
     try:
@@ -446,7 +450,7 @@ def verify(message, logger=None, dnsfunc=dnstxt):
     h = hasher()
     hash_headers(
         h, canonicalize_headers, headers, include_headers, sigheaders, sig)
-    signature = base64.b64decode(re.sub(br"\s+", "", sig[b'b']))
+    signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
     try:
         return RSASSA_PKCS1_v1_5_verify(
             h, signature, pk['publicExponent'], pk['modulus'])
