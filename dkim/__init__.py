@@ -345,7 +345,7 @@ def sign(message, selector, domain, privkey, identity=None,
             h, pk['privateExponent'], pk['modulus'])
     except DigestTooLargeError:
         raise ParameterError("digest too large for modulus")
-    sig_value += base64.b64encode(sig2)
+    sig_value += base64.b64encode(bytes(sig2))
 
     return b'DKIM-Signature: ' + sig_value + b"\r\n"
 
