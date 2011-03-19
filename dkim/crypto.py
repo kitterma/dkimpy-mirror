@@ -79,8 +79,8 @@ ASN1_RSAPrivateKey = [
 
 # These values come from RFC 3447, section 9.2 Notes, page 43.
 HASH_ID_MAP = {
-    'sha1': "\x2b\x0e\x03\x02\x1a",
-    'sha256': "\x60\x86\x48\x01\x65\x03\x04\x02\x01",
+    'sha1': b"\x2b\x0e\x03\x02\x1a",
+    'sha256': b"\x60\x86\x48\x01\x65\x03\x04\x02\x01",
     }
 
 
@@ -144,7 +144,7 @@ def parse_pem_private_key(data):
     @param data: RFC3447 RSAPrivateKey in PEM format.
     @return: RSA private key
     """
-    m = re.search("--\n(.*?)\n--", data, re.DOTALL)
+    m = re.search(b"--\n(.*?)\n--", data, re.DOTALL)
     if m is None:
         raise UnparsableKeyError("Private key not found")
     try:
@@ -171,7 +171,7 @@ def EMSA_PKCS1_v1_5_encode(hash, mlen):
         ]))
     if len(dinfo) + 11 > mlen:
         raise DigestTooLargeError()
-    return "\x00\x01"+"\xff"*(mlen-len(dinfo)-3)+"\x00"+dinfo
+    return b"\x00\x01"+b"\xff"*(mlen-len(dinfo)-3)+b"\x00"+dinfo
 
 
 def str2int(s):
