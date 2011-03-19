@@ -30,6 +30,8 @@ from dkim.crypto import (
     parse_pem_private_key,
     parse_public_key,
     perform_rsa,
+    RSASSA_PKCS1_v1_5_sign,
+    RSASSA_PKCS1_v1_5_verify,
     str2int,
     )
 from dkim.tests.test_dkim import read_test_data
@@ -110,7 +112,7 @@ class TestEMSA_PKCS1_v1_5(unittest.TestCase):
 
 class TestRSA(unittest.TestCase):
 
-    message = '\x00\x04\xfb'
+    message = '0004fb'.decode('hex')
     modulus = 186101
     modlen = 3
     public_exponent = 907
@@ -119,7 +121,7 @@ class TestRSA(unittest.TestCase):
     def test_perform(self):
         signed = perform_rsa(
             self.message, self.private_exponent, self.modulus, self.modlen)
-        self.assertEquals('\x01\xf1\x40', signed)
+        self.assertEquals('01f140'.decode('hex'), signed)
 
     def test_sign_and_verify(self):
         signed = perform_rsa(
@@ -127,6 +129,37 @@ class TestRSA(unittest.TestCase):
         unsigned = perform_rsa(
             signed, self.public_exponent, self.modulus, self.modlen)
         self.assertEquals(self.message, unsigned)
+
+
+class TestRSASSA(unittest.TestCase):
+
+    def setUp(self):
+        self.key = parse_pem_private_key(read_test_data('test.private'))
+
+    test_digest = '0123456789abcdef0123'
+    test_signature = (
+        '3702809f62db933a5c3d18c2c76a3470658d2e79868fac98eaaca7e87d0cdc7'
+        'fd091182673ed57c66531835d814ff367ffa3d764e74ca8ab301982d13eabb5'
+        'dbe90e5c46ea223c5d3ee835aa74aaffe06e8018affeb78b5178818cb33656c'
+        'ed462905bc0dc608e354f6ed3d4ec160ce9326ed227ccb0c1e5ba22098e10e6'
+        'c083').decode('hex')
+
+    def test_sign_and_verify(self):
+        signature = RSASSA_PKCS1_v1_5_sign(
+            self.test_digest, HASHID_SHA1, TEST_KEY_PRIVATE_EXPONENT,
+            TEST_KEY_MODULUS)
+        self.assertEquals(
+            self.test_signature, signature)
+        self.assertTrue(
+            RSASSA_PKCS1_v1_5_verify(
+                self.test_digest, HASHID_SHA1, signature,
+                TEST_KEY_PUBLIC_EXPONENT, TEST_KEY_MODULUS))
+
+    def test_invalid_signature(self):
+        self.assertFalse(
+            RSASSA_PKCS1_v1_5_verify(
+                self.test_digest, HASHID_SHA1, self.test_signature,
+                TEST_KEY_PUBLIC_EXPONENT, TEST_KEY_MODULUS + 1))
 
 
 def test_suite():
