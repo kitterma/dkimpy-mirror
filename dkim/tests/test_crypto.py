@@ -38,6 +38,7 @@ from dkim.tests.test_dkim import read_test_data
 from dkim.util import parse_tag_value
 
 
+# These are extracted from dkim/tests/data/test.private.
 TEST_KEY_MODULUS = int(
     '160190232090260054474895273563294777865179886824815261110923286158270437'
     '657769966074370477716411064825849317279563494735400250019233722215662302'
