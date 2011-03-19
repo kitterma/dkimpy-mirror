@@ -28,6 +28,9 @@ __all__ = [
     'UnparsableKeyError',
     ]
 
+import base64
+import re
+
 from dkim.asn1 import (
     ASN1FormatError,
     asn1_build,
@@ -125,6 +128,22 @@ def parse_private_key(data):
         'coefficient': pka[0][8],
     }
     return pk
+
+
+def parse_pem_private_key(data):
+    """Parse a PEM private key.
+
+    @param data: RFC3447 RSAPrivateKey in PEM format.
+    @return: RSA private key
+    """
+    m = re.search("--\n(.*?)\n--", data, re.DOTALL)
+    if m is None:
+        raise UnparsableKeyError("Private key not found")
+    try:
+        pkdata = base64.b64decode(m.group(1))
+    except TypeError, e:
+        raise UnparsableKeyError(str(e))
+    return parse_private_key(pkdata)
 
 
 def EMSA_PKCS1_v1_5_encode(digest, mlen, hashid):
