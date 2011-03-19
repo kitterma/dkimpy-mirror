@@ -77,7 +77,7 @@ class TestParseKeys(unittest.TestCase):
 
     def test_parse_public_key(self):
         data = read_test_data('test.txt')
-        key = parse_public_key(base64.b64decode(parse_tag_value(data)['p']))
+        key = parse_public_key(base64.b64decode(parse_tag_value(data)[b'p']))
         self.assertEquals(key['modulus'], TEST_KEY_MODULUS)
         self.assertEquals(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
 
@@ -136,7 +136,7 @@ class TestRSASSA(unittest.TestCase):
         self.key = parse_pem_private_key(read_test_data('test.private'))
         self.hash = hashlib.sha1(self.test_digest)
 
-    test_digest = '0123456789abcdef0123'
+    test_digest = b'0123456789abcdef0123'
     test_signature = binascii.unhexlify(
         b'cc8d3647d64dd3bc12984947a27bdfbb565041fcc9db781afb4b60d29d288d8d60d'
         b'e9e1916d6f81569c3e72af442538dd6aecb50a6de9a14565fdd679c46ff7842482e'
