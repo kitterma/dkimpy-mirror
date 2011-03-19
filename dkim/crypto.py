@@ -21,6 +21,7 @@
 
 __all__ = [
     'DigestTooLargeError',
+    'parse_pem_private_key',
     'parse_private_key',
     'parse_public_key',
     'RSASSA_PKCS1_v1_5_sign',
@@ -138,7 +139,7 @@ def parse_private_key(data):
 
 
 def parse_pem_private_key(data):
-    """Parse a PEM private key.
+    """Parse a PEM RSA private key.
 
     @param data: RFC3447 RSAPrivateKey in PEM format.
     @return: RSA private key
@@ -168,7 +169,7 @@ def EMSA_PKCS1_v1_5_encode(hash, mlen):
             ]),
             (OCTET_STRING, hash.digest()),
         ]))
-    if len(dinfo)+3 > mlen:
+    if len(dinfo) + 11 > mlen:
         raise DigestTooLargeError()
     return "\x00\x01"+"\xff"*(mlen-len(dinfo)-3)+"\x00"+dinfo
 
