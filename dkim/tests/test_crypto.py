@@ -55,13 +55,13 @@ TEST_KEY_PRIVATE_EXPONENT = int(
 class TestStrIntConversion(unittest.TestCase):
 
     def test_str2int(self):
-        self.assertEquals(1234, str2int('\x04\xd2'))
+        self.assertEquals(1234, str2int(b'\x04\xd2'))
 
     def test_int2str(self):
-        self.assertEquals('\x04\xd2', int2str(1234))
+        self.assertEquals(b'\x04\xd2', int2str(1234))
 
     def test_int2str_with_length(self):
-        self.assertEquals('\x00\x00\x04\xd2', int2str(1234, 4))
+        self.assertEquals(b'\x00\x00\x04\xd2', int2str(1234, 4))
 
     def test_int2str_fails_on_negative(self):
         self.assertRaises(AssertionError, int2str, -1)

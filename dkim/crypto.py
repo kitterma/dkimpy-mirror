@@ -180,9 +180,10 @@ def str2int(s):
     @param s: byte string representing a positive integer to convert
     @return: converted integer
     """
+    s = bytearray(s)
     r = 0
     for c in s:
-        r = (r << 8) | ord(c)
+        r = (r << 8) | c
     return r
 
 
@@ -195,15 +196,15 @@ def int2str(n, length=-1):
         specified
     """
     assert n >= 0
-    r = []
+    r = bytearray()
     while length < 0 or len(r) < length:
-        r.append(chr(n & 0xff))
+        r.append(n & 0xff)
         n >>= 8
         if length < 0 and n == 0:
             break
     r.reverse()
     assert length < 0 or len(r) == length
-    return ''.join(r)
+    return r
 
 
 def perform_rsa(message, exponent, modulus, mlen):
