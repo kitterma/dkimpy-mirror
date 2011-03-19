@@ -53,7 +53,7 @@ class TestSignAndVerify(unittest.TestCase):
 
     def dnsfunc(self, domain):
         self.assertEqual('test._domainkey.example.com.', domain)
-        return read_test_data("test.txt").decode('latin1')
+        return read_test_data("test.txt").decode('utf-8')
 
     def test_verifies(self):
         # A message verifies after being signed.

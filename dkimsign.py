@@ -36,11 +36,11 @@ if sys.version_info[0] >= 3:
     sys.stdin = sys.stdin.detach()
     sys.stdout = sys.stdout.detach()
 
-selector = sys.argv[1].encode('utf-8')
-domain = sys.argv[2].encode('utf-8')
+selector = sys.argv[1].encode('ascii')
+domain = sys.argv[2].encode('ascii')
 privatekeyfile = sys.argv[3]
 if len(sys.argv) > 5:
-    identity = sys.argv[4].encode('utf-8')
+    identity = sys.argv[4].encode('ascii')
 else:
     identity = None
 
