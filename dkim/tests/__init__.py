@@ -30,5 +30,5 @@ def test_suite():
         test_dkim,
         test_util,
         ]
-    suites = map(lambda x: x.test_suite(), modules)
+    suites = [x.test_suite() for x in modules]
     return unittest.TestSuite(suites)
