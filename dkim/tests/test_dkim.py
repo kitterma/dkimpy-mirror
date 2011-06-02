@@ -28,7 +28,8 @@ def read_test_data(filename):
     The files live in dkim/tests/data.
     """
     path = os.path.join(os.path.dirname(__file__), 'data', filename)
-    return open(path, 'rb').read()
+    with open(path, 'rb') as f:
+        return f.read()
 
 
 class TestFold(unittest.TestCase):
