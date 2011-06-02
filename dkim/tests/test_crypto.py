@@ -17,6 +17,7 @@
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
 import base64
+import binascii
 import hashlib
 import unittest
 
@@ -54,13 +55,13 @@ TEST_KEY_PRIVATE_EXPONENT = int(
 class TestStrIntConversion(unittest.TestCase):
 
     def test_str2int(self):
-        self.assertEquals(1234, str2int('\x04\xd2'))
+        self.assertEqual(1234, str2int(b'\x04\xd2'))
 
     def test_int2str(self):
-        self.assertEquals('\x04\xd2', int2str(1234))
+        self.assertEqual(b'\x04\xd2', int2str(1234))
 
     def test_int2str_with_length(self):
-        self.assertEquals('\x00\x00\x04\xd2', int2str(1234, 4))
+        self.assertEqual(b'\x00\x00\x04\xd2', int2str(1234, 4))
 
     def test_int2str_fails_on_negative(self):
         self.assertRaises(AssertionError, int2str, -1)
@@ -70,39 +71,39 @@ class TestParseKeys(unittest.TestCase):
 
     def test_parse_pem_private_key(self):
         key = parse_pem_private_key(read_test_data('test.private'))
-        self.assertEquals(key['modulus'], TEST_KEY_MODULUS)
-        self.assertEquals(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
-        self.assertEquals(key['privateExponent'], TEST_KEY_PRIVATE_EXPONENT)
+        self.assertEqual(key['modulus'], TEST_KEY_MODULUS)
+        self.assertEqual(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
+        self.assertEqual(key['privateExponent'], TEST_KEY_PRIVATE_EXPONENT)
 
     def test_parse_public_key(self):
         data = read_test_data('test.txt')
-        key = parse_public_key(base64.b64decode(parse_tag_value(data)['p']))
-        self.assertEquals(key['modulus'], TEST_KEY_MODULUS)
-        self.assertEquals(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
+        key = parse_public_key(base64.b64decode(parse_tag_value(data)[b'p']))
+        self.assertEqual(key['modulus'], TEST_KEY_MODULUS)
+        self.assertEqual(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
 
 
 class TestEMSA_PKCS1_v1_5(unittest.TestCase):
 
     def test_encode_sha256(self):
-        hash = hashlib.sha256('message')
-        self.assertEquals(
-            '\x00\x01\xff\xff\xff\xff\xff\xff\xff\xff\x00'
-            '010\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04 '
-            + hash.digest(),
+        hash = hashlib.sha256(b'message')
+        self.assertEqual(
+            b'\x00\x01\xff\xff\xff\xff\xff\xff\xff\xff\x00'
+            b'010\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04'
+            b' ' + hash.digest(),
             EMSA_PKCS1_v1_5_encode(hash, 62))
 
     def test_encode_sha1(self):
-        hash = hashlib.sha1('message')
-        self.assertEquals(
-            '\x00\x01\xff\xff\xff\xff\xff\xff\xff\xff\x00'
-            '0!0\x09\x06\x05\x2b\x0e\x03\x02\x1a\x05\x00\x04\x14'
+        hash = hashlib.sha1(b'message')
+        self.assertEqual(
+            b'\x00\x01\xff\xff\xff\xff\xff\xff\xff\xff\x00'
+            b'0!0\x09\x06\x05\x2b\x0e\x03\x02\x1a\x05\x00\x04\x14'
             + hash.digest(),
             EMSA_PKCS1_v1_5_encode(hash, 46))
 
     def test_encode_forbids_too_short(self):
         # PKCS#1 requires at least 8 bytes of padding, so there must be
         # at least that much space.
-        hash = hashlib.sha1('message')
+        hash = hashlib.sha1(b'message')
         self.assertRaises(
             DigestTooLargeError,
             EMSA_PKCS1_v1_5_encode, hash, 45)
@@ -110,7 +111,7 @@ class TestEMSA_PKCS1_v1_5(unittest.TestCase):
 
 class TestRSA(unittest.TestCase):
 
-    message = '0004fb'.decode('hex')
+    message = binascii.unhexlify(b'0004fb')
     modulus = 186101
     modlen = 3
     public_exponent = 907
@@ -119,14 +120,14 @@ class TestRSA(unittest.TestCase):
     def test_perform(self):
         signed = perform_rsa(
             self.message, self.private_exponent, self.modulus, self.modlen)
-        self.assertEquals('01f140'.decode('hex'), signed)
+        self.assertEqual(binascii.unhexlify(b'01f140'), signed)
 
     def test_sign_and_verify(self):
         signed = perform_rsa(
             self.message, self.private_exponent, self.modulus, self.modlen)
         unsigned = perform_rsa(
             signed, self.public_exponent, self.modulus, self.modlen)
-        self.assertEquals(self.message, unsigned)
+        self.assertEqual(self.message, unsigned)
 
 
 class TestRSASSA(unittest.TestCase):
@@ -135,18 +136,17 @@ class TestRSASSA(unittest.TestCase):
         self.key = parse_pem_private_key(read_test_data('test.private'))
         self.hash = hashlib.sha1(self.test_digest)
 
-    test_digest = '0123456789abcdef0123'
-    test_signature = (
-        'cc8d3647d64dd3bc12984947a27bdfbb565041fcc9db781afb4b60d29d288d8d60de'
-        '9e1916d6f81569c3e72af442538dd6aecb50a6de9a14565fdd679c46ff7842482e15'
-        'e5aa078549621b6f12ca8cd57ecfad95b18e53581e131c6c3c7cd01cb153adeb439d'
-        '2d6ab8b215b19be0e69ef490885004a474eb26d747a219693e8c').decode('hex')
+    test_digest = b'0123456789abcdef0123'
+    test_signature = binascii.unhexlify(
+        b'cc8d3647d64dd3bc12984947a27bdfbb565041fcc9db781afb4b60d29d288d8d60d'
+        b'e9e1916d6f81569c3e72af442538dd6aecb50a6de9a14565fdd679c46ff7842482e'
+        b'15e5aa078549621b6f12ca8cd57ecfad95b18e53581e131c6c3c7cd01cb153adeb4'
+        b'39d2d6ab8b215b19be0e69ef490885004a474eb26d747a219693e8c')
 
     def test_sign_and_verify(self):
         signature = RSASSA_PKCS1_v1_5_sign(
             self.hash, TEST_KEY_PRIVATE_EXPONENT, TEST_KEY_MODULUS)
-        self.assertEquals(
-            self.test_signature, signature)
+        self.assertEqual(self.test_signature, signature)
         self.assertTrue(
             RSASSA_PKCS1_v1_5_verify(
                 self.hash, signature, TEST_KEY_PUBLIC_EXPONENT,

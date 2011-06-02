@@ -30,38 +30,36 @@ class TestParseTagValue(unittest.TestCase):
 
     def test_single(self):
         self.assertEqual(
-            {'foo': 'bar'},
-            parse_tag_value('foo=bar'))
+            {b'foo': b'bar'},
+            parse_tag_value(b'foo=bar'))
 
     def test_trailing_separator_ignored(self):
         self.assertEqual(
-            {'foo': 'bar'},
-            parse_tag_value('foo=bar;'))
+            {b'foo': b'bar'},
+            parse_tag_value(b'foo=bar;'))
 
     def test_multiple(self):
         self.assertEqual(
-            {'foo': 'bar', 'baz': 'foo'},
-            parse_tag_value('foo=bar;baz=foo'))
+            {b'foo': b'bar', b'baz': b'foo'},
+            parse_tag_value(b'foo=bar;baz=foo'))
 
     def test_value_with_equals(self):
         self.assertEqual(
-            {'foo': 'bar', 'baz': 'foo=bar'},
-            parse_tag_value('foo=bar;baz=foo=bar'))
+            {b'foo': b'bar', b'baz': b'foo=bar'},
+            parse_tag_value(b'foo=bar;baz=foo=bar'))
 
     def test_whitespace_is_stripped(self):
         self.assertEqual(
-            {'foo': 'bar', 'baz': 'f oo=bar'},
-            parse_tag_value('   foo  \t= bar;\tbaz=  f oo=bar  '))
+            {b'foo': b'bar', b'baz': b'f oo=bar'},
+            parse_tag_value(b'   foo  \t= bar;\tbaz=  f oo=bar  '))
 
     def test_missing_value_is_an_error(self):
-        self.assertRaisesRegexp(
-            InvalidTagSpec, 'baz',
-            parse_tag_value, 'foo=bar;baz')
+        self.assertRaises(
+            InvalidTagSpec, parse_tag_value, b'foo=bar;baz')
 
     def test_duplicate_tag_is_an_error(self):
-        self.assertRaisesRegexp(
-            DuplicateTag, 'foo',
-            parse_tag_value, 'foo=bar;foo=baz')
+        self.assertRaises(
+            DuplicateTag, parse_tag_value, b'foo=bar;foo=baz')
 
 
 def test_suite():

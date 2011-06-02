@@ -28,20 +28,21 @@ def read_test_data(filename):
     The files live in dkim/tests/data.
     """
     path = os.path.join(os.path.dirname(__file__), 'data', filename)
-    return open(path).read()
+    with open(path, 'rb') as f:
+        return f.read()
 
 
 class TestFold(unittest.TestCase):
 
     def test_short_line(self):
         self.assertEqual(
-            "foo", dkim.fold("foo"))
+            b"foo", dkim.fold(b"foo"))
 
     def DISABLED_test_long_line(self):
         # The function is terribly broken, not passing even this simple
         # test.
         self.assertEqual(
-            "foo"*24 + "\r\n foo", dkim.fold("foo" * 25))
+            b"foo" * 24 + b"\r\n foo", dkim.fold(b"foo" * 25))
 
 
 class TestSignAndVerify(unittest.TestCase):
@@ -53,18 +54,24 @@ class TestSignAndVerify(unittest.TestCase):
 
     def dnsfunc(self, domain):
         self.assertEqual('test._domainkey.example.com.', domain)
-        return read_test_data("test.txt")
+        return read_test_data("test.txt").decode('utf-8')
 
     def test_verifies(self):
         # A message verifies after being signed.
-        sig = dkim.sign(self.message, "test", "example.com", self.key)
+        sig = dkim.sign(self.message, b"test", b"example.com", self.key)
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertTrue(res)
 
     def test_altered_body_fails(self):
         # An altered body fails verification.
-        sig = dkim.sign(self.message, "test", "example.com", self.key)
-        res = dkim.verify(sig + self.message + "foo", dnsfunc=self.dnsfunc)
+        sig = dkim.sign(self.message, b"test", b"example.com", self.key)
+        res = dkim.verify(sig + self.message + b"foo", dnsfunc=self.dnsfunc)
+        self.assertFalse(res)
+
+    def test_badly_encoded_domain_fails(self):
+        # Domains should be ASCII. Bad ASCII causes verification to fail.
+        sig = dkim.sign(self.message, b"test", b"example.com\xe9", self.key)
+        res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertFalse(res)
 
 

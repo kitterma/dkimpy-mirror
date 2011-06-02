@@ -50,25 +50,25 @@ def asn1_parse(template, data):
     @param data: byte string data to parse
     @return: decoded structure
     """
-
+    data = bytearray(data)
     r = []
     i = 0
     for t in template:
-        tag = ord(data[i])
+        tag = data[i]
         i += 1
         if tag == t[0]:
-            length = ord(data[i])
+            length = data[i]
             i += 1
             if length & 0x80:
                 n = length & 0x7f
                 length = 0
                 for j in range(n):
-                    length = (length << 8) | ord(data[i])
+                    length = (length << 8) | data[i]
                     i += 1
             if tag == INTEGER:
                 n = 0
                 for j in range(length):
-                    n = (n << 8) | ord(data[i])
+                    n = (n << 8) | data[i]
                     i += 1
                 r.append(n)
             elif tag == BIT_STRING:
@@ -100,12 +100,19 @@ def asn1_length(n):
     """
     assert n >= 0
     if n < 0x7f:
-        return chr(n)
-    r = ""
+        return bytearray([n])
+    r = bytearray()
     while n > 0:
-        r = chr(n & 0xff) + r
+        r.insert(n & 0xff)
         n >>= 8
     return r
+
+
+def asn1_encode(type, data):
+    length = asn1_length(len(data))
+    length.insert(0, type)
+    length.extend(data)
+    return length
 
 
 def asn1_build(node):
@@ -115,16 +122,16 @@ def asn1_build(node):
     @return: DER-encoded ASN.1 byte string
     """
     if node[0] == OCTET_STRING:
-        return chr(OCTET_STRING) + asn1_length(len(node[1])) + node[1]
+        return asn1_encode(OCTET_STRING, node[1])
     if node[0] == NULL:
         assert node[1] is None
-        return chr(NULL) + asn1_length(0)
+        return asn1_encode(NULL, b'')
     elif node[0] == OBJECT_IDENTIFIER:
-        return chr(OBJECT_IDENTIFIER) + asn1_length(len(node[1])) + node[1]
+        return asn1_encode(OBJECT_IDENTIFIER, node[1])
     elif node[0] == SEQUENCE:
-        r = ""
+        r = bytearray()
         for x in node[1]:
             r += asn1_build(x)
-        return chr(SEQUENCE) + asn1_length(len(r)) + r
+        return asn1_encode(SEQUENCE, r)
     else:
         raise ASN1FormatError("Unexpected tag in template: %02x" % node[0])
