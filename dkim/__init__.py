@@ -430,8 +430,11 @@ def verify(message, logger=None, dnsfunc=dnstxt):
         return False
 
     # dnstxt wants Unicode
-    selector = sig[b's'].decode('ascii')
-    domain = sig[b'd'].decode('ascii')
+    try:
+        selector = sig[b's'].decode('ascii')
+        domain = sig[b'd'].decode('ascii')
+    except UnicodeDecodeError:
+        return False
     name = "%s._domainkey.%s." % (selector, domain)
     s = dnsfunc(name).encode('utf-8')
     if not s:

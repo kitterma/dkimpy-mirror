@@ -42,7 +42,7 @@ class TestFold(unittest.TestCase):
         # The function is terribly broken, not passing even this simple
         # test.
         self.assertEqual(
-            b"foo"*24 + b"\r\n foo", dkim.fold(b"foo" * 25))
+            b"foo" * 24 + b"\r\n foo", dkim.fold(b"foo" * 25))
 
 
 class TestSignAndVerify(unittest.TestCase):
@@ -66,6 +66,12 @@ class TestSignAndVerify(unittest.TestCase):
         # An altered body fails verification.
         sig = dkim.sign(self.message, b"test", b"example.com", self.key)
         res = dkim.verify(sig + self.message + b"foo", dnsfunc=self.dnsfunc)
+        self.assertFalse(res)
+
+    def test_badly_encoded_domain_fails(self):
+        # Domains should be ASCII. Bad ASCII causes verification to fail.
+        sig = dkim.sign(self.message, b"test", b"example.com\xe9", self.key)
+        res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertFalse(res)
 
 
