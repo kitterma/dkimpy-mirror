@@ -65,4 +65,4 @@ def get_txt(name):
         unicode_name = name.decode('ascii')
     except UnicodeDecodeError:
         return None
-    return _get_txt(unicode_name).decode('utf-8')
+    return _get_txt(unicode_name).encode('utf-8')
