@@ -66,7 +66,7 @@ class Relaxed:
         # Compress WSP to single space.
         # Remove all WSP at the start or end of the field value (strip).
         return [
-            (x[0].lower(),
+            (x[0].lower().rstrip(),
              compress_whitespace(unfold_header_value(x[1])).strip() + b"\r\n")
             for x in headers]
 
