@@ -21,6 +21,10 @@
 
 import re
 
+__all__ = [
+    'algorithms',
+    ]
+
 
 def strip_trailing_whitespace(content):
     return re.sub(b"[\t ]+\r\n", b"\r\n", content)
