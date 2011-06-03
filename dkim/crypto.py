@@ -21,6 +21,7 @@
 
 __all__ = [
     'DigestTooLargeError',
+    'HASH_ALGORITHMS',
     'parse_pem_private_key',
     'parse_private_key',
     'parse_public_key',
@@ -30,6 +31,7 @@ __all__ = [
     ]
 
 import base64
+import hashlib
 import re
 
 from dkim.asn1 import (
@@ -76,6 +78,10 @@ ASN1_RSAPrivateKey = [
     ])
 ]
 
+HASH_ALGORITHMS = {
+    b'rsa-sha1': hashlib.sha1,
+    b'rsa-sha256': hashlib.sha256,
+    }
 
 # These values come from RFC 3447, section 9.2 Notes, page 43.
 HASH_ID_MAP = {

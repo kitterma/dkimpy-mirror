@@ -28,6 +28,7 @@ import time
 from dkim.canonicalization import algorithms
 from dkim.crypto import (
     DigestTooLargeError,
+    HASH_ALGORITHMS,
     parse_pem_private_key,
     parse_public_key,
     RSASSA_PKCS1_v1_5_sign,
@@ -202,8 +203,9 @@ def fold(header):
 
 
 def sign(message, selector, domain, privkey, identity=None,
-         canonicalize=(b'simple', b'simple'), include_headers=None, length=False,
-         logger=None):
+         canonicalize=(b'simple', b'simple'),
+         signature_algorithm=b'rsa-sha256',
+         include_headers=None, length=False, logger=None):
     """Sign an RFC822 message and return the DKIM-Signature header line.
 
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
@@ -245,7 +247,7 @@ def sign(message, selector, domain, privkey, identity=None,
 
     sigfields = [x for x in [
         (b'v', b"1"),
-        (b'a', b"rsa-sha256"),
+        (b'a', signature_algorithm),
         (b'c', b"/".join(
             (algorithms[canonicalize[0]].name,
              algorithms[canonicalize[1]].name))),
@@ -335,12 +337,10 @@ def verify(message, logger=None, dnsfunc=get_txt):
     headers = header_algorithm.canonicalize_headers(headers)
     body = body_algorithm.canonicalize_body(body)
 
-    if sig[b'a'] == b"rsa-sha1":
-        hasher = hashlib.sha1
-    elif sig[b'a'] == b"rsa-sha256":
-        hasher = hashlib.sha256
-    else:
-        logger.error("unknown signature algorithm (%s)" % sig[b'a'])
+    try:
+        hasher = HASH_ALGORITHMS[sig[b'a']]
+    except KeyError as e:
+        logger.error("unknown signature algorithm: %s" % e.message)
         return False
 
     if b'l' in sig:
