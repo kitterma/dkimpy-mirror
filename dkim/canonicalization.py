@@ -64,3 +64,6 @@ class Relaxed:
         # Ignore all empty lines at the end of the message body.
         removed_trailing_lines = re.sub(b"(\r\n)*$", b"\r\n", compressed_wsp)
         return removed_trailing_lines
+
+
+algorithms = dict((c.name, c) for c in (Simple, Relaxed))
