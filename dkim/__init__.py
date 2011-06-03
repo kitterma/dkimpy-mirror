@@ -25,14 +25,17 @@ import logging
 import re
 import time
 
+from dkim.canonicalization import algorithms
 from dkim.crypto import (
     DigestTooLargeError,
+    HASH_ALGORITHMS,
     parse_pem_private_key,
     parse_public_key,
     RSASSA_PKCS1_v1_5_sign,
     RSASSA_PKCS1_v1_5_verify,
     UnparsableKeyError,
     )
+from dkim.dns import get_txt
 from dkim.util import (
     get_default_logger,
     InvalidTagValueList,
@@ -40,8 +43,6 @@ from dkim.util import (
     )
 
 __all__ = [
-    "Simple",
-    "Relaxed",
     "InternalError",
     "KeyFormatError",
     "MessageFormatError",
@@ -49,42 +50,6 @@ __all__ = [
     "sign",
     "verify",
 ]
-
-
-class Simple:
-    """Class that represents the "simple" canonicalization algorithm."""
-
-    name = b"simple"
-
-    @staticmethod
-    def canonicalize_headers(headers):
-        # No changes to headers.
-        return headers
-
-    @staticmethod
-    def canonicalize_body(body):
-        # Ignore all empty lines at the end of the message body.
-        return re.sub(b"(\r\n)*$", b"\r\n", body)
-
-class Relaxed:
-    """Class that represents the "relaxed" canonicalization algorithm."""
-
-    name = b"relaxed"
-
-    @staticmethod
-    def canonicalize_headers(headers):
-        # Convert all header field names to lowercase.
-        # Unfold all header lines.
-        # Compress WSP to single space.
-        # Remove all WSP at the start or end of the field value (strip).
-        return [(x[0].lower(), re.sub(br"\s+", b" ", re.sub(b"\r\n", b"", x[1])).strip()+b"\r\n") for x in headers]
-
-    @staticmethod
-    def canonicalize_body(body):
-        # Remove all trailing WSP at end of lines.
-        # Compress non-line-ending WSP to single space.
-        # Ignore all empty lines at the end of the message body.
-        return re.sub(b"(\r\n)*$", b"\r\n", re.sub(br"[\x09\x20]+", b" ", re.sub(b"[\\x09\\x20]+\r\n", b"\r\n", body)))
 
 class DKIMException(Exception):
     """Base class for DKIM errors."""
@@ -217,36 +182,6 @@ def rfc822_parse(message):
 
 
 
-def dnstxt_dnspython(name):
-    """Return a TXT record associated with a DNS name."""
-    a = dns.resolver.query(name, dns.rdatatype.TXT)
-    for r in a.response.answer:
-        if r.rdtype == dns.rdatatype.TXT:
-            return b"".join(r.items[0].strings)
-    return None
-
-
-def dnstxt_pydns(name):
-    """Return a TXT record associated with a DNS name."""
-    # Older pydns releases don't like a trailing dot.
-    if name.endswith('.'):
-        name = name[:-1]
-    DNS.ParseResolvConf()
-    response = DNS.DnsRequest(name, qtype='txt').req()
-    if not response.answers:
-        return None
-    return response.answers[0]['data'][0]
-
-
-# Prefer dnspython if it's there, otherwise use pydns.
-try:
-    import dns.resolver
-    dnstxt = dnstxt_dnspython
-except ImportError:
-    import DNS
-    dnstxt = dnstxt_pydns
-
-
 def fold(header):
     """Fold a header line into multiple crlf-separated lines at column 72."""
     i = header.rfind(b"\r\n ")
@@ -268,8 +203,9 @@ def fold(header):
 
 
 def sign(message, selector, domain, privkey, identity=None,
-         canonicalize=(Simple, Simple), include_headers=None, length=False,
-         logger=None):
+         canonicalize=(b'simple', b'simple'),
+         signature_algorithm=b'rsa-sha256',
+         include_headers=None, length=False, logger=None):
     """Sign an RFC822 message and return the DKIM-Signature header line.
 
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
@@ -295,7 +231,7 @@ def sign(message, selector, domain, privkey, identity=None,
     if identity is not None and not identity.endswith(domain):
         raise ParameterError("identity must end with domain")
 
-    headers = canonicalize[0].canonicalize_headers(headers)
+    headers = algorithms[canonicalize[0]].canonicalize_headers(headers)
 
     if include_headers is None:
         include_headers = [x[0].lower() for x in headers]
@@ -303,7 +239,7 @@ def sign(message, selector, domain, privkey, identity=None,
         include_headers = [x.lower() for x in include_headers]
     sign_headers = [x for x in headers if x[0].lower() in include_headers]
 
-    body = canonicalize[1].canonicalize_body(body)
+    body = algorithms[canonicalize[1]].canonicalize_body(body)
 
     h = hashlib.sha256()
     h.update(body)
@@ -311,8 +247,10 @@ def sign(message, selector, domain, privkey, identity=None,
 
     sigfields = [x for x in [
         (b'v', b"1"),
-        (b'a', b"rsa-sha256"),
-        (b'c', b"/".join((canonicalize[0].name, canonicalize[1].name))),
+        (b'a', signature_algorithm),
+        (b'c', b"/".join(
+            (algorithms[canonicalize[0]].name,
+             algorithms[canonicalize[1]].name))),
         (b'd', domain),
         (b'i', identity or b"@"+domain),
         length and (b'l', len(body)),
@@ -325,7 +263,7 @@ def sign(message, selector, domain, privkey, identity=None,
     ] if x]
 
     sig_value = fold(b"; ".join(b"=".join(x) for x in sigfields))
-    dkim_header = canonicalize[0].canonicalize_headers([
+    dkim_header = algorithms[canonicalize[0]].canonicalize_headers([
         [b'DKIM-Signature', b' ' + sig_value]])[0]
     # the dkim sig is hashed with no trailing crlf, even if the
     # canonicalization algorithm would add one.
@@ -350,7 +288,7 @@ def sign(message, selector, domain, privkey, identity=None,
     return b'DKIM-Signature: ' + sig_value + b"\r\n"
 
 
-def verify(message, logger=None, dnsfunc=dnstxt):
+def verify(message, logger=None, dnsfunc=get_txt):
     """Verify a DKIM signature on an RFC822 formatted message.
 
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
@@ -390,30 +328,19 @@ def verify(message, logger=None, dnsfunc=dnstxt):
     else:
         can_body = b"simple"
 
-    if can_headers == b"simple":
-        canonicalize_headers = Simple
-    elif can_headers == b"relaxed":
-        canonicalize_headers = Relaxed
-    else:
-        logger.error("unknown header canonicalization (%s)" % can_headers)
+    try:
+        header_algorithm = algorithms[can_headers]
+        body_algorithm = algorithms[can_body]
+    except KeyError as e:
+        logger.error("unknown canonicalization algorithm: %s" % e.message)
         return False
+    headers = header_algorithm.canonicalize_headers(headers)
+    body = body_algorithm.canonicalize_body(body)
 
-    headers = canonicalize_headers.canonicalize_headers(headers)
-
-    if can_body == b"simple":
-        body = Simple.canonicalize_body(body)
-    elif can_body == b"relaxed":
-        body = Relaxed.canonicalize_body(body)
-    else:
-        logger.error("unknown body canonicalization (%s)" % can_body)
-        return False
-
-    if sig[b'a'] == b"rsa-sha1":
-        hasher = hashlib.sha1
-    elif sig[b'a'] == b"rsa-sha256":
-        hasher = hashlib.sha256
-    else:
-        logger.error("unknown signature algorithm (%s)" % sig[b'a'])
+    try:
+        hasher = HASH_ALGORITHMS[sig[b'a']]
+    except KeyError as e:
+        logger.error("unknown signature algorithm: %s" % e.message)
         return False
 
     if b'l' in sig:
@@ -429,14 +356,8 @@ def verify(message, logger=None, dnsfunc=dnstxt):
             (base64.b64encode(bodyhash), sig[b'bh']))
         return False
 
-    # dnstxt wants Unicode
-    try:
-        selector = sig[b's'].decode('ascii')
-        domain = sig[b'd'].decode('ascii')
-    except UnicodeDecodeError:
-        return False
-    name = "%s._domainkey.%s." % (selector, domain)
-    s = dnsfunc(name).encode('utf-8')
+    name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
+    s = dnsfunc(name)
     if not s:
         return False
     try:
@@ -452,7 +373,7 @@ def verify(message, logger=None, dnsfunc=dnstxt):
     include_headers = re.split(br"\s*:\s*", sig[b'h'])
     h = hasher()
     hash_headers(
-        h, canonicalize_headers, headers, include_headers, sigheaders, sig)
+        h, header_algorithm, headers, include_headers, sigheaders, sig)
     signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
     try:
         return RSASSA_PKCS1_v1_5_verify(

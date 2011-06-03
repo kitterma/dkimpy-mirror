@@ -21,11 +21,13 @@ import unittest
 
 def test_suite():
     from dkim.tests import (
+        test_canonicalization,
         test_crypto,
         test_dkim,
         test_util,
         )
     modules = [
+        test_canonicalization,
         test_crypto,
         test_dkim,
         test_util,
