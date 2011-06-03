@@ -21,61 +21,77 @@ import unittest
 from dkim.canonicalization import Simple, Relaxed
 
 
-class TestSimpleAlgorithm(unittest.TestCase):
+class BaseCanonicalizationTest(unittest.TestCase):
 
-    def test_headers_untouched(self):
+    def assertCanonicalForm(self, expected, input):
+        self.assertEqual(expected, self.func(expected))
+        self.assertEqual(expected, self.func(input))
+
+
+class TestSimpleAlgorithmHeaders(BaseCanonicalizationTest):
+
+    func = staticmethod(Simple.canonicalize_headers)
+
+    def test_untouched(self):
         test_headers = [(b'Foo  ', b'bar\r\n'), (b'Foo', b'baz\r\n')]
-        self.assertEqual(
+        self.assertCanonicalForm(
             test_headers,
-            Simple.canonicalize_headers(test_headers))
+            test_headers)
+
+
+class TestSimpleAlgorithmBody(BaseCanonicalizationTest):
+
+    func = staticmethod(Simple.canonicalize_body)
 
     def test_strips_trailing_empty_lines_from_body(self):
-        self.assertEqual(
+        self.assertCanonicalForm(
             b'Foo  \tbar    \r\n',
-            Simple.canonicalize_body(
-                b'Foo  \tbar    \r\n\r\n'))
+            b'Foo  \tbar    \r\n\r\n')
 
 
-class TestRelaxedAlgorithm(unittest.TestCase):
+class TestRelaxedAlgorithmHeaders(BaseCanonicalizationTest):
 
-    def test_lowercases_headers(self):
-        self.assertEqual(
+    func = staticmethod(Relaxed.canonicalize_headers)
+
+    def test_lowercases_names(self):
+        self.assertCanonicalForm(
             [(b'foo', b'Bar\r\n'), (b'baz', b'Foo\r\n')],
-            Relaxed.canonicalize_headers(
-                [(b'Foo', b'Bar\r\n'), (b'BaZ', b'Foo\r\n')]))
+            [(b'Foo', b'Bar\r\n'), (b'BaZ', b'Foo\r\n')])
 
-    def test_unfolds_headers(self):
-        self.assertEqual(
+    def test_unfolds_values(self):
+        self.assertCanonicalForm(
             [(b'foo', b'Bar baz\r\n')],
-            Relaxed.canonicalize_headers(
-                [(b'Foo', b'Bar\r\n baz\r\n')]))
+            [(b'Foo', b'Bar\r\n baz\r\n')])
 
-    def test_wsp_compresses_headers(self):
-        self.assertEqual(
+    def test_wsp_compresses_values(self):
+        self.assertCanonicalForm(
             [(b'foo', b'Bar baz\r\n')],
-            Relaxed.canonicalize_headers(
-                [(b'Foo', b'Bar \t baz\r\n')]))
+            [(b'Foo', b'Bar \t baz\r\n')])
 
-    def test_wsp_strips_headers(self):
-        self.assertEqual(
+    def test_wsp_strips(self):
+        self.assertCanonicalForm(
             [(b'foo', b'Bar baz\r\n')],
-            Relaxed.canonicalize_headers(
-                [(b'Foo  ', b'   Bar \t baz   \r\n')]))
+            [(b'Foo  ', b'   Bar \t baz   \r\n')])
 
-    def test_strips_trailing_wsp_from_body(self):
-        self.assertEqual(
+
+class TestRelaxedAlgorithmBody(BaseCanonicalizationTest):
+
+    func = staticmethod(Relaxed.canonicalize_body)
+
+    def test_strips_trailing_wsp(self):
+        self.assertCanonicalForm(
             b'Foo\r\nbar\r\n',
-            Relaxed.canonicalize_body(b'Foo  \t\r\nbar\r\n'))
+            b'Foo  \t\r\nbar\r\n')
 
-    def test_wsp_compresses_body(self):
-        self.assertEqual(
+    def test_wsp_compresses(self):
+        self.assertCanonicalForm(
             b'Foo bar\r\n',
-            Relaxed.canonicalize_body(b'Foo  \t  bar\r\n'))
+            b'Foo  \t  bar\r\n')
 
-    def test_strips_trailing_empty_lines_from_body(self):
-        self.assertEqual(
+    def test_strips_trailing_empty_lines(self):
+        self.assertCanonicalForm(
             b'Foo\r\nbar\r\n',
-            Relaxed.canonicalize_body(b'Foo\r\nbar\r\n\r\n\r\n'))
+            b'Foo\r\nbar\r\n\r\n\r\n')
 
 
 def test_suite():
