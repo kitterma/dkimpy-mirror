@@ -49,7 +49,20 @@ def get_txt_pydns(name):
 # Prefer dnspython if it's there, otherwise use pydns.
 try:
     import dns.resolver
-    get_txt = get_txt_dnspython
+    _get_txt = get_txt_dnspython
 except ImportError:
     import DNS
-    get_txt = get_txt_pydns
+    _get_txt = get_txt_pydns
+
+
+def get_txt(name):
+    """Return a TXT record associated with a DNS name.
+
+    @param name: The bytestring domain name to look up.
+    """
+    # pydns needs Unicode, but DKIM's d= is ASCII (already punycoded).
+    try:
+        unicode_name = name.decode('ascii')
+    except UnicodeDecodeError:
+        return None
+    return _get_txt(unicode_name).decode('utf-8')

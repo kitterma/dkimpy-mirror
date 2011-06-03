@@ -53,8 +53,12 @@ class TestSignAndVerify(unittest.TestCase):
         self.key = read_test_data("test.private")
 
     def dnsfunc(self, domain):
+        try:
+            domain = domain.decode('ascii')
+        except UnicodeDecodeError:
+            return None
         self.assertEqual('test._domainkey.example.com.', domain)
-        return read_test_data("test.txt").decode('utf-8')
+        return read_test_data("test.txt")
 
     def test_verifies(self):
         # A message verifies after being signed.

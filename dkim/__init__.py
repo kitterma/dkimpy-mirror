@@ -356,14 +356,8 @@ def verify(message, logger=None, dnsfunc=get_txt):
             (base64.b64encode(bodyhash), sig[b'bh']))
         return False
 
-    # dnstxt wants Unicode
-    try:
-        selector = sig[b's'].decode('ascii')
-        domain = sig[b'd'].decode('ascii')
-    except UnicodeDecodeError:
-        return False
-    name = "%s._domainkey.%s." % (selector, domain)
-    s = dnsfunc(name).encode('utf-8')
+    name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
+    s = dnsfunc(name)
     if not s:
         return False
     try:
