@@ -22,6 +22,22 @@
 import re
 
 
+def strip_trailing_whitespace(content):
+    return re.sub(b"[\t ]+\r\n", b"\r\n", content)
+
+
+def compress_whitespace(content):
+    return re.sub(b"[\t ]+", b" ", content)
+
+
+def strip_trailing_lines(content):
+    return re.sub(b"(\r\n)*$", b"\r\n", content)
+
+
+def unfold_header_value(content):
+    return re.sub(b"\r\n", b"", content)
+
+
 class Simple:
     """Class that represents the "simple" canonicalization algorithm."""
 
@@ -35,7 +51,7 @@ class Simple:
     @staticmethod
     def canonicalize_body(body):
         # Ignore all empty lines at the end of the message body.
-        return re.sub(b"(\r\n)*$", b"\r\n", body)
+        return strip_trailing_lines(body)
 
 
 class Relaxed:
@@ -51,19 +67,16 @@ class Relaxed:
         # Remove all WSP at the start or end of the field value (strip).
         return [
             (x[0].lower(),
-             re.sub(br"\s+", b" ", re.sub(b"\r\n", b"", x[1])).strip()
-             + b"\r\n")
+             compress_whitespace(unfold_header_value(x[1])).strip() + b"\r\n")
             for x in headers]
 
     @staticmethod
     def canonicalize_body(body):
         # Remove all trailing WSP at end of lines.
-        removed_trailing_wsp = re.sub(b"[\\x09\\x20]+\r\n", b"\r\n", body)
         # Compress non-line-ending WSP to single space.
-        compressed_wsp = re.sub(br"[\x09\x20]+", b" ", removed_trailing_wsp)
         # Ignore all empty lines at the end of the message body.
-        removed_trailing_lines = re.sub(b"(\r\n)*$", b"\r\n", compressed_wsp)
-        return removed_trailing_lines
+        return strip_trailing_lines(
+            compress_whitespace(strip_trailing_whitespace(body)))
 
 
 algorithms = dict((c.name, c) for c in (Simple, Relaxed))
