@@ -25,6 +25,10 @@ import logging
 import re
 import time
 
+from dkim.canonicalization import (
+    Relaxed,
+    Simple,
+    )
 from dkim.crypto import (
     DigestTooLargeError,
     parse_pem_private_key,
@@ -40,8 +44,6 @@ from dkim.util import (
     )
 
 __all__ = [
-    "Simple",
-    "Relaxed",
     "InternalError",
     "KeyFormatError",
     "MessageFormatError",
@@ -49,42 +51,6 @@ __all__ = [
     "sign",
     "verify",
 ]
-
-
-class Simple:
-    """Class that represents the "simple" canonicalization algorithm."""
-
-    name = b"simple"
-
-    @staticmethod
-    def canonicalize_headers(headers):
-        # No changes to headers.
-        return headers
-
-    @staticmethod
-    def canonicalize_body(body):
-        # Ignore all empty lines at the end of the message body.
-        return re.sub(b"(\r\n)*$", b"\r\n", body)
-
-class Relaxed:
-    """Class that represents the "relaxed" canonicalization algorithm."""
-
-    name = b"relaxed"
-
-    @staticmethod
-    def canonicalize_headers(headers):
-        # Convert all header field names to lowercase.
-        # Unfold all header lines.
-        # Compress WSP to single space.
-        # Remove all WSP at the start or end of the field value (strip).
-        return [(x[0].lower(), re.sub(br"\s+", b" ", re.sub(b"\r\n", b"", x[1])).strip()+b"\r\n") for x in headers]
-
-    @staticmethod
-    def canonicalize_body(body):
-        # Remove all trailing WSP at end of lines.
-        # Compress non-line-ending WSP to single space.
-        # Ignore all empty lines at the end of the message body.
-        return re.sub(b"(\r\n)*$", b"\r\n", re.sub(br"[\x09\x20]+", b" ", re.sub(b"[\\x09\\x20]+\r\n", b"\r\n", body)))
 
 class DKIMException(Exception):
     """Base class for DKIM errors."""
