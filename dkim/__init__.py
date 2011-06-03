@@ -34,6 +34,7 @@ from dkim.crypto import (
     RSASSA_PKCS1_v1_5_verify,
     UnparsableKeyError,
     )
+from dkim.dns import get_txt
 from dkim.util import (
     get_default_logger,
     InvalidTagValueList,
@@ -180,36 +181,6 @@ def rfc822_parse(message):
 
 
 
-def dnstxt_dnspython(name):
-    """Return a TXT record associated with a DNS name."""
-    a = dns.resolver.query(name, dns.rdatatype.TXT)
-    for r in a.response.answer:
-        if r.rdtype == dns.rdatatype.TXT:
-            return b"".join(r.items[0].strings)
-    return None
-
-
-def dnstxt_pydns(name):
-    """Return a TXT record associated with a DNS name."""
-    # Older pydns releases don't like a trailing dot.
-    if name.endswith('.'):
-        name = name[:-1]
-    DNS.ParseResolvConf()
-    response = DNS.DnsRequest(name, qtype='txt').req()
-    if not response.answers:
-        return None
-    return response.answers[0]['data'][0]
-
-
-# Prefer dnspython if it's there, otherwise use pydns.
-try:
-    import dns.resolver
-    dnstxt = dnstxt_dnspython
-except ImportError:
-    import DNS
-    dnstxt = dnstxt_pydns
-
-
 def fold(header):
     """Fold a header line into multiple crlf-separated lines at column 72."""
     i = header.rfind(b"\r\n ")
@@ -315,7 +286,7 @@ def sign(message, selector, domain, privkey, identity=None,
     return b'DKIM-Signature: ' + sig_value + b"\r\n"
 
 
-def verify(message, logger=None, dnsfunc=dnstxt):
+def verify(message, logger=None, dnsfunc=get_txt):
     """Verify a DKIM signature on an RFC822 formatted message.
 
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
