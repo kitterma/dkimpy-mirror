@@ -25,10 +25,7 @@ import logging
 import re
 import time
 
-from dkim.canonicalization import (
-    algorithms,
-    CanonicalizationPolicy,
-    )
+from dkim.canonicalization import CanonicalizationPolicy
 from dkim.crypto import (
     DigestTooLargeError,
     HASH_ALGORITHMS,
@@ -234,7 +231,9 @@ def sign(message, selector, domain, privkey, identity=None,
     if identity is not None and not identity.endswith(domain):
         raise ParameterError("identity must end with domain")
 
-    headers = algorithms[canonicalize[0]].canonicalize_headers(headers)
+    canon_policy = CanonicalizationPolicy.from_c_value(
+        b'/'.join(canonicalize))
+    headers = canon_policy.canonicalize_headers(headers)
 
     if include_headers is None:
         include_headers = [x[0].lower() for x in headers]
@@ -242,7 +241,7 @@ def sign(message, selector, domain, privkey, identity=None,
         include_headers = [x.lower() for x in include_headers]
     sign_headers = [x for x in headers if x[0].lower() in include_headers]
 
-    body = algorithms[canonicalize[1]].canonicalize_body(body)
+    body = canon_policy.canonicalize_body(body)
 
     h = hashlib.sha256()
     h.update(body)
@@ -251,9 +250,7 @@ def sign(message, selector, domain, privkey, identity=None,
     sigfields = [x for x in [
         (b'v', b"1"),
         (b'a', signature_algorithm),
-        (b'c', b"/".join(
-            (algorithms[canonicalize[0]].name,
-             algorithms[canonicalize[1]].name))),
+        (b'c', canon_policy.to_c_value()),
         (b'd', domain),
         (b'i', identity or b"@"+domain),
         length and (b'l', len(body)),
@@ -266,7 +263,7 @@ def sign(message, selector, domain, privkey, identity=None,
     ] if x]
 
     sig_value = fold(b"; ".join(b"=".join(x) for x in sigfields))
-    dkim_header = algorithms[canonicalize[0]].canonicalize_headers([
+    dkim_header = canon_policy.canonicalize_headers([
         [b'DKIM-Signature', b' ' + sig_value]])[0]
     # the dkim sig is hashed with no trailing crlf, even if the
     # canonicalization algorithm would add one.
