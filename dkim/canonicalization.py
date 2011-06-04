@@ -22,7 +22,7 @@
 import re
 
 __all__ = [
-    'algorithms',
+    'CanonicalizationPolicy',
     ]
 
 
@@ -83,4 +83,50 @@ class Relaxed:
             compress_whitespace(strip_trailing_whitespace(body)))
 
 
-algorithms = dict((c.name, c) for c in (Simple, Relaxed))
+class CanonicalizationPolicy:
+
+    def __init__(self, header_algorithm, body_algorithm):
+        self.header_algorithm = header_algorithm
+        self.body_algorithm = body_algorithm
+
+    @classmethod
+    def from_c_value(cls, c, logger=None):
+        """Construct the canonicalization policy described by a c= value.
+
+        @param c: c= value from a DKIM-Signature header field
+        @return: a C{CanonicalizationPolicy}, or C{None} if the value is
+            invalid
+        """
+        if c is None:
+            c = b'simple/simple'
+        m = c.split(b'/')
+        if len(m) not in (1, 2):
+            if logger:
+                logger.error(
+                    "c= value is not in format method/method: %s" % c)
+            return None
+        if len(m) == 1:
+            m.append(b'simple')
+        can_headers, can_body = m
+        try:
+            header_algorithm = ALGORITHMS[can_headers]
+            body_algorithm = ALGORITHMS[can_body]
+        except KeyError as e:
+            if logger:
+                logger.error(
+                    "unknown canonicalization algorithm: %s" % e.message)
+            return None
+        return cls(header_algorithm, body_algorithm)
+
+    def to_c_value(self):
+        return b'/'.join(
+            (self.header_algorithm.name, self.body_algorithm.name))
+
+    def canonicalize_headers(self, headers):
+        return self.header_algorithm.canonicalize_headers(headers)
+
+    def canonicalize_body(self, body):
+        return self.body_algorithm.canonicalize_body(body)
+
+
+ALGORITHMS = dict((c.name, c) for c in (Simple, Relaxed))

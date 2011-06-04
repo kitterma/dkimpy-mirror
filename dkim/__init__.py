@@ -25,7 +25,7 @@ import logging
 import re
 import time
 
-from dkim.canonicalization import algorithms
+from dkim.canonicalization import CanonicalizationPolicy
 from dkim.crypto import (
     DigestTooLargeError,
     HASH_ALGORITHMS,
@@ -231,7 +231,9 @@ def sign(message, selector, domain, privkey, identity=None,
     if identity is not None and not identity.endswith(domain):
         raise ParameterError("identity must end with domain")
 
-    headers = algorithms[canonicalize[0]].canonicalize_headers(headers)
+    canon_policy = CanonicalizationPolicy.from_c_value(
+        b'/'.join(canonicalize))
+    headers = canon_policy.canonicalize_headers(headers)
 
     if include_headers is None:
         include_headers = [x[0].lower() for x in headers]
@@ -239,7 +241,7 @@ def sign(message, selector, domain, privkey, identity=None,
         include_headers = [x.lower() for x in include_headers]
     sign_headers = [x for x in headers if x[0].lower() in include_headers]
 
-    body = algorithms[canonicalize[1]].canonicalize_body(body)
+    body = canon_policy.canonicalize_body(body)
 
     h = hashlib.sha256()
     h.update(body)
@@ -248,9 +250,7 @@ def sign(message, selector, domain, privkey, identity=None,
     sigfields = [x for x in [
         (b'v', b"1"),
         (b'a', signature_algorithm),
-        (b'c', b"/".join(
-            (algorithms[canonicalize[0]].name,
-             algorithms[canonicalize[1]].name))),
+        (b'c', canon_policy.to_c_value()),
         (b'd', domain),
         (b'i', identity or b"@"+domain),
         length and (b'l', len(body)),
@@ -263,7 +263,7 @@ def sign(message, selector, domain, privkey, identity=None,
     ] if x]
 
     sig_value = fold(b"; ".join(b"=".join(x) for x in sigfields))
-    dkim_header = algorithms[canonicalize[0]].canonicalize_headers([
+    dkim_header = canon_policy.canonicalize_headers([
         [b'DKIM-Signature', b' ' + sig_value]])[0]
     # the dkim sig is hashed with no trailing crlf, even if the
     # canonicalization algorithm would add one.
@@ -317,25 +317,11 @@ def verify(message, logger=None, dnsfunc=get_txt):
         logger.error("signature fields failed to validate: %s" % e)
         return False
 
-    m = re.match(b"(\w+)(?:/(\w+))?$", sig[b'c'])
-    if m is None:
-        logger.error(
-            "c= value is not in format method/method (%s)" % sig[b'c'])
+    canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c'), logger)
+    if canon_policy is None:
         return False
-    can_headers = m.group(1)
-    if m.group(2) is not None:
-        can_body = m.group(2)
-    else:
-        can_body = b"simple"
-
-    try:
-        header_algorithm = algorithms[can_headers]
-        body_algorithm = algorithms[can_body]
-    except KeyError as e:
-        logger.error("unknown canonicalization algorithm: %s" % e.message)
-        return False
-    headers = header_algorithm.canonicalize_headers(headers)
-    body = body_algorithm.canonicalize_body(body)
+    headers = canon_policy.canonicalize_headers(headers)
+    body = canon_policy.canonicalize_body(body)
 
     try:
         hasher = HASH_ALGORITHMS[sig[b'a']]
@@ -372,8 +358,7 @@ def verify(message, logger=None, dnsfunc=get_txt):
 
     include_headers = re.split(br"\s*:\s*", sig[b'h'])
     h = hasher()
-    hash_headers(
-        h, header_algorithm, headers, include_headers, sigheaders, sig)
+    hash_headers(h, canon_policy, headers, include_headers, sigheaders, sig)
     signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
     try:
         return RSASSA_PKCS1_v1_5_verify(
