@@ -62,15 +62,23 @@ class TestSignAndVerify(unittest.TestCase):
 
     def test_verifies(self):
         # A message verifies after being signed.
-        sig = dkim.sign(self.message, b"test", b"example.com", self.key)
-        res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
-        self.assertTrue(res)
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message, b"test", b"example.com", self.key,
+                    canonicalize=(header_algo, body_algo))
+                res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+                self.assertTrue(res)
 
     def test_altered_body_fails(self):
         # An altered body fails verification.
-        sig = dkim.sign(self.message, b"test", b"example.com", self.key)
-        res = dkim.verify(sig + self.message + b"foo", dnsfunc=self.dnsfunc)
-        self.assertFalse(res)
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message, b"test", b"example.com", self.key)
+                res = dkim.verify(
+                    sig + self.message + b"foo", dnsfunc=self.dnsfunc)
+                self.assertFalse(res)
 
     def test_badly_encoded_domain_fails(self):
         # Domains should be ASCII. Bad ASCII causes verification to fail.
