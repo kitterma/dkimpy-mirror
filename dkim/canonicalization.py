@@ -23,6 +23,7 @@ import re
 
 __all__ = [
     'algorithms',
+    'CanonicalizationPolicy',
     ]
 
 
@@ -81,6 +82,19 @@ class Relaxed:
         # Ignore all empty lines at the end of the message body.
         return strip_trailing_lines(
             compress_whitespace(strip_trailing_whitespace(body)))
+
+
+class CanonicalizationPolicy:
+
+    def __init__(self, header_algorithm, body_algorithm):
+        self.header_algorithm = header_algorithm
+        self.body_algorithm = body_algorithm
+
+    def canonicalize_headers(self, headers):
+        return self.header_algorithm.canonicalize_headers(headers)
+
+    def canonicalize_body(self, body):
+        return self.body_algorithm.canonicalize_body(body)
 
 
 algorithms = dict((c.name, c) for c in (Simple, Relaxed))

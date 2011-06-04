@@ -25,7 +25,10 @@ import logging
 import re
 import time
 
-from dkim.canonicalization import algorithms
+from dkim.canonicalization import (
+    algorithms,
+    CanonicalizationPolicy,
+    )
 from dkim.crypto import (
     DigestTooLargeError,
     HASH_ALGORITHMS,
@@ -334,8 +337,9 @@ def verify(message, logger=None, dnsfunc=get_txt):
     except KeyError as e:
         logger.error("unknown canonicalization algorithm: %s" % e.message)
         return False
-    headers = header_algorithm.canonicalize_headers(headers)
-    body = body_algorithm.canonicalize_body(body)
+    canon_policy = CanonicalizationPolicy(header_algorithm, body_algorithm)
+    headers = canon_policy.canonicalize_headers(headers)
+    body = canon_policy.canonicalize_body(body)
 
     try:
         hasher = HASH_ALGORITHMS[sig[b'a']]
