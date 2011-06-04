@@ -22,7 +22,6 @@
 import re
 
 __all__ = [
-    'algorithms',
     'CanonicalizationPolicy',
     ]
 
@@ -110,8 +109,8 @@ class CanonicalizationPolicy:
             m.append(b'simple')
         can_headers, can_body = m
         try:
-            header_algorithm = algorithms[can_headers]
-            body_algorithm = algorithms[can_body]
+            header_algorithm = ALGORITHMS[can_headers]
+            body_algorithm = ALGORITHMS[can_body]
         except KeyError as e:
             if logger:
                 logger.error(
@@ -130,4 +129,4 @@ class CanonicalizationPolicy:
         return self.body_algorithm.canonicalize_body(body)
 
 
-algorithms = dict((c.name, c) for c in (Simple, Relaxed))
+ALGORITHMS = dict((c.name, c) for c in (Simple, Relaxed))
