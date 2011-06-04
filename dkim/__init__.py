@@ -25,7 +25,10 @@ import logging
 import re
 import time
 
-from dkim.canonicalization import CanonicalizationPolicy
+from dkim.canonicalization import (
+    CanonicalizationPolicy,
+    InvalidCanonicalizationPolicyError,
+    )
 from dkim.crypto import (
     DigestTooLargeError,
     HASH_ALGORITHMS,
@@ -317,8 +320,10 @@ def verify(message, logger=None, dnsfunc=get_txt):
         logger.error("signature fields failed to validate: %s" % e)
         return False
 
-    canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c'), logger)
-    if canon_policy is None:
+    try:
+        canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c'))
+    except InvalidCanonicalizationPolicyError as e:
+        logger.error("invalid c= value: %s" % e.args[0])
         return False
     headers = canon_policy.canonicalize_headers(headers)
     body = canon_policy.canonicalize_body(body)
@@ -326,7 +331,7 @@ def verify(message, logger=None, dnsfunc=get_txt):
     try:
         hasher = HASH_ALGORITHMS[sig[b'a']]
     except KeyError as e:
-        logger.error("unknown signature algorithm: %s" % e.message)
+        logger.error("unknown signature algorithm: %s" % e.args[0])
         return False
 
     if b'l' in sig:

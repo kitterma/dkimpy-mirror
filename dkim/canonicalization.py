@@ -23,7 +23,13 @@ import re
 
 __all__ = [
     'CanonicalizationPolicy',
+    'InvalidCanonicalizationPolicyError',
     ]
+
+
+class InvalidCanonicalizationPolicyError(Exception):
+    """The c= value could not be parsed."""
+    pass
 
 
 def strip_trailing_whitespace(content):
@@ -90,21 +96,20 @@ class CanonicalizationPolicy:
         self.body_algorithm = body_algorithm
 
     @classmethod
-    def from_c_value(cls, c, logger=None):
+    def from_c_value(cls, c):
         """Construct the canonicalization policy described by a c= value.
 
+        May raise an C{InvalidCanonicalizationPolicyError} if the given
+        value is invalid
+
         @param c: c= value from a DKIM-Signature header field
-        @return: a C{CanonicalizationPolicy}, or C{None} if the value is
-            invalid
+        @return: a C{CanonicalizationPolicy}
         """
         if c is None:
             c = b'simple/simple'
         m = c.split(b'/')
         if len(m) not in (1, 2):
-            if logger:
-                logger.error(
-                    "c= value is not in format method/method: %s" % c)
-            return None
+            raise InvalidCanonicalizationPolicyError(c)
         if len(m) == 1:
             m.append(b'simple')
         can_headers, can_body = m
@@ -112,10 +117,7 @@ class CanonicalizationPolicy:
             header_algorithm = ALGORITHMS[can_headers]
             body_algorithm = ALGORITHMS[can_body]
         except KeyError as e:
-            if logger:
-                logger.error(
-                    "unknown canonicalization algorithm: %s" % e.message)
-            return None
+            raise InvalidCanonicalizationPolicyError(e.args[0])
         return cls(header_algorithm, body_algorithm)
 
     def to_c_value(self):

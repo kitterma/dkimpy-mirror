@@ -20,6 +20,7 @@ import unittest
 
 from dkim.canonicalization import (
     CanonicalizationPolicy,
+    InvalidCanonicalizationPolicyError,
     Simple,
     Relaxed,
     )
@@ -107,7 +108,9 @@ class TestCanonicalizationPolicyFromCValue(unittest.TestCase):
             (p.header_algorithm, p.body_algorithm))
 
     def assertValueDoesNotParse(self, c_value):
-        self.assertIs(None, CanonicalizationPolicy.from_c_value(c_value))
+        self.assertRaises(
+            InvalidCanonicalizationPolicyError,
+            CanonicalizationPolicy.from_c_value, c_value)
 
     def test_both_default_to_simple(self):
         self.assertAlgorithms(Simple, Simple, None)
@@ -131,7 +134,7 @@ class TestCanonicalizationPolicyFromCValue(unittest.TestCase):
         self.assertValueDoesNotParse(b'worried')
 
 
-class TestCanonicalizationpolicyToCValue(unittest.TestCase):
+class TestCanonicalizationPolicyToCValue(unittest.TestCase):
 
     def assertCValue(self, c_value, header_algo, body_algo):
         self.assertEqual(
