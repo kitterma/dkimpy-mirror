@@ -320,24 +320,9 @@ def verify(message, logger=None, dnsfunc=get_txt):
         logger.error("signature fields failed to validate: %s" % e)
         return False
 
-    m = re.match(b"(\w+)(?:/(\w+))?$", sig[b'c'])
-    if m is None:
-        logger.error(
-            "c= value is not in format method/method (%s)" % sig[b'c'])
+    canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c'), logger)
+    if canon_policy is None:
         return False
-    can_headers = m.group(1)
-    if m.group(2) is not None:
-        can_body = m.group(2)
-    else:
-        can_body = b"simple"
-
-    try:
-        header_algorithm = algorithms[can_headers]
-        body_algorithm = algorithms[can_body]
-    except KeyError as e:
-        logger.error("unknown canonicalization algorithm: %s" % e.message)
-        return False
-    canon_policy = CanonicalizationPolicy(header_algorithm, body_algorithm)
     headers = canon_policy.canonicalize_headers(headers)
     body = canon_policy.canonicalize_body(body)
 
@@ -376,8 +361,7 @@ def verify(message, logger=None, dnsfunc=get_txt):
 
     include_headers = re.split(br"\s*:\s*", sig[b'h'])
     h = hasher()
-    hash_headers(
-        h, header_algorithm, headers, include_headers, sigheaders, sig)
+    hash_headers(h, canon_policy, headers, include_headers, sigheaders, sig)
     signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
     try:
         return RSASSA_PKCS1_v1_5_verify(

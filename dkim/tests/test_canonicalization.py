@@ -18,7 +18,11 @@
 
 import unittest
 
-from dkim.canonicalization import Simple, Relaxed
+from dkim.canonicalization import (
+    CanonicalizationPolicy,
+    Simple,
+    Relaxed,
+    )
 
 
 class BaseCanonicalizationTest(unittest.TestCase):
@@ -92,6 +96,39 @@ class TestRelaxedAlgorithmBody(BaseCanonicalizationTest):
         self.assertCanonicalForm(
             b'Foo\r\nbar\r\n',
             b'Foo\r\nbar\r\n\r\n\r\n')
+
+
+class TestCanonicalizationPolicyFromCValue(unittest.TestCase):
+
+    def assertAlgorithms(self, header_algo, body_algo, c_value):
+        p = CanonicalizationPolicy.from_c_value(c_value)
+        self.assertEqual(
+            (header_algo, body_algo),
+            (p.header_algorithm, p.body_algorithm))
+
+    def assertValueDoesNotParse(self, c_value):
+        self.assertIs(None, CanonicalizationPolicy.from_c_value(c_value))
+
+    def test_both_default_to_simple(self):
+        self.assertAlgorithms(Simple, Simple, None)
+
+    def test_relaxed_headers(self):
+        self.assertAlgorithms(Relaxed, Simple, b'relaxed')
+
+    def test_relaxed_body(self):
+        self.assertAlgorithms(Simple, Relaxed, b'simple/relaxed')
+
+    def test_relaxed_both(self):
+        self.assertAlgorithms(Relaxed, Relaxed, b'relaxed/relaxed')
+
+    def test_explict_simple_both(self):
+        self.assertAlgorithms(Simple, Simple, b'simple/simple')
+
+    def test_corruption_is_ignored(self):
+        self.assertValueDoesNotParse(b'')
+        self.assertValueDoesNotParse(b'simple/simple/simple')
+        self.assertValueDoesNotParse(b'relaxed/stressed')
+        self.assertValueDoesNotParse(b'worried')
 
 
 def test_suite():
