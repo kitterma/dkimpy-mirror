@@ -119,6 +119,10 @@ class CanonicalizationPolicy:
             return None
         return cls(header_algorithm, body_algorithm)
 
+    def to_c_value(self):
+        return b'/'.join(
+            (self.header_algorithm.name, self.body_algorithm.name))
+
     def canonicalize_headers(self, headers):
         return self.header_algorithm.canonicalize_headers(headers)
 

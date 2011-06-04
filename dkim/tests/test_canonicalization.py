@@ -131,6 +131,26 @@ class TestCanonicalizationPolicyFromCValue(unittest.TestCase):
         self.assertValueDoesNotParse(b'worried')
 
 
+class TestCanonicalizationpolicyToCValue(unittest.TestCase):
+
+    def assertCValue(self, c_value, header_algo, body_algo):
+        self.assertEqual(
+            c_value,
+            CanonicalizationPolicy(header_algo, body_algo).to_c_value())
+
+    def test_both_simple(self):
+        self.assertCValue(b'simple/simple', Simple, Simple)
+
+    def test_relaxed_body(self):
+        self.assertCValue(b'simple/relaxed', Simple, Relaxed)
+
+    def test_both_relaxed(self):
+        self.assertCValue(b'relaxed/relaxed', Relaxed, Relaxed)
+
+    def test_relaxed_headers(self):
+        self.assertCValue(b'relaxed/simple', Relaxed, Simple)
+
+
 def test_suite():
     from unittest import TestLoader
     return TestLoader().loadTestsFromName(__name__)
