@@ -46,6 +46,7 @@ from dkim.util import (
     )
 
 __all__ = [
+    "DKIMException",
     "InternalError",
     "KeyFormatError",
     "MessageFormatError",
