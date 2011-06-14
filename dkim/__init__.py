@@ -296,10 +296,10 @@ class DKIM(object):
         return False
 
     # Currently, we only validate the first DKIM-Signature line found.
-    try:
-        sig = parse_tag_value(sigheaders[0][1])
-    except InvalidTagValueList,e:
-        raise MessageFormatError(e)
+    #try:
+    sig = parse_tag_value(sigheaders[0][1])
+    #except InvalidTagValueList,e:
+    #    raise MessageFormatError(e)
 
     sig = parse_tag_value(sigheaders[0][1])
     logger = self.logger

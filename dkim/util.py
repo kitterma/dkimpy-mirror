@@ -55,7 +55,7 @@ def parse_tag_value(tag_list):
     @param tag_list: A string containing a DKIM Tag=Value list.
     """
     tags = {}
-    tag_specs = tag_list.split(b';')
+    tag_specs = tag_list.strip().split(b';')
     # Trailing semicolons are valid.
     if not tag_specs[-1]:
         tag_specs.pop()

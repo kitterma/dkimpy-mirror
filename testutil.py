@@ -13,7 +13,8 @@ class ParseTestCase(unittest.TestCase):
         3KzW0yB9JHwiDCw1EioVkv+OMHhAYzoIypA0bQyi2bc=;
 '''
     sig = parse_tag_value(hval)
-    print sig
+    self.assertEquals(sig[b't'],'1308078492')
+    self.assertEquals(len(sig),11)
 
 def suite(): 
   s = unittest.makeSuite(ParseTestCase,'test')
