@@ -42,18 +42,30 @@ def get_txt_pydns(name):
     response = DNS.DnsRequest(name, qtype='txt').req()
     if not response.answers:
         return None
-    return response.answers[0]['data'][0]
+    return b''.join(response.answers[0]['data'])
 
+def get_txt_Milter_dns(name):
+    """Return a TXT record associated with a DNS name."""
+    # Older pydns releases don't like a trailing dot.
+    if name.endswith('.'):
+        name = name[:-1]
+    sess = Session()
+    a = sess.dns(name,'TXT')
+    if a: return b''.join(a[0])
+    return None
 
 # Prefer dnspython if it's there, otherwise use pydns.
 try:
     import dns.resolver
     _get_txt = get_txt_dnspython
 except ImportError:
-    import DNS
-    DNS.DiscoverNameServers()
-    _get_txt = get_txt_pydns
-
+    try:
+        from Milter.dns import Session
+        _get_txt = get_txt_Milter_dns
+    except ImportError:
+        import DNS
+        DNS.DiscoverNameServers()
+        _get_txt = get_txt_pydns
 
 def get_txt(name):
     """Return a TXT record associated with a DNS name.

@@ -348,7 +348,7 @@ class DKIM(object):
     try:
         pk = parse_public_key(base64.b64decode(pub[b'p']))
     except (TypeError,UnparsableKeyError) as e:
-        raise KeyFormatError("could not parse public key: %s" % e)
+        raise KeyFormatError("could not parse public key (%s): %s" % (pub[b'p'],e))
 
     include_headers = re.split(br"\s*:\s*", sig[b'h'])
     h = hasher()
