@@ -39,7 +39,6 @@ def get_txt_pydns(name):
     # Older pydns releases don't like a trailing dot.
     if name.endswith('.'):
         name = name[:-1]
-    DNS.ParseResolvConf()
     response = DNS.DnsRequest(name, qtype='txt').req()
     if not response.answers:
         return None
@@ -52,6 +51,7 @@ try:
     _get_txt = get_txt_dnspython
 except ImportError:
     import DNS
+    DNS.DiscoverNameServers()
     _get_txt = get_txt_pydns
 
 
@@ -65,4 +65,7 @@ def get_txt(name):
         unicode_name = name.decode('ascii')
     except UnicodeDecodeError:
         return None
-    return _get_txt(unicode_name).encode('utf-8')
+    txt = _get_txt(unicode_name)
+    if txt:
+      txt = txt.encode('utf-8')
+    return txt
