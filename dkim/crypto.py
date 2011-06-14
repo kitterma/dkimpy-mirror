@@ -170,7 +170,7 @@ def EMSA_PKCS1_v1_5_encode(hash, mlen):
     dinfo = asn1_build(
         (SEQUENCE, [
             (SEQUENCE, [
-                (OBJECT_IDENTIFIER, HASH_ID_MAP[hash.name]),
+                (OBJECT_IDENTIFIER, HASH_ID_MAP[hash.name.lower()]),
                 (NULL, None),
             ]),
             (OCTET_STRING, hash.digest()),
