@@ -32,8 +32,13 @@ if sys.version_info[0] >= 3:
     sys.stdin = sys.stdin.detach()
 
 message = sys.stdin.read()
-d = dkim.DKIM(message)
-if not d.verify():
+verbose = False
+if verbose:
+  d = dkim.DKIM(message)
+  res = d.verify()
+else:
+  res = dkim.verify(message)
+if not res:
     print("signature verification failed")
     sys.exit(1)
 print("signature ok")
