@@ -44,6 +44,8 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Wed Jun 15 2011 Stuart Gathman <stuart@bmsi.com> 0.4.1-1
 - fix except clauses for python3
+- Add test case for <https://launchpad.net/bugs/587783>
+- add back dkim.Relaxed and dkim.Simple constants
 
 * Tue Jun 14 2011 Stuart Gathman <stuart@bmsi.com> 0.4-1
 - class DKIM API
