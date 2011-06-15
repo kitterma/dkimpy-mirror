@@ -3,7 +3,7 @@
 
 Summary: Python DKIM library
 Name: %{pythonbase}-pydkim
-Version: 0.4
+Version: 0.4.1
 Release: 1
 Source0: http://hewgill.com/pydkim/pydkim-%{version}.tar.gz
 License: BSD-like
@@ -42,6 +42,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/dkimverify.1.gz
 
 %changelog
+* Wed Jun 15 2011 Stuart Gathman <stuart@bmsi.com> 0.4.1-1
+- fix except clauses for python3
+
 * Tue Jun 14 2011 Stuart Gathman <stuart@bmsi.com> 0.4-1
 - class DKIM API
 

@@ -1,5 +1,5 @@
 2011-06-15 Version 0.4.1
-    - Fix python3 compatibility bugs
+    - Fix some except clauses for python3
     - Correct Changelog and release versions
 
 2011-06-14 Version 0.4
