@@ -24,7 +24,7 @@
 from distutils.core import setup
 import os
 
-version = "0.4"
+version = "0.4.1"
 
 setup(
     name = "pydkim",

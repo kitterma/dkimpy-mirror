@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: pydkim
-Version: 0.4
+Version: 0.4.1
 Summary: DKIM (DomainKeys Identified Mail)
 Home-page: http://hewgill.com/pydkim/
 Author: Greg Hewgill

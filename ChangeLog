@@ -1,12 +1,15 @@
-Not yet released
-    - when producing Relaxed mode signatures, the partial DKIM-Signature
-      header must be canonicalized before hashing (Martin Pool)
-      <https://launchpad.net/bugs/587783>
+2011-06-15 Version 0.4.1
+    - Fix python3 compatibility bugs
+    - Correct Changelog and release versions
 
 2011-06-14 Version 0.4
 
     - new API: class DKIM to retrieve domain and other info after verify
+    - Add support for python3
     - pydns driver tested and fixed
+    - when producing Relaxed mode signatures, the partial DKIM-Signature
+      header must be canonicalized before hashing (Martin Pool)
+      <https://launchpad.net/bugs/587783>
     - other bug fixes
 
 2008-06-25 Version 0.3
