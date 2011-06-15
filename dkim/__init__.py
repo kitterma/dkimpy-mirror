@@ -298,7 +298,7 @@ class DKIM(object):
     # Currently, we only validate the first DKIM-Signature line found.
     try:
         sig = parse_tag_value(sigheaders[0][1])
-    except InvalidTagValueList,e:
+    except InvalidTagValueList as e:
         raise MessageFormatError(e)
 
     sig = parse_tag_value(sigheaders[0][1])
@@ -330,7 +330,7 @@ class DKIM(object):
     logger.debug("bh: %s" % base64.b64encode(bodyhash))
     try:
         bh = base64.b64decode(re.sub(br"\s+", b"", sig[b'bh']))
-    except TypeError,e:
+    except TypeError as e:
         raise MessageFormatError(str(e))
     if bodyhash != bh:
         raise ValidationError(
@@ -390,7 +390,7 @@ def verify(message, logger=None, dnsfunc=get_txt):
     d = DKIM(message,logger=logger)
     try:
         return d.verify(dnsfunc=dnsfunc)
-    except DKIMException,x:
+    except DKIMException as x:
         if logger is not None:
             logger.error("%s" % e)
         return False
