@@ -58,8 +58,8 @@ __all__ = [
     "verify",
 ]
 
-Relaxed = b'relaxed'
-Simple = b'simple'
+Relaxed = b'relaxed'    # for clients passing dkim.Relaxed
+Simple = b'simple'      # for clients passing dkim.Simple
 
 class DKIMException(Exception):
     """Base class for DKIM errors."""
