@@ -3,6 +3,12 @@ Not yet released
       header must be canonicalized before hashing (Martin Pool)
       <https://launchpad.net/bugs/587783>
 
+2011-06-14 Version 0.4
+
+    - new API: class DKIM to retreive domain and other info after verify
+    - pydns driver tested and fixed
+    - other bug fixes
+
 2008-06-25 Version 0.3
 
     - length parameter to sign() is now a boolean
