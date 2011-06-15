@@ -51,9 +51,15 @@ __all__ = [
     "KeyFormatError",
     "MessageFormatError",
     "ParameterError",
+    "Relaxed",
+    "Simple",
+    "DKIM",
     "sign",
     "verify",
 ]
+
+Relaxed = b'relaxed'
+Simple = b'simple'
 
 class DKIMException(Exception):
     """Base class for DKIM errors."""
