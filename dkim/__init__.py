@@ -38,7 +38,7 @@ from dkim.crypto import (
     RSASSA_PKCS1_v1_5_verify,
     UnparsableKeyError,
     )
-from dkim.dns import get_txt
+from dkim.dnsplug import get_txt
 from dkim.util import (
     get_default_logger,
     InvalidTagValueList,
