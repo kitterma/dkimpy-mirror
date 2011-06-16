@@ -16,11 +16,7 @@ MAX_CNAME = 10
 # @param tcpfallback if False, raise exception instead of TCP fallback
 # @return a list of ((name,type),data) tuples
 def DNSLookup(name, qtype, tcpfallback=True, timeout=30):
-    try:
-        install_dnspython()     # prefer dnspython (the more complete library)
-    except:
-        install_pydns()         # the lightweight library
-    return DNSLookup(name, qtype, tcpfallback, timeout)
+    raise NotImplementedError('No supported dns library found')
 
 class Session(object):
   """A Session object has a simple cache with no TTL that is valid
@@ -113,19 +109,6 @@ def DNSLookup_pydns(name, qtype, tcpfallback=True, timeout=30):
     except IOError, x:
         raise DNS.DNSError, 'DNS: ' + str(x)
 
-def install_pydns():
-  import DNS    # http://pydns.sourceforge.net
-
-  if not hasattr(DNS.Type, 'SPF'):
-      # patch in type99 support
-      DNS.Type.SPF = 99
-      DNS.Type.typemap[99] = 'SPF'
-      DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
-
-  DNS.DiscoverNameServers() # Fails on Mac OS X? Add domain to /etc/resolv.conf
-
-  DNSLookup = DNSLookup_pydns
-
 def DNSLookup_dnspython(name,qtype,tcpfallback=True,timeout=30):
   retVal = []
   try:
@@ -146,17 +129,31 @@ def DNSLookup_dnspython(name,qtype,tcpfallback=True,timeout=30):
     pass
   return retVal
 
-def install_dnspython():
-  import dns
-  import dns.resolver  # http://www.dnspython.org
-  import dns.exception
+try:
+    # prefer dnspython (the more complete library)
+    import dns
+    import dns.resolver  # http://www.dnspython.org
+    import dns.exception
 
-  if not hasattr(dns.rdatatype,'SPF'):
-    # patch in type99 support
-    dns.rdatatype.SPF = 99
-    dns.rdatatype._by_text['SPF'] = dns.rdatatype.SPF
+    if not hasattr(dns.rdatatype,'SPF'):
+      # patch in type99 support
+      dns.rdatatype.SPF = 99
+      dns.rdatatype._by_text['SPF'] = dns.rdatatype.SPF
 
-  DNSLookup = DNSLookup_dnspython
+    DNSLookup = DNSLookup_dnspython
+except:
+    import DNS    # http://pydns.sourceforge.net
+
+    if not hasattr(DNS.Type, 'SPF'):
+        # patch in type99 support
+        DNS.Type.SPF = 99
+        DNS.Type.typemap[99] = 'SPF'
+        DNS.Lib.RRunpacker.getSPFdata = DNS.Lib.RRunpacker.getTXTdata
+
+    # Fails on Mac OS X? Add domain to /etc/resolv.conf
+    DNS.DiscoverNameServers()
+
+    DNSLookup = DNSLookup_pydns
 
 if __name__ == '__main__':
   import sys
