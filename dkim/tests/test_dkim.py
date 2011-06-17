@@ -132,15 +132,20 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
 
     def test_extra_headers(self):
     # <https://bugs.launchpad.net/pydkim/+bug/737311>
-    # It works when you remove extra headers above From 
+    # extra headers above From caused failure
         message = read_test_data("message.mbox")
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key,
+                    message, b"test", b"example.com", self.key,
                     canonicalize=(header_algo, body_algo))
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
+
+    def test_multiple_from(self):
+    # <https://bugs.launchpad.net/pydkim/+bug/644046>
+    # additional From header fields should cause verify failure
+        pass
 
 def test_suite():
     from unittest import TestLoader
