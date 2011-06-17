@@ -312,7 +312,6 @@ class DKIM(object):
     self.selector = selector
     return b'DKIM-Signature: ' + sig_value + b"\r\n"
 
-
   def verify(self,dnsfunc=get_txt):
 
     sigheaders = [(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]

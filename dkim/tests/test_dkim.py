@@ -133,7 +133,8 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
     def test_extra_headers(self):
         # <https://bugs.launchpad.net/pydkim/+bug/737311>
         # extra headers above From caused failure
-        message = read_test_data("test_extra.message")
+        #message = read_test_data("test_extra.message")
+        message = read_test_data("message.mbox")
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 d = dkim.DKIM(message)
