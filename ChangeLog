@@ -1,3 +1,5 @@
+UNRELEASED Version 0.5
+
 2011-06-16 Version 0.4.2
     - Fix use of dns namespace so dnspython works
 
