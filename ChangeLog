@@ -1,4 +1,7 @@
 UNRELEASED Version 0.5
+    - Add test case for <https://launchpad.net/bugs/644046>
+    - Add test case for <https://launchpad.net/bugs/737311>
+    - Fix dkim.fold()
 
 2011-06-16 Version 0.4.2
     - Fix use of dns namespace so dnspython works

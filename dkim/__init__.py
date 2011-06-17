@@ -90,19 +90,29 @@ def _remove(s, t):
     assert i >= 0
     return s[:i] + s[i+len(t):]
 
-def hash_headers(hasher, canonicalize_headers, headers, include_headers,
-                 sigheaders, sig):
-    """Sign message header fields."""
+def select_headers(headers, include_headers):
+    """Select message header fields to be signed/verified.
+    >>> h = [('from','biz'),('foo','bar'),('from','baz'),('subject','boring')]
+    >>> i = ['from','subject','from']
+    >>> select_headers(h,i)
+    [('from', 'baz'), ('subject', 'boring'), ('from', 'biz')]
+    """
     sign_headers = []
     lastindex = {}
-    for h in include_headers:
+    for h in [x.lower() for x in include_headers]:
         i = lastindex.get(h, len(headers))
         while i > 0:
             i -= 1
-            if h.lower() == headers[i][0].lower():
+            if h == headers[i][0].lower():
                 sign_headers.append(headers[i])
                 break
         lastindex[h] = i
+    return sign_headers
+
+def hash_headers(hasher, canonicalize_headers, headers, include_headers,
+                 sigheaders, sig):
+    """Sign message header fields."""
+    sign_headers = select_headers(headers,include_headers)
     # The call to _remove() assumes that the signature b= only appears
     # once in the signature header
     cheaders = canonicalize_headers.canonicalize_headers(
@@ -112,7 +122,6 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
         hasher.update(x[0])
         hasher.update(b":")
         hasher.update(x[1])
-
 
 def validate_signature_fields(sig):
     """Validate DKIM-Signature fields.
@@ -196,6 +205,8 @@ def fold(header):
     """Fold a header line into multiple crlf-separated lines at column 72.
     >>> fold(b'foo')
     'foo'
+    >>> fold(b'foo  '+b'foo'*24).splitlines()[0]
+    'foo  '
     >>> fold(b'foo'*25).splitlines()[-1]
     ' foo'
     >>> len(fold(b'foo'*25).splitlines()[0])
@@ -364,6 +375,12 @@ class DKIM(object):
         raise KeyFormatError("could not parse public key (%s): %s" % (pub[b'p'],e))
 
     include_headers = re.split(br"\s*:\s*", sig[b'h'])
+    # address bug#644046 by including any additional From header
+    # fields when verifying.  Since there should be only one From header,
+    # this shouldn't break any legitimate messages.  This could be
+    # generalized to check for extras of other singleton headers.
+    if 'from' in [x.lower() for x in include_headers]:
+      include_headers.append('from')      
     h = hasher()
     hash_headers(h, canon_policy, headers, include_headers, sigheaders, sig)
     try:
