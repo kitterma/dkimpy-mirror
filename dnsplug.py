@@ -3,6 +3,11 @@
 # NOT RELEASED: this is a proposed API and implementation.
 # Goals - work with both pydns and dnspython (and possibly other libraries)
 # at a simplied level.
+# TODO:
+# 1. map exceptions to common dnsplug.DNSError exception (with
+#    original exception saved as a member).
+# 2. include dict based implementation (handy for test suites)
+# 3. move implementations to subpackages to enable autoselect on first call.
 
 ## Maximum number of CNAME records to follow
 MAX_CNAME = 10
