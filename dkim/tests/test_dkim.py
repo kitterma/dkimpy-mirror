@@ -131,8 +131,8 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
         self.assertTrue(result)
 
     def test_extra_headers(self):
-    # <https://bugs.launchpad.net/pydkim/+bug/737311>
-    # extra headers above From caused failure
+        # <https://bugs.launchpad.net/pydkim/+bug/737311>
+        # extra headers above From caused failure
         message = read_test_data("message.mbox")
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
@@ -142,10 +142,30 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
-    def test_multiple_from(self):
-    # <https://bugs.launchpad.net/pydkim/+bug/644046>
-    # additional From header fields should cause verify failure
-        pass
+    def test_multiple_from_fails(self):
+        # <https://bugs.launchpad.net/pydkim/+bug/644046>
+        # additional From header fields should cause verify failure
+        hfrom = b'From: "Resident Evil" <sales@spammer.com>\r\n'
+        h,b = self.message.split(b'\n\n',1)
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message, b"test", b"example.com", self.key)
+                # adding an unknown header still verifies
+                h1 = h+b'\r\n'+b'X-Foo: bar'
+                message = b'\n\n'.join((h1,b))
+                res = dkim.verify(sig+message, dnsfunc=self.dnsfunc)
+                self.assertTrue(res)
+                # adding extra from at end should not verify
+                h1 = h+b'\r\n'+hfrom.strip()
+                message = b'\n\n'.join((h1,b))
+                res = dkim.verify(sig+message, dnsfunc=self.dnsfunc)
+                self.assertFalse(res)
+                # add extra from in front should not verify either
+                h1 = hfrom+h
+                message = b'\n\n'.join((h1,b))
+                res = dkim.verify(sig+message, dnsfunc=self.dnsfunc)
+                self.assertFalse(res)
 
 def test_suite():
     from unittest import TestLoader
