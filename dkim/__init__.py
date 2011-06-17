@@ -93,9 +93,13 @@ def _remove(s, t):
 def select_headers(headers, include_headers):
     """Select message header fields to be signed/verified.
     >>> h = [('from','biz'),('foo','bar'),('from','baz'),('subject','boring')]
-    >>> i = ['from','subject','from']
+    >>> i = ['from','subject','to','from']
     >>> select_headers(h,i)
     [('from', 'baz'), ('subject', 'boring'), ('from', 'biz')]
+    >>> h = [('from','biz'),('foo','bar'),('subject','boring')]
+    >>> i = ['from','subject','to','from']
+    >>> select_headers(h,i)
+    [('from', 'biz'), ('subject', 'boring')]
     """
     sign_headers = []
     lastindex = {}
@@ -118,11 +122,14 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
     # once in the signature header
     cheaders = canonicalize_headers.canonicalize_headers(
         [(sigheaders[0][0], _remove(sigheaders[0][1], sig[b'b']))])
+    # the dkim sig is hashed with no trailing crlf, even if the
+    # canonicalization algorithm would add one.
     sign_headers += [(x, y.rstrip()) for x,y in cheaders]
     for x,y in sign_headers:
         hasher.update(x)
         hasher.update(b":")
         hasher.update(y)
+    return sign_headers
 
 def validate_signature_fields(sig):
     """Validate DKIM-Signature fields.
@@ -259,10 +266,7 @@ class DKIM(object):
     headers = canon_policy.canonicalize_headers(self.headers)
 
     if include_headers is None:
-        include_headers = [x.lower() for x,y in headers]
-    else:
-        include_headers = [x.lower() for x in include_headers]
-    sign_headers = [(x,y) for x,y in headers if x.lower() in include_headers]
+        include_headers = [x for x,y in headers]
 
     body = canon_policy.canonicalize_body(self.body)
 
@@ -281,28 +285,21 @@ class DKIM(object):
         (b'q', b"dns/txt"),
         (b's', selector),
         (b't', str(int(time.time())).encode('ascii')),
-        (b'h', b" : ".join(x for x,y in sign_headers)),
+        (b'h', b" : ".join(include_headers)),
         (b'bh', bodyhash),
         (b'b', b""),
     ] if x]
+    include_headers = [x.lower() for x in include_headers]
     # record what verify should extract
-    self.include_headers = tuple([x.lower() for x,y in sign_headers])
+    self.include_headers = tuple(include_headers)
 
     sig_value = fold(b"; ".join(b"=".join(x) for x in sigfields))
-    dkim_header = canon_policy.canonicalize_headers([
-        [b'DKIM-Signature', b' ' + sig_value]])[0]
-    # the dkim sig is hashed with no trailing crlf, even if the
-    # canonicalization algorithm would add one.
-    if dkim_header[1][-2:] == b'\r\n':
-        dkim_header = (dkim_header[0], dkim_header[1][:-2])
-    sign_headers.append(dkim_header)
-
-    self.logger.debug("sign headers: %r" % sign_headers)
+    dkim_header = (b'DKIM-Signature', b' ' + sig_value)
     h = hashlib.sha256()
-    for x in sign_headers:
-        h.update(x[0])
-        h.update(b":")
-        h.update(x[1])
+    sig = dict(sigfields)
+    signed_headers = hash_headers(
+        h, canon_policy, headers, include_headers, [dkim_header],sig)
+    self.logger.debug("sign headers: %r" % signed_headers)
 
     try:
         sig2 = RSASSA_PKCS1_v1_5_sign(
@@ -376,7 +373,6 @@ class DKIM(object):
         pk = parse_public_key(base64.b64decode(pub[b'p']))
     except (TypeError,UnparsableKeyError) as e:
         raise KeyFormatError("could not parse public key (%s): %s" % (pub[b'p'],e))
-
     include_headers = [x.lower() for x in re.split(br"\s*:\s*", sig[b'h'])]
     self.include_headers = tuple(include_headers)
     # address bug#644046 by including any additional From header
