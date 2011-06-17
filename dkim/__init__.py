@@ -118,11 +118,11 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
     # once in the signature header
     cheaders = canonicalize_headers.canonicalize_headers(
         [(sigheaders[0][0], _remove(sigheaders[0][1], sig[b'b']))])
-    sign_headers += [(x[0], x[1].rstrip()) for x in cheaders]
-    for x in sign_headers:
-        hasher.update(x[0])
+    sign_headers += [(x, y.rstrip()) for x,y in cheaders]
+    for x,y in sign_headers:
+        hasher.update(x)
         hasher.update(b":")
-        hasher.update(x[1])
+        hasher.update(y)
 
 def validate_signature_fields(sig):
     """Validate DKIM-Signature fields.
@@ -259,10 +259,10 @@ class DKIM(object):
     headers = canon_policy.canonicalize_headers(self.headers)
 
     if include_headers is None:
-        include_headers = [x[0].lower() for x in headers]
+        include_headers = [x.lower() for x,y in headers]
     else:
         include_headers = [x.lower() for x in include_headers]
-    sign_headers = [x for x in headers if x[0].lower() in include_headers]
+    sign_headers = [(x,y) for x,y in headers if x.lower() in include_headers]
 
     body = canon_policy.canonicalize_body(self.body)
 
@@ -281,10 +281,12 @@ class DKIM(object):
         (b'q', b"dns/txt"),
         (b's', selector),
         (b't', str(int(time.time())).encode('ascii')),
-        (b'h', b" : ".join(x[0] for x in sign_headers)),
+        (b'h', b" : ".join(x for x,y in sign_headers)),
         (b'bh', bodyhash),
         (b'b', b""),
     ] if x]
+    # record what verify should extract
+    self.include_headers = tuple([x.lower() for x,y in sign_headers])
 
     sig_value = fold(b"; ".join(b"=".join(x) for x in sigfields))
     dkim_header = canon_policy.canonicalize_headers([
@@ -316,7 +318,7 @@ class DKIM(object):
 
   def verify(self,dnsfunc=get_txt):
 
-    sigheaders = [x for x in self.headers if x[0].lower() == b"dkim-signature"]
+    sigheaders = [(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]
     if len(sigheaders) < 1:
         return False
 
@@ -376,6 +378,7 @@ class DKIM(object):
         raise KeyFormatError("could not parse public key (%s): %s" % (pub[b'p'],e))
 
     include_headers = [x.lower() for x in re.split(br"\s*:\s*", sig[b'h'])]
+    self.include_headers = tuple(include_headers)
     # address bug#644046 by including any additional From header
     # fields when verifying.  Since there should be only one From header,
     # this shouldn't break any legitimate messages.  This could be

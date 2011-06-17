@@ -133,13 +133,18 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
     def test_extra_headers(self):
         # <https://bugs.launchpad.net/pydkim/+bug/737311>
         # extra headers above From caused failure
-        message = read_test_data("message.mbox")
+        message = read_test_data("test_extra.message")
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
-                sig = dkim.sign(
-                    message, b"test", b"example.com", self.key,
+                d = dkim.DKIM(message)
+                sig = d.sign(b"test", b"example.com", self.key,
                     canonicalize=(header_algo, body_algo))
-                res = dkim.verify(sig + message, dnsfunc=self.dnsfunc)
+                dv = dkim.DKIM(sig + message)
+                res = dv.verify(dnsfunc=self.dnsfunc)
+                self.assertEquals(d.include_headers,dv.include_headers)
+                s = dkim.select_headers(d.headers,d.include_headers)
+                sv = dkim.select_headers(dv.headers,dv.include_headers)
+                self.assertEquals(s,sv)
                 self.assertTrue(res)
 
     def test_multiple_from_fails(self):
