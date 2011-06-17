@@ -139,7 +139,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
                 sig = dkim.sign(
                     message, b"test", b"example.com", self.key,
                     canonicalize=(header_algo, body_algo))
-                res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+                res = dkim.verify(sig + message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
     def test_multiple_from_fails(self):

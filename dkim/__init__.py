@@ -99,7 +99,8 @@ def select_headers(headers, include_headers):
     """
     sign_headers = []
     lastindex = {}
-    for h in [x.lower() for x in include_headers]:
+    for h in include_headers:
+        assert h == h.lower()
         i = lastindex.get(h, len(headers))
         while i > 0:
             i -= 1
@@ -374,12 +375,12 @@ class DKIM(object):
     except (TypeError,UnparsableKeyError) as e:
         raise KeyFormatError("could not parse public key (%s): %s" % (pub[b'p'],e))
 
-    include_headers = re.split(br"\s*:\s*", sig[b'h'])
+    include_headers = [x.lower() for x in re.split(br"\s*:\s*", sig[b'h'])]
     # address bug#644046 by including any additional From header
     # fields when verifying.  Since there should be only one From header,
     # this shouldn't break any legitimate messages.  This could be
     # generalized to check for extras of other singleton headers.
-    if 'from' in [x.lower() for x in include_headers]:
+    if 'from' in include_headers:
       include_headers.append('from')      
     h = hasher()
     hash_headers(h, canon_policy, headers, include_headers, sigheaders, sig)
