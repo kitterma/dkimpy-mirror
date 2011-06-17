@@ -38,7 +38,7 @@ class TestFold(unittest.TestCase):
         self.assertEqual(
             b"foo", dkim.fold(b"foo"))
 
-    def DISABLED_test_long_line(self):
+    def test_long_line(self):
         # The function is terribly broken, not passing even this simple
         # test.
         self.assertEqual(
