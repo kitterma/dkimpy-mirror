@@ -193,7 +193,14 @@ def rfc822_parse(message):
 
 
 def fold(header):
-    """Fold a header line into multiple crlf-separated lines at column 72."""
+    """Fold a header line into multiple crlf-separated lines at column 72.
+    >>> fold(b'foo')
+    'foo'
+    >>> fold(b'foo'*25).splitlines()[-1]
+    ' foo'
+    >>> len(fold(b'foo'*25).splitlines()[0])
+    72
+    """
     i = header.rfind(b"\r\n ")
     if i == -1:
         pre = b""
@@ -204,10 +211,10 @@ def fold(header):
     while len(header) > 72:
         i = header[:72].rfind(b" ")
         if i == -1:
-            j = i
+            j = 72
         else:
             j = i + 1
-        pre += header[:i] + b"\r\n "
+        pre += header[:j] + b"\r\n "
         header = header[j:]
     return pre + header
 

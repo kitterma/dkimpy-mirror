@@ -25,6 +25,10 @@ TESTING
 
 To run pydkim's test suite:
 
+    PYTHONPATH=. python dkim
+or
+    python test.py
+or
     PYTHONPATH=. python -m unittest dkim.tests.test_suite
 
 Alternatively, if you have testrepository installed:
