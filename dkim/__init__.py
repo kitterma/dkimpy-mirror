@@ -92,6 +92,7 @@ def _remove(s, t):
 
 def select_headers(headers, include_headers):
     """Select message header fields to be signed/verified.
+
     >>> h = [('from','biz'),('foo','bar'),('from','baz'),('subject','boring')]
     >>> i = ['from','subject','to','from']
     >>> select_headers(h,i)
@@ -116,7 +117,7 @@ def select_headers(headers, include_headers):
 
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
                  sigheaders, sig):
-    """Sign message header fields."""
+    """Update hash for signed message header fields."""
     sign_headers = select_headers(headers,include_headers)
     # The call to _remove() assumes that the signature b= only appears
     # once in the signature header
@@ -211,6 +212,7 @@ def rfc822_parse(message):
 
 def fold(header):
     """Fold a header line into multiple crlf-separated lines at column 72.
+
     >>> fold(b'foo')
     'foo'
     >>> fold(b'foo  '+b'foo'*24).splitlines()[0]
@@ -257,10 +259,8 @@ class DKIM(object):
     'dkim-signature'
   )
 
-  def __init__(self,message,logger=None,signature_algorithm=b'rsa-sha256'):
-    (self.headers, self.body) = rfc822_parse(message)
-    self.domain = None
-    self.selector = 'default'
+  def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256'):
+    self.set_message(message)
     if logger is None:
         logger = get_default_logger()
     self.logger = logger
@@ -268,17 +268,34 @@ class DKIM(object):
         raise ParameterError(
             "Unsupported signature algorithm: "+signature_algorithm)
     self.signature_algorithm = signature_algorithm
+    #: Header fields which should be signed.  Default from RFC4871
     self.should_sign = set(DKIM.SHOULD)
+    #: Header fields which should not be signed.  Default from RFC4871
     self.should_not_sign = set(DKIM.SHOULD_NOT)
+    #: Header fields to sign an extra time to prevent additions.
     self.frozen_sign = set(DKIM.FROZEN)
 
-  def default_include_headers(self):
-    #include_headers = [x for x,y in self.headers]
+  def set_message(self,message):
+    if message:
+      self.headers, self.body = rfc822_parse(message)
+    else:
+      self.headers, self.body = [],''
+    self.domain = None
+    self.selector = 'default'
+
+  def default_sign_headers(self):
+    """Return the default list of headers to sign: those in should_sign or
+    frozen_sign, with those in frozen_sign signed an extra time to prevent
+    additions."""
     hset = self.should_sign | self.frozen_sign
     include_headers = [ x for x,y in self.headers
         if x.lower() in hset ]
     return include_headers + [ x for x in include_headers
         if x.lower() in self.frozen_sign]
+
+  def all_sign_headers(self):
+    """Return header list of all headers not in should_not_sign."""
+    return [x for x,y in self.headers if x.lower() not in self.should_not_sign]
 
   def sign(self, selector, domain, privkey, identity=None,
         canonicalize=(b'simple',b'simple'), include_headers=None, length=False):
@@ -295,7 +312,7 @@ class DKIM(object):
     headers = canon_policy.canonicalize_headers(self.headers)
 
     if include_headers is None:
-        include_headers = self.default_include_headers()
+        include_headers = self.default_sign_headers()
 
     # rfc4871 says FROM is required
     if 'from' not in ( x.lower() for x in include_headers ):

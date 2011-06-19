@@ -139,9 +139,9 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
             for body_algo in (b"simple", b"relaxed"):
                 d = dkim.DKIM(message)
                 # bug requires a repeated header to manifest
-                d.should_sign.add('received')
                 d.should_not_sign.remove('received')
                 sig = d.sign(b"test", b"example.com", self.key,
+                    include_headers=d.all_sign_headers(),
                     canonicalize=(header_algo, body_algo))
                 dv = dkim.DKIM(sig + message)
                 res = dv.verify(dnsfunc=self.dnsfunc)
