@@ -138,6 +138,9 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 d = dkim.DKIM(message)
+                # bug requires a repeated header to manifest
+                d.should_sign.add('received')
+                d.should_not_sign.remove('received')
                 sig = d.sign(b"test", b"example.com", self.key,
                     canonicalize=(header_algo, body_algo))
                 dv = dkim.DKIM(sig + message)
