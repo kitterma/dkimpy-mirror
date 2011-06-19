@@ -238,6 +238,24 @@ def fold(header):
     return pre + header
 
 class DKIM(object):
+  # NOTE - the first 2 indentation levels are 2 instead of 4 
+  # to minimize changed lines from the function only version.
+
+  FROZEN = ('from','date') # Subject?
+
+  SHOULD = (
+    'sender', 'reply-to', 'subject', 'date', 'message-id', 'to', 'cc',
+    'mime-version', 'content-type', 'content-transfer-encoding', 'content-id',
+    'content- description', 'resent-date', 'resent-from', 'resent-sender',
+    'resent-to', 'resent-cc', 'resent-message-id', 'in-reply-to', 'references',
+    'list-id', 'list-help', 'list-unsubscribe', 'list-subscribe', 'list-post',
+    'list-owner', 'list-archive'
+  )
+
+  SHOULD_NOT = (
+    'return-path', 'received', 'comments', 'keywords', 'bcc', 'resent-bcc',
+    'dkim-signature'
+  )
 
   def __init__(self,message,logger=None,signature_algorithm=b'rsa-sha256'):
     (self.headers, self.body) = rfc822_parse(message)
@@ -250,6 +268,17 @@ class DKIM(object):
         raise ParameterError(
             "Unsupported signature algorithm: "+signature_algorithm)
     self.signature_algorithm = signature_algorithm
+    self.should_sign = set(DKIM.SHOULD)
+    self.should_not_sign = set(DKIM.SHOULD_NOT)
+    self.frozen_sign = set(DKIM.FROZEN)
+
+  def default_include_headers(self):
+    #include_headers = [x for x,y in self.headers]
+    hset = self.should_sign | self.frozen_sign
+    include_headers = [ x for x,y in self.headers
+        if x.lower() in hset ]
+    return include_headers + [ x for x in include_headers
+        if x.lower() in self.frozen_sign]
 
   def sign(self, selector, domain, privkey, identity=None,
         canonicalize=(b'simple',b'simple'), include_headers=None, length=False):
@@ -266,7 +295,17 @@ class DKIM(object):
     headers = canon_policy.canonicalize_headers(self.headers)
 
     if include_headers is None:
-        include_headers = [x for x,y in headers]
+        include_headers = self.default_include_headers()
+
+    # rfc4871 says FROM is required
+    if 'from' not in ( x.lower() for x in include_headers ):
+        raise ParameterError("The From header field MUST be signed")
+
+    # raise exception for any SHOULD_NOT headers, call can modify 
+    # SHOULD_NOT if really needed.
+    for x in include_headers:
+        if x.lower() in self.should_not_sign:
+            raise ParameterError("The %s header field SHOULD NOT be signed"%x)
 
     body = canon_policy.canonicalize_body(self.body)
 
