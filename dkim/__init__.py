@@ -422,19 +422,27 @@ class DKIM(object):
     self.selector = selector
     return b'DKIM-Signature: ' + sig_value + b"\r\n"
 
-  def verify(self,dnsfunc=get_txt):
+  #: Verify a DKIM signature.
+  #: @type idx: int
+  #: @param idx: which signature to verify.  The first (topmost) signature is 0.
+  #: @type dnsfunc: callable
+  #: @param dnsfunc: an option function to lookup TXT resource records
+  #: for a DNS domain.  The default uses dnspython or pydns.
+  #: @return: True if signature verifies or False otherwise
+  #: @raise DKIMException: when the message, signature, or key are badly formed
+  def verify(self,idx=0,dnsfunc=get_txt):
 
     sigheaders = [(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]
-    if len(sigheaders) < 1:
+    if len(sigheaders) <= idx:
         return False
 
     # Currently, we only validate the first DKIM-Signature line found.
     try:
-        sig = parse_tag_value(sigheaders[0][1])
+        sig = parse_tag_value(sigheaders[idx][1])
     except InvalidTagValueList as e:
         raise MessageFormatError(e)
 
-    sig = parse_tag_value(sigheaders[0][1])
+    sig = parse_tag_value(sigheaders[idx][1])
     logger = self.logger
     logger.debug("sig: %r" % sig)
 
@@ -523,11 +531,9 @@ def sign(message, selector, domain, privkey, identity=None,
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
 def verify(message, logger=None, dnsfunc=get_txt):
-    """Verify a DKIM signature on an RFC822 formatted message.
-
+    """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
-
     """
     d = DKIM(message,logger=logger)
     try:
