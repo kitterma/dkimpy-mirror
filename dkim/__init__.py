@@ -125,8 +125,7 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
         [(sigheaders[0][0], _remove(sigheaders[0][1], sig[b'b']))])
     # the dkim sig is hashed with no trailing crlf, even if the
     # canonicalization algorithm would add one.
-    sign_headers += [(x, y.rstrip()) for x,y in cheaders]
-    for x,y in sign_headers:
+    for x,y in sign_headers + [(x, y.rstrip()) for x,y in cheaders]:
         hasher.update(x)
         hasher.update(b":")
         hasher.update(y)
@@ -182,10 +181,8 @@ def rfc822_parse(message):
     """Parse a message in RFC822 format.
 
     @param message: The message in RFC822 format. Either CRLF or LF is an accepted line separator.
-
-    @return Returns a tuple of (headers, body) where headers is a list of (name, value) pairs.
+    @return: Returns a tuple of (headers, body) where headers is a list of (name, value) pairs.
     The body is a CRLF-separated string.
-
     """
     headers = []
     lines = re.split(b"\r?\n", message)
@@ -239,12 +236,25 @@ def fold(header):
         header = header[j:]
     return pre + header
 
+#: Hold messages during DKIM signing and verification.
 class DKIM(object):
   # NOTE - the first 2 indentation levels are 2 instead of 4 
   # to minimize changed lines from the function only version.
 
+  #: Header fields to protect from additions by default.
+  #: RFC5322 gives the complete list of singleton headers (which should
+  #: appear at most once) as::
+  #: 
+  #:   SINGLETON = ('date','from','sender','reply-to','to','cc','bcc',
+  #:     'message-id','in-reply-to','references')
+  #: 
+  #: Bcc in this list is in the SHOULD NOT sign list, the rest could
+  #: be in the default FROZEN list, but that could also make signatures 
+  #: more fragile than necessary.  The short list below is the result
+  #: more of instinct than logic.
   FROZEN = ('from','date') # Subject?
 
+  #: The rfc4871 recommended header fields to sign
   SHOULD = (
     'sender', 'reply-to', 'subject', 'date', 'message-id', 'to', 'cc',
     'mime-version', 'content-type', 'content-transfer-encoding', 'content-id',
@@ -254,11 +264,18 @@ class DKIM(object):
     'list-owner', 'list-archive'
   )
 
+  #: The rfc4871 recommended header fields not to sign
   SHOULD_NOT = (
     'return-path', 'received', 'comments', 'keywords', 'bcc', 'resent-bcc',
     'dkim-signature'
   )
 
+  #: Create a DKIM instance to sign and verify rfc5322 messages.
+  #:
+  #: @param message: an RFC822 formatted message to be signed or verified
+  #: (with either \\n or \\r\\n line endings)
+  #: @param logger: a logger to which debug info will be written (default None)
+  #: @param signature_algorithm the signing algorithm to use when signing
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256'):
     self.set_message(message)
     if logger is None:
@@ -270,18 +287,30 @@ class DKIM(object):
     self.signature_algorithm = signature_algorithm
     #: Header fields which should be signed.  Default from RFC4871
     self.should_sign = set(DKIM.SHOULD)
-    #: Header fields which should not be signed.  Default from RFC4871
+    #: Header fields which should not be signed.  The default is from RFC4871.
+    #: Attempting to sign these headers results in an exception.
+    #: If it is necessary to sign one of these, it must be removed
+    #: from this list first.
     self.should_not_sign = set(DKIM.SHOULD_NOT)
     #: Header fields to sign an extra time to prevent additions.
     self.frozen_sign = set(DKIM.FROZEN)
 
+  #: Load a new message to be signed or verified.
+  #: @param message: an RFC822 formatted message to be signed or verified
+  #: (with either \\n or \\r\\n line endings)
   def set_message(self,message):
     if message:
       self.headers, self.body = rfc822_parse(message)
     else:
       self.headers, self.body = [],''
+    #: The DKIM signing domain last signed or verified
     self.domain = None
+    #: The DKIM key selector last signed or verified
     self.selector = 'default'
+    #: The list of headers last signed or verified.  Each header
+    #: is a name,value tuple.  FIXME: The headers are canonicalized.
+    #: This could be more useful as original headers.
+    self.signed_headers = []
 
   def default_sign_headers(self):
     """Return the default list of headers to sign: those in should_sign or
@@ -294,9 +323,34 @@ class DKIM(object):
         if x.lower() in self.frozen_sign]
 
   def all_sign_headers(self):
-    """Return header list of all headers not in should_not_sign."""
+    """Return header list of all existing headers not in should_not_sign."""
     return [x for x,y in self.headers if x.lower() not in self.should_not_sign]
 
+  #: Sign an RFC822 message and return the DKIM-Signature header line.
+  #:
+  #: The include_headers option gives full control over which header fields
+  #: are signed.  Note that signing a header field that doesn't exist prevents
+  #: that field from being added without breaking the signature.  Repeated
+  #: fields (such as Received) can be signed multiple times.  Instances
+  #: of the field are signed from bottom to top.  Signing a header field more
+  #: times than are currently present prevents additional instances
+  #: from being added without breaking the signature.
+  #:
+  #: The length option allows the message body to be appended to by MTAs
+  #: enroute (e.g. mailing lists that append unsubscribe information)
+  #: without breaking the signature.
+  #:
+  #: @param selector: the DKIM selector value for the signature
+  #: @param domain: the DKIM domain value for the signature
+  #: @param privkey: a PKCS#1 private key in base64-encoded text form
+  #: @param identity: the DKIM identity value for the signature
+  #: (default "@"+domain)
+  #: @param canonicalize: the canonicalization algorithms to use
+  #: (default (Simple, Simple))
+  #: @param include_headers: a list of strings indicating which headers
+  #: are to be signed (default rfc4871 recommended headers)
+  #: @param length: true if the l= tag should be included to indicate
+  #: body length signed (default False).
   def sign(self, selector, domain, privkey, identity=None,
         canonicalize=(b'simple',b'simple'), include_headers=None, length=False):
     try:
@@ -353,9 +407,9 @@ class DKIM(object):
     dkim_header = (b'DKIM-Signature', b' ' + sig_value)
     h = hashlib.sha256()
     sig = dict(sigfields)
-    signed_headers = hash_headers(
+    self.signed_headers = hash_headers(
         h, canon_policy, headers, include_headers, [dkim_header],sig)
-    self.logger.debug("sign headers: %r" % signed_headers)
+    self.logger.debug("sign headers: %r" % self.signed_headers)
 
     try:
         sig2 = RSASSA_PKCS1_v1_5_sign(
@@ -437,7 +491,8 @@ class DKIM(object):
     if 'from' in include_headers:
       include_headers.append('from')      
     h = hasher()
-    hash_headers(h, canon_policy, headers, include_headers, sigheaders, sig)
+    self.signed_headers = hash_headers(
+        h, canon_policy, headers, include_headers, sigheaders, sig)
     try:
         signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
         return RSASSA_PKCS1_v1_5_verify(
@@ -457,12 +512,14 @@ def sign(message, selector, domain, privkey, identity=None,
     @param privkey: a PKCS#1 private key in base64-encoded text form
     @param identity: the DKIM identity value for the signature (default "@"+domain)
     @param canonicalize: the canonicalization algorithms to use (default (Simple, Simple))
-    @param include_headers: a list of strings indicating which headers are to be signed (default all headers)
+    @param include_headers: a list of strings indicating which headers are to be signed (default all headers not listed as SHOULD NOT sign)
     @param length: true if the l= tag should be included to indicate body length (default False)
     @param logger: a logger to which debug info will be written (default None)
     """
 
     d = DKIM(message,logger=logger)
+    if not include_headers:
+        include_headers = d.all_sign_headers()
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
 def verify(message, logger=None, dnsfunc=get_txt):
