@@ -241,7 +241,8 @@ class DKIM(object):
   # NOTE - the first 2 indentation levels are 2 instead of 4 
   # to minimize changed lines from the function only version.
 
-  #: The RFC5322 complete list of singleton headers (which should
+  #: The U{RFC5322<http://tools.ietf.org/html/rfc5322#section-3.6>}
+  #: complete list of singleton headers (which should
   #: appear at most once).  This can be used for a "paranoid" or
   #: "strict" signing mode.
   #: Bcc in this list is in the SHOULD NOT sign list, the rest could
