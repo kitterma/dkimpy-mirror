@@ -236,23 +236,24 @@ def fold(header):
         header = header[j:]
     return pre + header
 
-#: Hold messages during DKIM signing and verification.
+#: Hold messages and options during DKIM signing and verification.
 class DKIM(object):
   # NOTE - the first 2 indentation levels are 2 instead of 4 
   # to minimize changed lines from the function only version.
 
-  #: Header fields to protect from additions by default.
-  #: RFC5322 gives the complete list of singleton headers (which should
-  #: appear at most once) as::
-  #: 
-  #:   SINGLETON = ('date','from','sender','reply-to','to','cc','bcc',
-  #:     'message-id','in-reply-to','references')
-  #: 
+  #: The RFC5322 complete list of singleton headers (which should
+  #: appear at most once).  This can be used for a "paranoid" or
+  #: "strict" signing mode.
   #: Bcc in this list is in the SHOULD NOT sign list, the rest could
   #: be in the default FROZEN list, but that could also make signatures 
-  #: more fragile than necessary.  The short list below is the result
-  #: more of instinct than logic.
-  FROZEN = ('from','date') # Subject?
+  #: more fragile than necessary.  
+  RFC5322_SINGLETON = ('date','from','sender','reply-to','to','cc','bcc',
+        'message-id','in-reply-to','references')
+
+  #: Header fields to protect from additions by default.
+  #: 
+  #: The short list below is the result more of instinct than logic.
+  FROZEN = ('from','date','subject')
 
   #: The rfc4871 recommended header fields to sign
   SHOULD = (
@@ -275,7 +276,7 @@ class DKIM(object):
   #: @param message: an RFC822 formatted message to be signed or verified
   #: (with either \\n or \\r\\n line endings)
   #: @param logger: a logger to which debug info will be written (default None)
-  #: @param signature_algorithm the signing algorithm to use when signing
+  #: @param signature_algorithm: the signing algorithm to use when signing
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256'):
     self.set_message(message)
     if logger is None:
@@ -294,6 +295,17 @@ class DKIM(object):
     self.should_not_sign = set(DKIM.SHOULD_NOT)
     #: Header fields to sign an extra time to prevent additions.
     self.frozen_sign = set(DKIM.FROZEN)
+
+  #: Add headers not in should_not_sign to frozen_sign.
+  #: To enforce an rfc5322 strict mode, add RFC5322_SINGLETON.
+  #:
+  #:    from dkim import DKIM
+  #:    dkim = DKIM()
+  #:    dkim.add_frozen(DKIM.RFC5322_SINGLETON)
+  #:
+  #: @param s: list of headers to add to frozen_sign
+  def add_frozen(self,s):
+    self.frozen_sign.update(x for x in s if x not in self.should_not_sign)
 
   #: Load a new message to be signed or verified.
   #: @param message: an RFC822 formatted message to be signed or verified
@@ -436,7 +448,7 @@ class DKIM(object):
     if len(sigheaders) <= idx:
         return False
 
-    # Currently, we only validate the first DKIM-Signature line found.
+    # By default, we validate the first DKIM-Signature line found.
     try:
         sig = parse_tag_value(sigheaders[idx][1])
     except InvalidTagValueList as e:
