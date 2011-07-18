@@ -296,16 +296,17 @@ class DKIM(object):
     #: Header fields to sign an extra time to prevent additions.
     self.frozen_sign = set(DKIM.FROZEN)
 
-  #: Add headers not in should_not_sign to frozen_sign.
-  #: To enforce an rfc5322 strict mode, add RFC5322_SINGLETON.
-  #:
-  #:    from dkim import DKIM
-  #:    dkim = DKIM()
-  #:    dkim.add_frozen(DKIM.RFC5322_SINGLETON)
-  #:
-  #: @param s: list of headers to add to frozen_sign
   def add_frozen(self,s):
-    self.frozen_sign.update(x for x in s if x not in self.should_not_sign)
+    """ Add headers not in should_not_sign to frozen_sign.
+    @param s: list of headers to add to frozen_sign
+
+    >>> dkim = DKIM()
+    >>> dkim.add_frozen(DKIM.RFC5322_SINGLETON)
+    >>> sorted(dkim.frozen_sign)
+    ['cc', 'date', 'from', 'in-reply-to', 'message-id', 'references', 'reply-to', 'sender', 'subject', 'to']
+    """
+    self.frozen_sign.update(x.lower() for x in s
+        if x.lower() not in self.should_not_sign)
 
   #: Load a new message to be signed or verified.
   #: @param message: an RFC822 formatted message to be signed or verified
@@ -363,6 +364,9 @@ class DKIM(object):
   #: are to be signed (default rfc4871 recommended headers)
   #: @param length: true if the l= tag should be included to indicate
   #: body length signed (default False).
+  #: @return: DKIM-Signature header field terminated by '\r\n'
+  #: @raise DKIMException: when the message, include_headers, or key are badly
+  #: formed.
   def sign(self, selector, domain, privkey, identity=None,
         canonicalize=(b'simple',b'simple'), include_headers=None, length=False):
     try:
