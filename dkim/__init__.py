@@ -97,10 +97,10 @@ def select_headers(headers, include_headers):
     >>> i = ['from','subject','to','from']
     >>> select_headers(h,i)
     [('from', 'baz'), ('subject', 'boring'), ('from', 'biz')]
-    >>> h = [('from','biz'),('foo','bar'),('subject','boring')]
+    >>> h = [('From','biz'),('Foo','bar'),('Subject','Boring')]
     >>> i = ['from','subject','to','from']
     >>> select_headers(h,i)
-    [('from', 'biz'), ('subject', 'boring')]
+    [('From', 'biz'), ('Subject', 'Boring')]
     """
     sign_headers = []
     lastindex = {}
@@ -248,15 +248,18 @@ class DKIM(object):
   #: Bcc in this list is in the SHOULD NOT sign list, the rest could
   #: be in the default FROZEN list, but that could also make signatures 
   #: more fragile than necessary.  
+  #: @since: 0.5
   RFC5322_SINGLETON = ('date','from','sender','reply-to','to','cc','bcc',
         'message-id','in-reply-to','references')
 
   #: Header fields to protect from additions by default.
   #: 
   #: The short list below is the result more of instinct than logic.
+  #: @since: 0.5
   FROZEN = ('from','date','subject')
 
   #: The rfc4871 recommended header fields to sign
+  #: @since: 0.5
   SHOULD = (
     'sender', 'reply-to', 'subject', 'date', 'message-id', 'to', 'cc',
     'mime-version', 'content-type', 'content-transfer-encoding', 'content-id',
@@ -266,7 +269,8 @@ class DKIM(object):
     'list-owner', 'list-archive'
   )
 
-  #: The rfc4871 recommended header fields not to sign
+  #: The rfc4871 recommended header fields not to sign.
+  #: @since: 0.5
   SHOULD_NOT = (
     'return-path', 'received', 'comments', 'keywords', 'bcc', 'resent-bcc',
     'dkim-signature'
@@ -300,6 +304,7 @@ class DKIM(object):
   def add_frozen(self,s):
     """ Add headers not in should_not_sign to frozen_sign.
     @param s: list of headers to add to frozen_sign
+    @since: 0.5
 
     >>> dkim = DKIM()
     >>> dkim.add_frozen(DKIM.RFC5322_SINGLETON)
@@ -312,6 +317,7 @@ class DKIM(object):
   #: Load a new message to be signed or verified.
   #: @param message: an RFC822 formatted message to be signed or verified
   #: (with either \\n or \\r\\n line endings)
+  #: @since: 0.5
   def set_message(self,message):
     if message:
       self.headers, self.body = rfc822_parse(message)
@@ -329,7 +335,8 @@ class DKIM(object):
   def default_sign_headers(self):
     """Return the default list of headers to sign: those in should_sign or
     frozen_sign, with those in frozen_sign signed an extra time to prevent
-    additions."""
+    additions.
+    @since: 0.5"""
     hset = self.should_sign | self.frozen_sign
     include_headers = [ x for x,y in self.headers
         if x.lower() in hset ]
@@ -337,7 +344,8 @@ class DKIM(object):
         if x.lower() in self.frozen_sign]
 
   def all_sign_headers(self):
-    """Return header list of all existing headers not in should_not_sign."""
+    """Return header list of all existing headers not in should_not_sign.
+    @since: 0.5"""
     return [x for x,y in self.headers if x.lower() not in self.should_not_sign]
 
   #: Sign an RFC822 message and return the DKIM-Signature header line.
@@ -353,6 +361,13 @@ class DKIM(object):
   #: The length option allows the message body to be appended to by MTAs
   #: enroute (e.g. mailing lists that append unsubscribe information)
   #: without breaking the signature.
+  #:
+  #: The default include_headers for this method differs from the backward
+  #: compatible sign function, which signs all headers not 
+  #: in should_not_sign.  The default list for this method can be modified 
+  #: by tweaking should_sign and frozen_sign (or even should_not_sign).
+  #: It is only necessary to pass an include_headers list when precise control
+  #: is needed.
   #:
   #: @param selector: the DKIM selector value for the signature
   #: @param domain: the DKIM domain value for the signature
@@ -530,7 +545,6 @@ def sign(message, selector, domain, privkey, identity=None,
          signature_algorithm=b'rsa-sha256',
          include_headers=None, length=False, logger=None):
     """Sign an RFC822 message and return the DKIM-Signature header line.
-
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param selector: the DKIM selector value for the signature
     @param domain: the DKIM domain value for the signature
@@ -540,6 +554,8 @@ def sign(message, selector, domain, privkey, identity=None,
     @param include_headers: a list of strings indicating which headers are to be signed (default all headers not listed as SHOULD NOT sign)
     @param length: true if the l= tag should be included to indicate body length (default False)
     @param logger: a logger to which debug info will be written (default None)
+    @return: DKIM-Signature header field terminated by \\r\\n
+    @raise DKIMException: when the message, include_headers, or key are badly formed.
     """
 
     d = DKIM(message,logger=logger)
@@ -551,6 +567,7 @@ def verify(message, logger=None, dnsfunc=get_txt):
     """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
+    @return: True if signature verifies or False otherwise
     """
     d = DKIM(message,logger=logger)
     try:
