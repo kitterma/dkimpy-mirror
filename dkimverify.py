@@ -32,7 +32,7 @@ if sys.version_info[0] >= 3:
     sys.stdin = sys.stdin.detach()
 
 message = sys.stdin.read()
-verbose = False
+verbose = True
 if verbose:
   d = dkim.DKIM(message)
   res = d.verify()

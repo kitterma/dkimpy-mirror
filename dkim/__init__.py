@@ -520,6 +520,8 @@ class DKIM(object):
         raise KeyFormatError(e)
     try:
         pk = parse_public_key(base64.b64decode(pub[b'p']))
+    except KeyError:
+        raise KeyFormatError("incomplete public key: %s" % s)
     except (TypeError,UnparsableKeyError) as e:
         raise KeyFormatError("could not parse public key (%s): %s" % (pub[b'p'],e))
     include_headers = [x.lower() for x in re.split(br"\s*:\s*", sig[b'h'])]
