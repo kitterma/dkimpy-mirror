@@ -38,7 +38,11 @@ from dkim.crypto import (
     RSASSA_PKCS1_v1_5_verify,
     UnparsableKeyError,
     )
-from dkim.dnsplug import get_txt
+try:
+  from dkim.dnsplug import get_txt
+except:
+  def get_txt(s):
+    raise RuntimeError("DKIM.verify requires DNS or dnspython module")
 from dkim.util import (
     get_default_logger,
     InvalidTagValueList,
