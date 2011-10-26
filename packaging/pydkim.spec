@@ -3,9 +3,9 @@
 
 Summary: Python DKIM library
 Name: %{pythonbase}-pydkim
-Version: 0.4.1
+Version: 0.5
 Release: 1
-Source0: http://hewgill.com/pydkim/pydkim-%{version}.tar.gz
+Source0: http://hewgill.com/pydkim/pydkim-%{version}.tar.bz2
 License: BSD-like
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -42,6 +42,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/dkimverify.1.gz
 
 %changelog
+* Wed Oct 26 2011 Stuart Gathman <stuart@bmsi.com> 0.5-1
+- raise KeyFormatError when missing required key parts in DNS
+
 * Wed Jun 15 2011 Stuart Gathman <stuart@bmsi.com> 0.4.1-1
 - fix except clauses for python3
 - Add test case for <https://launchpad.net/bugs/587783>
