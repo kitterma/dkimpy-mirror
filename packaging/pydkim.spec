@@ -46,6 +46,10 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Wed Oct 26 2011 Stuart Gathman <stuart@bmsi.com> 0.5-1
 - raise KeyFormatError when missing required key parts in DNS
+- test fail on extra headers in message
+- test case for handling of multiple from
+- do not sign all headers by default
+- option to verify signatures other than first
 
 * Wed Jun 15 2011 Stuart Gathman <stuart@bmsi.com> 0.4.1-1
 - fix except clauses for python3
