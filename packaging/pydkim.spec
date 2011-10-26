@@ -29,6 +29,7 @@ Python DKIM library
 %install
 %{__python} setup.py install --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 sed -i -e'/man1/d' INSTALLED_FILES
+#grep '\.pyc$' INSTALLED_FILE | sed -e's/c$/o/' >>INSTALLED_FILES
 mkdir -p ${RPM_BUILD_ROOT}%{_mandir}/man1
 cp -p man/*.1 ${RPM_BUILD_ROOT}%{_mandir}/man1
 
@@ -40,6 +41,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc ChangeLog README LICENSE TODO
 %{_mandir}/man1/dkimsign.1.gz
 %{_mandir}/man1/dkimverify.1.gz
+/usr/lib/%{__python}/site-packages/dkim/__main__.pyo
 
 %changelog
 * Wed Oct 26 2011 Stuart Gathman <stuart@bmsi.com> 0.5-1

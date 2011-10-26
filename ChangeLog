@@ -1,4 +1,4 @@
-UNRELEASED Version 0.5
+2011-10-26 Version 0.5
     - Add test case and fix for <https://launchpad.net/bugs/644046>
     - Add test case and fix for <https://launchpad.net/bugs/737311>
     - Fix dkim.fold()
