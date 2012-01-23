@@ -304,6 +304,8 @@ class DKIM(object):
     self.should_not_sign = set(DKIM.SHOULD_NOT)
     #: Header fields to sign an extra time to prevent additions.
     self.frozen_sign = set(DKIM.FROZEN)
+    #: Signature parameters of last sign or verify
+    self.signature_fields = {}
 
   def add_frozen(self,s):
     """ Add headers not in should_not_sign to frozen_sign.
@@ -456,6 +458,7 @@ class DKIM(object):
 
     self.domain = domain
     self.selector = selector
+    self.signature_fields = sig
     return b'DKIM-Signature: ' + sig_value + b"\r\n"
 
   #: Verify a DKIM signature.
@@ -540,6 +543,7 @@ class DKIM(object):
     self.signed_headers = hash_headers(
         h, canon_policy, headers, include_headers, sigheaders, sig)
     try:
+        self.signature_fields = sig
         signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
         return RSASSA_PKCS1_v1_5_verify(
             h, signature, pk['publicExponent'], pk['modulus'])
