@@ -27,7 +27,6 @@ from dkim.crypto import (
     int2str,
     parse_pem_private_key,
     parse_public_key,
-    perform_rsa,
     RSASSA_PKCS1_v1_5_sign,
     RSASSA_PKCS1_v1_5_verify,
     str2int,
@@ -50,6 +49,37 @@ TEST_KEY_PRIVATE_EXPONENT = int(
     '489900956461640273471526152019568303807247290486052565153701534491987040'
     '131529720476525111651818771481293273124837542067061293644354088836358900'
     '29771161475005043329')
+TEST_KEY_PRIME1 = int(
+    '127343333492908149956322715568115237787784712176275919666517073343689103'
+    '280591709737233188193431204382936008602497360201661766158158969883295914'
+    '16266272177')
+TEST_KEY_PRIME2 = int(
+    '125793967926229270607412639516115399484604596465353856808629588968254772'
+    '302339293254103556785310783521521266982500068526354237606773478050287350'
+    '33316975853')
+TEST_KEY_EXPONENT1 = int(
+    '971401692373919639404678505179789291960987093676634885925231250693661495'
+    '080125935714710587508461815572290443270923375888685273287584323569222368'
+    '5450962737')
+TEST_KEY_EXPONENT2 = int(
+    '405135004809332318340885085107137607293826268763328174261828392259785080'
+    '028911220030572618988900118679333717167345003034279703551607153395397272'
+    '3014807045')
+TEST_KEY_COEFFICIENT = int(
+    '933140693852464192207530806898449261372116224159220632563973880414444021'
+    '989007318611849609226428922185905596238131661588470844906391982906126973'
+    '1282880267')
+TEST_PK = {
+    'version': 0,
+    'modulus': TEST_KEY_MODULUS,
+    'publicExponent': TEST_KEY_PUBLIC_EXPONENT,
+    'privateExponent': TEST_KEY_PRIVATE_EXPONENT,
+    'prime1': TEST_KEY_PRIME1,
+    'prime2': TEST_KEY_PRIME2,
+    'exponent1': TEST_KEY_EXPONENT1,
+    'exponent2': TEST_KEY_EXPONENT2,
+    'coefficient': TEST_KEY_COEFFICIENT,
+}
 
 
 class TestStrIntConversion(unittest.TestCase):
@@ -71,9 +101,7 @@ class TestParseKeys(unittest.TestCase):
 
     def test_parse_pem_private_key(self):
         key = parse_pem_private_key(read_test_data('test.private'))
-        self.assertEqual(key['modulus'], TEST_KEY_MODULUS)
-        self.assertEqual(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
-        self.assertEqual(key['privateExponent'], TEST_KEY_PRIVATE_EXPONENT)
+        self.assertEqual(key, TEST_PK)
 
     def test_parse_public_key(self):
         data = read_test_data('test.txt')
@@ -109,27 +137,6 @@ class TestEMSA_PKCS1_v1_5(unittest.TestCase):
             EMSA_PKCS1_v1_5_encode, hash, 45)
 
 
-class TestRSA(unittest.TestCase):
-
-    message = binascii.unhexlify(b'0004fb')
-    modulus = 186101
-    modlen = 3
-    public_exponent = 907
-    private_exponent = 2851
-
-    def test_perform(self):
-        signed = perform_rsa(
-            self.message, self.private_exponent, self.modulus, self.modlen)
-        self.assertEqual(binascii.unhexlify(b'01f140'), signed)
-
-    def test_sign_and_verify(self):
-        signed = perform_rsa(
-            self.message, self.private_exponent, self.modulus, self.modlen)
-        unsigned = perform_rsa(
-            signed, self.public_exponent, self.modulus, self.modlen)
-        self.assertEqual(self.message, unsigned)
-
-
 class TestRSASSA(unittest.TestCase):
 
     def setUp(self):
@@ -144,19 +151,18 @@ class TestRSASSA(unittest.TestCase):
         b'39d2d6ab8b215b19be0e69ef490885004a474eb26d747a219693e8c')
 
     def test_sign_and_verify(self):
-        signature = RSASSA_PKCS1_v1_5_sign(
-            self.hash, TEST_KEY_PRIVATE_EXPONENT, TEST_KEY_MODULUS)
+        signature = RSASSA_PKCS1_v1_5_sign(self.hash, TEST_PK)
         self.assertEqual(self.test_signature, signature)
         self.assertTrue(
             RSASSA_PKCS1_v1_5_verify(
-                self.hash, signature, TEST_KEY_PUBLIC_EXPONENT,
-                TEST_KEY_MODULUS))
+                self.hash, signature, TEST_PK))
 
     def test_invalid_signature(self):
+        invalid_key = TEST_PK.copy()
+        invalid_key['modulus'] += 1
         self.assertFalse(
             RSASSA_PKCS1_v1_5_verify(
-                self.hash, self.test_signature, TEST_KEY_PUBLIC_EXPONENT,
-                TEST_KEY_MODULUS + 1))
+                self.hash, self.test_signature, invalid_key))
 
 
 def test_suite():

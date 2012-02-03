@@ -1,3 +1,6 @@
+2012-02-03 Version 0.5.1
+    - Apply performance patch from <https://launchpad.net/bugs/901591>
+
 2011-10-26 Version 0.5
     - Add test case and fix for <https://launchpad.net/bugs/644046>
     - Add test case and fix for <https://launchpad.net/bugs/737311>

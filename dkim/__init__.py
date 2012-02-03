@@ -450,8 +450,7 @@ class DKIM(object):
     self.logger.debug("sign headers: %r" % self.signed_headers)
 
     try:
-        sig2 = RSASSA_PKCS1_v1_5_sign(
-            h, pk['privateExponent'], pk['modulus'])
+        sig2 = RSASSA_PKCS1_v1_5_sign(h, pk)
     except DigestTooLargeError:
         raise ParameterError("digest too large for modulus")
     sig_value += base64.b64encode(bytes(sig2))
@@ -545,8 +544,7 @@ class DKIM(object):
     try:
         self.signature_fields = sig
         signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
-        return RSASSA_PKCS1_v1_5_verify(
-            h, signature, pk['publicExponent'], pk['modulus'])
+        return RSASSA_PKCS1_v1_5_verify(h, signature, pk)
     except (TypeError,DigestTooLargeError) as e:
         raise KeyFormatError("digest too large for modulus: %s"%e)
 

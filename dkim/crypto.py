@@ -213,41 +213,60 @@ def int2str(n, length=-1):
     return r
 
 
-def perform_rsa(message, exponent, modulus, mlen):
-    """Perform RSA signing or verification.
+def rsa_decrypt(message, pk, mlen):
+    """Perform RSA decryption/signing
 
     @param message: byte string to operate on
-    @param exponent: public or private key exponent
-    @param modulus: key modulus
+    @param pk: private key data
     @param mlen: desired output length
     @return: byte string result of the operation
     """
-    return int2str(pow(str2int(message), exponent, modulus), mlen)
+    c = str2int(message)
+
+    m1 = pow(c, pk['exponent1'], pk['prime1'])
+    m2 = pow(c, pk['exponent2'], pk['prime2'])
+
+    if m1 < m2:
+        h = pk['coefficient'] * (m1 + pk['prime1'] - m2) % pk['prime1']
+    else:
+        h = pk['coefficient'] * (m1 - m2) % pk['prime1']
+
+    return int2str(m2 + h * pk['prime2'], mlen)
 
 
-def RSASSA_PKCS1_v1_5_sign(hash, private_exponent, modulus):
+def rsa_encrypt(message, pk, mlen):
+    """Perform RSA encryption/verification
+
+    @param message: byte string to operate on
+    @param pk: public key data
+    @param mlen: desired output length
+    @return: byte string result of the operation
+    """
+    m = str2int(message)
+    return int2str(pow(m, pk['publicExponent'], pk['modulus']), mlen)
+
+
+def RSASSA_PKCS1_v1_5_sign(hash, private_key):
     """Sign a digest with RFC3447 RSASSA-PKCS1-v1_5.
 
     @param hash: hash object to sign
-    @param private_exponent: private key exponent
-    @param modulus: key modulus
+    @param private_key: private key data
     @return: signed digest byte string
     """
-    modlen = len(int2str(modulus))
+    modlen = len(int2str(private_key['modulus']))
     encoded_digest = EMSA_PKCS1_v1_5_encode(hash, modlen)
-    return perform_rsa(encoded_digest, private_exponent, modulus, modlen)
+    return rsa_decrypt(encoded_digest, private_key, modlen)
 
 
-def RSASSA_PKCS1_v1_5_verify(hash, signature, public_exponent, modulus):
+def RSASSA_PKCS1_v1_5_verify(hash, signature, public_key):
     """Verify a digest signed with RFC3447 RSASSA-PKCS1-v1_5.
 
     @param hash: hash object to check
     @param signature: signed digest byte string
-    @param public_exponent: public key exponent
-    @param modulus: key modulus
+    @param public_key: public key data
     @return: True if the signature is valid, False otherwise
     """
-    modlen = len(int2str(modulus))
+    modlen = len(int2str(public_key['modulus']))
     encoded_digest = EMSA_PKCS1_v1_5_encode(hash, modlen)
-    signed_digest = perform_rsa(signature, public_exponent, modulus, modlen)
+    signed_digest = rsa_encrypt(signature, public_key, modlen)
     return encoded_digest == signed_digest
