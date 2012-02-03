@@ -1,5 +1,3 @@
-Handle multiple DKIM-Signature header lines, ie. more than just the first one.
-
 Better debug logging output.
 
 General code cleanup.
