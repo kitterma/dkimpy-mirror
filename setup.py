@@ -42,6 +42,20 @@ Identified Mail) email signing and verification.""",
     data_files = [(os.path.join('share', 'man', 'man1'),
         ['man/dkimsign.1']), (os.path.join('share', 'man', 'man1'),
         ['man/dkimverify.1'])],
+    classifiers = [
+      'Development Status :: 5 - Production/Stable',
+      'Environment :: No Input/Output (Daemon)',
+      'Intended Audience :: Developers',
+      'License :: DFSG approved',
+      'Natural Language :: English',
+      'Operating System :: OS Independent',
+      'Programming Language :: Python',
+      'Programming Language :: Python3',
+      'Topic :: Communications :: Email :: Mail Transport Agents',
+      'Topic :: Communications :: Email :: Filters',
+      'Topic :: Internet :: Name Service (DNS)',
+      'Topic :: Software Development :: Libraries :: Python Modules'
+      ]
 )
 
 if os.name != 'posix':
