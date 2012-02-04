@@ -87,7 +87,7 @@ class TestSignAndVerify(unittest.TestCase):
         self.assertFalse(res)
 
     def test_dkim_dignature_canonicalization(self):
-      # <https://bugs.edge.launchpad.net/ubuntu/+source/pydkim/+bug/587783>
+      # <https://bugs.launchpad.net/ubuntu/+source/pydkim/+bug/587783>
       # Relaxed-mode header signing is wrong
       sample_msg = """\
 From: mbp@canonical.com
@@ -131,7 +131,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
         self.assertTrue(result)
 
     def test_extra_headers(self):
-        # <https://bugs.launchpad.net/pydkim/+bug/737311>
+        # <https://bugs.launchpad.net/dkimpy/+bug/737311>
         # extra headers above From caused failure
         #message = read_test_data("test_extra.message")
         message = read_test_data("message.mbox")
@@ -152,7 +152,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
                 self.assertTrue(res)
 
     def test_multiple_from_fails(self):
-        # <https://bugs.launchpad.net/pydkim/+bug/644046>
+        # <https://bugs.launchpad.net/dkimpy/+bug/644046>
         # additional From header fields should cause verify failure
         hfrom = b'From: "Resident Evil" <sales@spammer.com>\r\n'
         h,b = self.message.split(b'\n\n',1)

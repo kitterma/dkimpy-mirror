@@ -1,14 +1,17 @@
-pydkim - DKIM (DomainKeys Identified Mail)
+dkimpy - DKIM (DomainKeys Identified Mail)
+https://launchpad.net/dkimpy/
+
+Fork of:
 http://hewgill.com/pydkim/
 
 INTRODUCTION
 
-pydkim is a library that implements DKIM (DomainKeys Identified Mail) email
+dkimpy is a library that implements DKIM (DomainKeys Identified Mail) email
 signing and verification.
 
 VERSION
 
-This is pydkim 0.5.
+This is dkimpy 0.5.1.
 
 REQUIREMENTS
 
@@ -17,13 +20,13 @@ REQUIREMENTS
 
 INSTALLATION
 
-To build and install pydkim:
+To build and install dkimpy:
 
     python setup.py install
 
 TESTING
 
-To run pydkim's test suite:
+To run dkimpy's test suite:
 
     PYTHONPATH=. python dkim
 or
@@ -38,13 +41,11 @@ Alternatively, if you have testrepository installed:
 
 USAGE
 
-The pydkim library offers one module called dkim. The sign() function takes an
+The dkimpy library offers one module called dkim. The sign() function takes an
 RFC822 formatted message, along with some signing options, and returns a
 DKIM-Signature header line that can be prepended to the message. The verify()
 function takes an RFC822 formatted message, and returns True or False depending
 on whether the signature verifies correctly.
-
-For full documentation, see: http://hewgill.local/pydkim/html/
 
 Two helper programs are also supplied: dkimsign.py and dkimverify.py.
 
@@ -62,4 +63,5 @@ code 1.
 
 FEEDBACK
 
-Bug reports may be sent to <greg@hewgill.com>.
+Bug reports may be submitted to the bug tracker for the dkimpy project on
+launchpad.

@@ -71,8 +71,8 @@ def parse_tag_value(tag_list):
 
 
 def get_default_logger():
-    """Get the default pydkim logger."""
-    logger = logging.getLogger('pydkim')
+    """Get the default dkimpy logger."""
+    logger = logging.getLogger('dkimpy')
     if not logger.handlers:
         logger.addHandler(NullHandler())
     return logger

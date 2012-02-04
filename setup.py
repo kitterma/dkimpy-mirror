@@ -19,7 +19,7 @@
 # Copyright (c) 2008 Greg Hewgill http://hewgill.com
 #
 # This has been modified from the original software.
-# Copyright (c) 2011 Scott Kitterman <scott@kitterman.com>
+# Copyright (c) 2011,2012 Scott Kitterman <scott@kitterman.com>
 
 from distutils.core import setup
 import os
@@ -27,15 +27,15 @@ import os
 version = "0.5.1"
 
 setup(
-    name = "pydkim",
+    name = "dkimipy",
     version = version,
     description = "DKIM (DomainKeys Identified Mail)",
     long_description =
-    """pydkim is a Python library that implements DKIM (DomainKeys
+    """dkimpy is a Python library that implements DKIM (DomainKeys
 Identified Mail) email signing and verification.""",
-    author = "Greg Hewgill",
-    author_email = "greg@hewgill.com",
-    url = "http://hewgill.com/pydkim/",
+    author = "Scott Kitterman",
+    author_email = "scott@kitterman.com",
+    url = "https://launchpad.net/dkimpy",
     license = "BSD-like",
     packages = ["dkim"],
     scripts = ["dkimsign.py", "dkimverify.py"],

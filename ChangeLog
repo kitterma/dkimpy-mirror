@@ -1,4 +1,5 @@
 2012-02-03 Version 0.5.1
+    - Rename tarball to dkimpy to avoid confusion with original project
     - Apply performance patch from <https://launchpad.net/bugs/901591>
     - save parsed signatures in DKIM object
     - do not require DNS/dnspython for signing
