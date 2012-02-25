@@ -161,7 +161,7 @@ def validate_signature_fields(sig):
         not sig[b'i'].endswith(sig[b'd']) or
         sig[b'i'][-len(sig[b'd'])-1] not in ('@', '.', 64, 46)):
         raise ValidationError(
-            "i= domain is not a subdomain of d= (i=%s d=%d)" %
+            "i= domain is not a subdomain of d= (i=%s d=%s)" %
             (sig[b'i'], sig[b'd']))
     if b'l' in sig and re.match(br"\d{,76}$", sig['l']) is None:
         raise ValidationError(
@@ -304,8 +304,6 @@ class DKIM(object):
     self.should_not_sign = set(DKIM.SHOULD_NOT)
     #: Header fields to sign an extra time to prevent additions.
     self.frozen_sign = set(DKIM.FROZEN)
-    #: Signature parameters of last sign or verify
-    self.signature_fields = {}
 
   def add_frozen(self,s):
     """ Add headers not in should_not_sign to frozen_sign.
@@ -329,10 +327,14 @@ class DKIM(object):
       self.headers, self.body = rfc822_parse(message)
     else:
       self.headers, self.body = [],''
-    #: The DKIM signing domain last signed or verified
+    #: The DKIM signing domain last signed or verified.
     self.domain = None
-    #: The DKIM key selector last signed or verified
+    #: The DKIM key selector last signed or verified.
     self.selector = 'default'
+    #: Signature parameters of last sign or verify.  To parse
+    #: a DKIM-Signature header field that you have in hand,
+    #: use L{dkim.util.parse_tag_value}.
+    self.signature_fields = {}
     #: The list of headers last signed or verified.  Each header
     #: is a name,value tuple.  FIXME: The headers are canonicalized.
     #: This could be more useful as original headers.
