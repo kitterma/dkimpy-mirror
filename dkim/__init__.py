@@ -584,5 +584,5 @@ def verify(message, logger=None, dnsfunc=get_txt):
         return d.verify(dnsfunc=dnsfunc)
     except DKIMException as x:
         if logger is not None:
-            logger.error("%s" % e)
+            logger.error("%s" % x)
         return False
