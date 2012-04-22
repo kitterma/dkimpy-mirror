@@ -392,7 +392,7 @@ class DKIM(object):
   #: @raise DKIMException: when the message, include_headers, or key are badly
   #: formed.
   def sign(self, selector, domain, privkey, identity=None,
-        canonicalize=(b'simple',b'simple'), include_headers=None, length=False):
+        canonicalize=(b'relaxed',b'simple'), include_headers=None, length=False):
     try:
         pk = parse_pem_private_key(privkey)
     except UnparsableKeyError as e:
@@ -551,7 +551,7 @@ class DKIM(object):
         raise KeyFormatError("digest too large for modulus: %s"%e)
 
 def sign(message, selector, domain, privkey, identity=None,
-         canonicalize=(b'simple', b'simple'),
+         canonicalize=(b'relaxed', b'simple'),
          signature_algorithm=b'rsa-sha256',
          include_headers=None, length=False, logger=None):
     """Sign an RFC822 message and return the DKIM-Signature header line.
