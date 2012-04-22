@@ -445,7 +445,7 @@ class DKIM(object):
 
     sig_value = fold(b"; ".join(b"=".join(x) for x in sigfields))
     dkim_header = (b'DKIM-Signature', b' ' + sig_value)
-    h = hashlib.sha256()
+    h = hasher()
     sig = dict(sigfields)
     self.signed_headers = hash_headers(
         h, canon_policy, headers, include_headers, [dkim_header],sig)

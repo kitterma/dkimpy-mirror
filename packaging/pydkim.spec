@@ -44,6 +44,11 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/%{__python}/site-packages/dkim/__main__.pyo
 
 %changelog
+* Sat Apr 21 2012 Stuart Gathman <stuart@bmsi.com> 0.5.2-1
+- Fix sha1 hash, Bug #969206
+- Fix NoAnswer exception using dnspython
+- Fix typos reporting ValidationError and DKIMException
+
 * Fri Feb 03 2012 Stuart Gathman <stuart@bmsi.com> 0.5.1-1
 - performance patch from https://launchpad.net/~petri Petri Lehtinen
 - save parsed signatures in DKIM object
