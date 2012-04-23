@@ -455,6 +455,8 @@ class DKIM(object):
         sig2 = RSASSA_PKCS1_v1_5_sign(h, pk)
     except DigestTooLargeError:
         raise ParameterError("digest too large for modulus")
+    # Folding b= is explicity allowed, but yahoo and live.com are broken
+    #sig_value = fold(sig_value + base64.b64encode(bytes(sig2)))
     sig_value += base64.b64encode(bytes(sig2))
 
     self.domain = domain

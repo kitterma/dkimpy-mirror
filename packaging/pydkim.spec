@@ -48,6 +48,7 @@ rm -rf $RPM_BUILD_ROOT
 - Fix sha1 hash, Bug #969206
 - Fix NoAnswer exception using dnspython
 - Fix typos reporting ValidationError and DKIMException
+- Change default canonicalization to relaxed/simple to work around Bug #939128
 
 * Fri Feb 03 2012 Stuart Gathman <stuart@bmsi.com> 0.5.1-1
 - performance patch from https://launchpad.net/~petri Petri Lehtinen

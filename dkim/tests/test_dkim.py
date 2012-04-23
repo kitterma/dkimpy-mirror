@@ -86,9 +86,12 @@ class TestSignAndVerify(unittest.TestCase):
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertFalse(res)
 
-    def test_dkim_dignature_canonicalization(self):
+    def test_dkim_signature_canonicalization(self):
       # <https://bugs.launchpad.net/ubuntu/+source/pydkim/+bug/587783>
       # Relaxed-mode header signing is wrong
+      # <https://bugs.launchpad.net/dkimpy/+bug/939128>
+      # Simple-mode signature header verification is wrong
+      # (should ignore FWS anywhere in signature tag: b=)
       sample_msg = """\
 From: mbp@canonical.com
 To: scottk@example.com
@@ -125,8 +128,13 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
 
         dkim_header = dkim.sign(sample_msg, 'example', 'canonical.com',
             sample_privkey, canonicalize=(header_mode, dkim.Relaxed))
-        signed = dkim_header + sample_msg
-
+        # Folding dkim_header affects b= tag only, since dkim.sign folds
+        # sig_value with empty b= before hashing, and then appends the
+        # signature.  So folding dkim_header again adds FWS to
+        # the b= tag only.  This should be ignored even with
+        # simple canonicalization.  
+        # http://tools.ietf.org/html/rfc4871#section-3.5
+        signed = dkim.fold(dkim_header) + sample_msg
         result = dkim.verify(signed,dnsfunc=lambda x: _dns_responses[x])
         self.assertTrue(result)
 
