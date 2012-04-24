@@ -89,11 +89,6 @@ class ValidationError(DKIMException):
     """Validation error."""
     pass
 
-def _remove(s, t):
-    i = s.find(t)
-    assert i >= 0
-    return s[:i] + s[i+len(t):]
-
 def select_headers(headers, include_headers):
     """Select message header fields to be signed/verified.
 
@@ -119,14 +114,17 @@ def select_headers(headers, include_headers):
         lastindex[h] = i
     return sign_headers
 
+FWS = r'(?:\r\n\s+)?'
+RE_BTAG = re.compile(r'([; ]b'+FWS+r'=)(?:'+FWS+r'[a-zA-Z0-9+/=])*(?:\r\n\Z)?')
+
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
-                 sigheaders, sig):
+                 sigheader, sig):
     """Update hash for signed message header fields."""
     sign_headers = select_headers(headers,include_headers)
     # The call to _remove() assumes that the signature b= only appears
     # once in the signature header
     cheaders = canonicalize_headers.canonicalize_headers(
-        [(sigheaders[0][0], _remove(sigheaders[0][1], sig[b'b']))])
+        [(sigheader[0], RE_BTAG.sub(b'\\1',sigheader[1]))])
     # the dkim sig is hashed with no trailing crlf, even if the
     # canonicalization algorithm would add one.
     for x,y in sign_headers + [(x, y.rstrip()) for x,y in cheaders]:
@@ -437,18 +435,21 @@ class DKIM(object):
         (b't', str(int(time.time())).encode('ascii')),
         (b'h', b" : ".join(include_headers)),
         (b'bh', bodyhash),
-        (b'b', b""),
+        # Force b= to fold onto it's own line so that refolding after
+        # adding sig doesn't change whitespace for previous tags.
+        (b'b', b'0'*60), 
     ] if x]
     include_headers = [x.lower() for x in include_headers]
     # record what verify should extract
     self.include_headers = tuple(include_headers)
 
     sig_value = fold(b"; ".join(b"=".join(x) for x in sigfields))
+    sig_value = RE_BTAG.sub(b'\\1',sig_value)
     dkim_header = (b'DKIM-Signature', b' ' + sig_value)
     h = hasher()
     sig = dict(sigfields)
     self.signed_headers = hash_headers(
-        h, canon_policy, headers, include_headers, [dkim_header],sig)
+        h, canon_policy, headers, include_headers, dkim_header,sig)
     self.logger.debug("sign headers: %r" % self.signed_headers)
 
     try:
@@ -456,8 +457,11 @@ class DKIM(object):
     except DigestTooLargeError:
         raise ParameterError("digest too large for modulus")
     # Folding b= is explicity allowed, but yahoo and live.com are broken
-    #sig_value = fold(sig_value + base64.b64encode(bytes(sig2)))
-    sig_value += base64.b64encode(bytes(sig2))
+    #sig_value += base64.b64encode(bytes(sig2))
+    # Instead of leaving unfolded (which lets an MTA fold it later and still
+    # breaks yahoo and live.com), we change the default signing mode to
+    # relaxed/simple (for broken receivers), and fold now.
+    sig_value = fold(sig_value + base64.b64encode(bytes(sig2)))
 
     self.domain = domain
     self.selector = selector
@@ -484,7 +488,6 @@ class DKIM(object):
     except InvalidTagValueList as e:
         raise MessageFormatError(e)
 
-    sig = parse_tag_value(sigheaders[idx][1])
     logger = self.logger
     logger.debug("sig: %r" % sig)
 
@@ -544,7 +547,7 @@ class DKIM(object):
       include_headers.append('from')      
     h = hasher()
     self.signed_headers = hash_headers(
-        h, canon_policy, headers, include_headers, sigheaders, sig)
+        h, canon_policy, headers, include_headers, sigheaders[idx], sig)
     try:
         self.signature_fields = sig
         signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
