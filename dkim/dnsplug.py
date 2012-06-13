@@ -27,10 +27,12 @@ __all__ = [
 
 def get_txt_dnspython(name):
     """Return a TXT record associated with a DNS name."""
-    a = dns.resolver.query(name, dns.rdatatype.TXT,raise_on_no_answer=False)
-    for r in a.response.answer:
-        if r.rdtype == dns.rdatatype.TXT:
-            return b"".join(r.items[0].strings)
+    try:
+      a = dns.resolver.query(name, dns.rdatatype.TXT,raise_on_no_answer=False)
+      for r in a.response.answer:
+          if r.rdtype == dns.rdatatype.TXT:
+              return b"".join(r.items[0].strings)
+    except dns.resolver.NXDOMAIN: pass
     return None
 
 
