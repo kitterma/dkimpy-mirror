@@ -485,6 +485,7 @@ class DKIM(object):
     # By default, we validate the first DKIM-Signature line found.
     try:
         sig = parse_tag_value(sigheaders[idx][1])
+        self.signature_fields = sig
     except InvalidTagValueList as e:
         raise MessageFormatError(e)
 
@@ -549,7 +550,6 @@ class DKIM(object):
     self.signed_headers = hash_headers(
         h, canon_policy, headers, include_headers, sigheaders[idx], sig)
     try:
-        self.signature_fields = sig
         signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
         return RSASSA_PKCS1_v1_5_verify(h, signature, pk)
     except (TypeError,DigestTooLargeError) as e:
