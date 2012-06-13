@@ -27,7 +27,7 @@ import os
 version = "0.5.2"
 
 setup(
-    name = "dkimipy",
+    name = "dkimpy",
     version = version,
     description = "DKIM (DomainKeys Identified Mail)",
     long_description =
