@@ -1,0 +1,10 @@
+include dkim/*
+include README
+include ChangeLog
+include MANIFEST.in
+include dkimsign.py
+include dkimverify.py
+include dnsplug.py
+include man/*
+include PKG-INFO
+include test.py
