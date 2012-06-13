@@ -1,4 +1,6 @@
 include dkim/*
+include dkim/tests/*
+include dkim/tests/data/*
 include README
 include ChangeLog
 include MANIFEST.in
@@ -6,5 +8,4 @@ include dkimsign.py
 include dkimverify.py
 include dnsplug.py
 include man/*
-include PKG-INFO
 include test.py
