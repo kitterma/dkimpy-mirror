@@ -1,3 +1,11 @@
+2012-06-13 Verion 0.5.2
+    - Change canonicalization defaults to work around issues with different
+      verification implementations <https://launchpad.net/bugs/939128>
+    - Fully fold DKIM-Signature on sign, and ignore FWS in b= value on verify
+    - Fix hashing problem while signing using sha1
+    - Trap NXDOMAIN exception with dnspython
+    - Other minor bug fixes
+
 2012-02-03 Version 0.5.1
     - Rename tarball to dkimpy to avoid confusion with original project
     - Apply performance patch from <https://launchpad.net/bugs/901591>

@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: dkimpy
-Version: 0.5.1
+Version: 0.5.2
 Summary: DKIM (DomainKeys Identified Mail)
 Home-page: https://launchapd.net/dkimpy
 Author: Scott Kitterman
