@@ -112,7 +112,7 @@ def parse_public_key(data):
         x = asn1_parse(ASN1_Object, data)
         pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
     except ASN1FormatError as e:
-        raise UnparsableKeyError(str(e))
+        raise UnparsableKeyError('Unparsable public key: ' + str(e))
     pk = {
         'modulus': pkd[0][0],
         'publicExponent': pkd[0][1],
@@ -129,7 +129,7 @@ def parse_private_key(data):
     try:
         pka = asn1_parse(ASN1_RSAPrivateKey, data)
     except ASN1FormatError as e:
-        raise UnparsableKeyError(str(e))
+        raise UnparsableKeyError('Unparsable private key: ' + str(e))
     pk = {
         'version': pka[0][0],
         'modulus': pka[0][1],

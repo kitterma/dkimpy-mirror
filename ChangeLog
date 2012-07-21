@@ -1,4 +1,8 @@
-2012-06-13 Verion 0.5.2
+UNRELEASED Version 0.5.3
+    - Make key parsing error messages more specific to help troubleshooting
+      (Based on user feedback)
+
+2012-06-13 Version 0.5.2
     - Change canonicalization defaults to work around issues with different
       verification implementations <https://launchpad.net/bugs/939128>
     - Fully fold DKIM-Signature on sign, and ignore FWS in b= value on verify
