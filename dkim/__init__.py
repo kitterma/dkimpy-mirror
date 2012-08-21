@@ -493,6 +493,8 @@ class DKIM(object):
     logger.debug("sig: %r" % sig)
 
     validate_signature_fields(sig)
+    self.domain = sig[b'd']
+    self.selector = sig[b's']
 
     try:
         canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c'))
@@ -506,8 +508,6 @@ class DKIM(object):
     except KeyError as e:
         raise MessageFormatError("unknown signature algorithm: %s" % e.args[0])
 
-    self.domain = sig[b'd']
-    self.selector = sig[b's']
     if b'l' in sig:
         body = body[:int(sig[b'l'])]
 
