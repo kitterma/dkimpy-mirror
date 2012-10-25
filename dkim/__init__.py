@@ -65,6 +65,17 @@ __all__ = [
 Relaxed = b'relaxed'    # for clients passing dkim.Relaxed
 Simple = b'simple'      # for clients passing dkim.Simple
 
+# DKIM standard requires minimum key length of 1024
+MINKEY = 1L << 1023
+
+def bitsize(x):
+    """Return size of long in bits."""
+    b = 0
+    while x > 0:
+      x >>= 1
+      b += 1
+    return b
+
 class DKIMException(Exception):
     """Base class for DKIM errors."""
     pass
@@ -534,6 +545,9 @@ class DKIM(object):
         raise KeyFormatError(e)
     try:
         pk = parse_public_key(base64.b64decode(pub[b'p']))
+        if pk['modulus'] < MINKEY:
+          raise KeyFormatError("public key too small: %d"
+                % bitsize(pk['modulus']))
     except KeyError:
         raise KeyFormatError("incomplete public key: %s" % s)
     except (TypeError,UnparsableKeyError) as e:
