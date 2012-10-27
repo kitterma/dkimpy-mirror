@@ -3,7 +3,7 @@
 
 Summary: Python DKIM library
 Name: %{pythonbase}-pydkim
-Version: 0.5.1
+Version: 0.5.3
 Release: 1
 Source0: http://hewgill.com/pydkim/pydkim-%{version}.tar.bz2
 License: BSD-like
@@ -44,6 +44,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/%{__python}/site-packages/dkim/__main__.pyo
 
 %changelog
+* Sat Apr 21 2012 Stuart Gathman <stuart@bmsi.com> 0.5.3-1
+- Raise KeyFormatError when public key less than 1024 bits
+
 * Sat Apr 21 2012 Stuart Gathman <stuart@bmsi.com> 0.5.2-1
 - Fix sha1 hash, Bug #969206
 - Fix NoAnswer exception using dnspython

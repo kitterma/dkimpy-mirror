@@ -65,16 +65,9 @@ __all__ = [
 Relaxed = b'relaxed'    # for clients passing dkim.Relaxed
 Simple = b'simple'      # for clients passing dkim.Simple
 
-# DKIM standard requires minimum key length of 1024
-MINKEY = 1L << 1023
-
 def bitsize(x):
     """Return size of long in bits."""
-    b = 0
-    while x > 0:
-      x >>= 1
-      b += 1
-    return b
+    return len(bin(x)) - 2
 
 class DKIMException(Exception):
     """Base class for DKIM errors."""
@@ -125,8 +118,8 @@ def select_headers(headers, include_headers):
         lastindex[h] = i
     return sign_headers
 
-FWS = r'(?:\r\n\s+)?'
-RE_BTAG = re.compile(r'([; ]b'+FWS+r'=)(?:'+FWS+r'[a-zA-Z0-9+/=])*(?:\r\n\Z)?')
+FWS = r'(?:\r?\n\s+)?'
+RE_BTAG = re.compile(r'([;\s]b'+FWS+r'=)(?:'+FWS+r'[a-zA-Z0-9+/=])*(?:\r?\n\Z)?')
 
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
                  sigheader, sig):
@@ -295,7 +288,8 @@ class DKIM(object):
   #: (with either \\n or \\r\\n line endings)
   #: @param logger: a logger to which debug info will be written (default None)
   #: @param signature_algorithm: the signing algorithm to use when signing
-  def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256'):
+  def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256',
+        minkey=1024):
     self.set_message(message)
     if logger is None:
         logger = get_default_logger()
@@ -313,6 +307,9 @@ class DKIM(object):
     self.should_not_sign = set(DKIM.SHOULD_NOT)
     #: Header fields to sign an extra time to prevent additions.
     self.frozen_sign = set(DKIM.FROZEN)
+    #: Minimum public key size.  Shorter keys raise KeyFormatError. The
+    #: default is 1024
+    self.minkey = minkey
 
   def add_frozen(self,s):
     """ Add headers not in should_not_sign to frozen_sign.
@@ -348,6 +345,8 @@ class DKIM(object):
     #: is a name,value tuple.  FIXME: The headers are canonicalized.
     #: This could be more useful as original headers.
     self.signed_headers = []
+    #: The public key size last verified.
+    self.keysize = 0
 
   def default_sign_headers(self):
     """Return the default list of headers to sign: those in should_sign or
@@ -545,9 +544,9 @@ class DKIM(object):
         raise KeyFormatError(e)
     try:
         pk = parse_public_key(base64.b64decode(pub[b'p']))
-        if pk['modulus'] < MINKEY:
-          raise KeyFormatError("public key too small: %d"
-                % bitsize(pk['modulus']))
+        self.keysize = bitsize(pk['modulus'])
+        if self.keysize < self.minkey:
+          raise KeyFormatError("public key too small: %d" % self.keysize)
     except KeyError:
         raise KeyFormatError("incomplete public key: %s" % s)
     except (TypeError,UnparsableKeyError) as e:
