@@ -591,13 +591,13 @@ def sign(message, selector, domain, privkey, identity=None,
         include_headers = d.all_sign_headers()
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
-def verify(message, logger=None, dnsfunc=get_txt):
+def verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
     """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
     @return: True if signature verifies or False otherwise
     """
-    d = DKIM(message,logger=logger)
+    d = DKIM(message,logger=logger,minkey=minkey)
     try:
         return d.verify(dnsfunc=dnsfunc)
     except DKIMException as x:

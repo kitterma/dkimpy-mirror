@@ -135,7 +135,15 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
         # simple canonicalization.  
         # http://tools.ietf.org/html/rfc4871#section-3.5
         signed = dkim.fold(dkim_header) + sample_msg
-        result = dkim.verify(signed,dnsfunc=lambda x: _dns_responses[x])
+        result = dkim.verify(signed,dnsfunc=lambda x: _dns_responses[x],
+                minkey=512)
+        self.assertTrue(result)
+        dkim_header = dkim.fold(dkim_header)
+        # use a tab for last fold to test tab in FWS bug
+        pos = dkim_header.rindex(b'\r\n ')
+        dkim_header = dkim_header[:pos]+b'\r\n\t'+dkim_header[pos+3:]
+        result = dkim.verify(dkim_header + sample_msg,
+                dnsfunc=lambda x: _dns_responses[x], minkey=512)
         self.assertTrue(result)
 
     def test_extra_headers(self):
