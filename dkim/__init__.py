@@ -545,8 +545,6 @@ class DKIM(object):
     try:
         pk = parse_public_key(base64.b64decode(pub[b'p']))
         self.keysize = bitsize(pk['modulus'])
-        if self.keysize < self.minkey:
-          raise KeyFormatError("public key too small: %d" % self.keysize)
     except KeyError:
         raise KeyFormatError("incomplete public key: %s" % s)
     except (TypeError,UnparsableKeyError) as e:
@@ -564,7 +562,10 @@ class DKIM(object):
         h, canon_policy, headers, include_headers, sigheaders[idx], sig)
     try:
         signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
-        return RSASSA_PKCS1_v1_5_verify(h, signature, pk)
+        res = RSASSA_PKCS1_v1_5_verify(h, signature, pk)
+        if res and self.keysize < self.minkey:
+          raise KeyFormatError("public key too small: %d" % self.keysize)
+        return res
     except (TypeError,DigestTooLargeError) as e:
         raise KeyFormatError("digest too large for modulus: %s"%e)
 

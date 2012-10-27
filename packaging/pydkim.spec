@@ -45,7 +45,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Sat Apr 21 2012 Stuart Gathman <stuart@bmsi.com> 0.5.3-1
-- Raise KeyFormatError when public key less than 1024 bits
+- Raise KeyFormatError when public key less than 1024 bits by default
+- Fix TAB in FWS bug
 
 * Sat Apr 21 2012 Stuart Gathman <stuart@bmsi.com> 0.5.2-1
 - Fix sha1 hash, Bug #969206
