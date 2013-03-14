@@ -53,44 +53,46 @@ def asn1_parse(template, data):
     data = bytearray(data)
     r = []
     i = 0
-    for t in template:
-        tag = data[i]
-        i += 1
-        if tag == t[0]:
-            length = data[i]
-            i += 1
-            if length & 0x80:
-                n = length & 0x7f
-                length = 0
-                for j in range(n):
-                    length = (length << 8) | data[i]
-                    i += 1
-            if tag == INTEGER:
-                n = 0
-                for j in range(length):
-                    n = (n << 8) | data[i]
-                    i += 1
-                r.append(n)
-            elif tag == BIT_STRING:
-                r.append(data[i:i+length])
-                i += length
-            elif tag == NULL:
-                assert length == 0
-                r.append(None)
-            elif tag == OBJECT_IDENTIFIER:
-                r.append(data[i:i+length])
-                i += length
-            elif tag == SEQUENCE:
-                r.append(asn1_parse(t[1], data[i:i+length]))
-                i += length
-            else:
-                raise ASN1FormatError(
-                    "Unexpected tag in template: %02x" % tag)
-        else:
-            raise ASN1FormatError(
-                "Unexpected tag (got %02x, expecting %02x)" % (tag, t[0]))
-    return r
-
+    try:
+      for t in template:
+          tag = data[i]
+          i += 1
+          if tag == t[0]:
+              length = data[i]
+              i += 1
+              if length & 0x80:
+                  n = length & 0x7f
+                  length = 0
+                  for j in range(n):
+                      length = (length << 8) | data[i]
+                      i += 1
+              if tag == INTEGER:
+                  n = 0
+                  for j in range(length):
+                      n = (n << 8) | data[i]
+                      i += 1
+                  r.append(n)
+              elif tag == BIT_STRING:
+                  r.append(data[i:i+length])
+                  i += length
+              elif tag == NULL:
+                  assert length == 0
+                  r.append(None)
+              elif tag == OBJECT_IDENTIFIER:
+                  r.append(data[i:i+length])
+                  i += length
+              elif tag == SEQUENCE:
+                  r.append(asn1_parse(t[1], data[i:i+length]))
+                  i += length
+              else:
+                  raise ASN1FormatError(
+                      "Unexpected tag in template: %02x" % tag)
+          else:
+              raise ASN1FormatError(
+                  "Unexpected tag (got %02x, expecting %02x)" % (tag, t[0]))
+      return r
+    except IndexError:
+      raise ASN1FormatError("Data truncated at byte %d"%i)
 
 def asn1_length(n):
     """Return a string representing a field length in ASN.1 format.

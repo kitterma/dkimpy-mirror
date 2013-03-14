@@ -23,6 +23,7 @@ import unittest
 
 from dkim.crypto import (
     DigestTooLargeError,
+    UnparsableKeyError,
     EMSA_PKCS1_v1_5_encode,
     int2str,
     parse_pem_private_key,
@@ -108,7 +109,11 @@ class TestParseKeys(unittest.TestCase):
         key = parse_public_key(base64.b64decode(parse_tag_value(data)[b'p']))
         self.assertEqual(key['modulus'], TEST_KEY_MODULUS)
         self.assertEqual(key['publicExponent'], TEST_KEY_PUBLIC_EXPONENT)
-
+        try:
+          data = read_test_data('test_bad.txt')
+          key = parse_public_key(base64.b64decode(parse_tag_value(data)[b'p']))
+        except UnparsableKeyError: return
+        self.fail("failed to reject invalid public key")
 
 class TestEMSA_PKCS1_v1_5(unittest.TestCase):
 
