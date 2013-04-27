@@ -540,7 +540,7 @@ class DKIM(object):
         raise KeyFormatError("missing public key: %s"%name)
     try:
         pub = parse_tag_value(s)
-    except InvalidTagValueList:
+    except InvalidTagValueList as e:
         raise KeyFormatError(e)
     try:
         pk = parse_public_key(base64.b64decode(pub[b'p']))
