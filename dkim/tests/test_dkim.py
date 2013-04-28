@@ -192,6 +192,20 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
                 res = dkim.verify(sig+message, dnsfunc=self.dnsfunc)
                 self.assertFalse(res)
 
+    def test_no_from_fails(self):
+        # Body From is mandatory to be in the message and mandatory to sign
+        sigerror = False
+        sig = ''
+        message = read_test_data('test_nofrom.message')
+        selector = 'test'
+        domain = 'example.com'
+        identity = None
+        try:
+            sig = dkim.sign(message, selector, domain, read_test_data('test.private'), identity = identity)
+        except dkim.ParameterError as sigerror:
+            pass
+        self.assertTrue(sigerror)
+
 def test_suite():
     from unittest import TestLoader
     return TestLoader().loadTestsFromName(__name__)
