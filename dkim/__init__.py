@@ -589,7 +589,7 @@ def sign(message, selector, domain, privkey, identity=None,
 
     d = DKIM(message,logger=logger)
     if not include_headers:
-        include_headers = d.all_sign_headers()
+        include_headers = d.default_sign_headers()
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
 def verify(message, logger=None, dnsfunc=get_txt, minkey=1024):

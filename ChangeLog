@@ -1,6 +1,8 @@
 UNRELEASED Version 0.5.3
     - Make key parsing error messages more specific to help troubleshooting
       (Based on user feedback)
+    - Change dkimsign.py to sign the default (recommended) set of headers
+      instead of all headers
 
 2012-06-13 Version 0.5.2
     - Change canonicalization defaults to work around issues with different
