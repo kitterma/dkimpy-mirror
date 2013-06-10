@@ -1,8 +1,13 @@
-UNRELEASED Version 0.5.3
-    - Make key parsing error messages more specific to help troubleshooting
-      (Based on user feedback)
+2013-06-10 Version 0.5.4
+    - Fixed error in FWS regular expression that cause some valid signatures
+      to fail verification (Thanks to Peter Palfrader (weasel) for the patch)
+      http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=711751
     - Change dkimsign.py to sign the default (recommended) set of headers
       instead of all headers
+
+2012-10-27 Version 0.5.3
+    - Make key parsing error messages more specific to help troubleshooting
+      based on user feedback
 
 2012-06-13 Version 0.5.2
     - Change canonicalization defaults to work around issues with different

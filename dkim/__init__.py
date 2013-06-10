@@ -118,7 +118,8 @@ def select_headers(headers, include_headers):
         lastindex[h] = i
     return sign_headers
 
-FWS = r'(?:\r?\n\s+)?'
+# FWS  =  ([*WSP CRLF] 1*WSP) /  obs-FWS ; Folding white space  [RFC5322]
+FWS = r'(?:(?:\s*\r?\n)?\s+)?'
 RE_BTAG = re.compile(r'([;\s]b'+FWS+r'=)(?:'+FWS+r'[a-zA-Z0-9+/=])*(?:\r?\n\Z)?')
 
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
