@@ -53,12 +53,28 @@ class TestSignAndVerify(unittest.TestCase):
         self.key = read_test_data("test.private")
 
     def dnsfunc(self, domain):
+        sample_dns = """\
+k=rsa; \
+p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
+b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
+
+        _dns_responses = {
+          'example._domainkey.canonical.com.': sample_dns,
+          'test._domainkey.example.com.': read_test_data("test.txt"),
+          '20120113._domainkey.gmail.com.': """k=rsa; \
+p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1Kd87/UeJjenpabgbFwh\
++eBCsSTrqmwIYYvywlbhbqoo2DymndFkbjOVIPIldNs/m40KF+yzMn1skyoxcTUGCQ\
+s8g3FgD2Ap3ZB5DekAo5wMmk4wimDO+U8QzI3SD07y2+07wlNWwIt8svnxgdxGkVbb\
+hzY8i+RQ9DpSVpPbF7ykQxtKXkv/ahW3KjViiAH+ghvvIhkx4xYSIc9oSwVmAl5Oct\
+MEeWUwg8Istjqz8BZeTWbf41fbNhte7Y+YqZOwq1Sd0DbvYAD9NOZK9vlfuac0598H\
+Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
+        }
         try:
             domain = domain.decode('ascii')
         except UnicodeDecodeError:
             return None
-        self.assertEqual('test._domainkey.example.com.', domain)
-        return read_test_data("test.txt")
+        self.assertTrue(domain in _dns_responses,domain)
+        return _dns_responses[domain]
 
     def test_verifies(self):
         # A message verifies after being signed.
@@ -118,12 +134,6 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
 -----END PUBLIC KEY-----
 """
 
-      sample_dns = """\
-k=rsa; \
-p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
-b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
-
-      _dns_responses = {'example._domainkey.canonical.com.': sample_dns}
       for header_mode in [dkim.Relaxed, dkim.Simple]:
 
         dkim_header = dkim.sign(sample_msg, 'example', 'canonical.com',
@@ -135,7 +145,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
         # simple canonicalization.  
         # http://tools.ietf.org/html/rfc4871#section-3.5
         signed = dkim.fold(dkim_header) + sample_msg
-        result = dkim.verify(signed,dnsfunc=lambda x: _dns_responses[x],
+        result = dkim.verify(signed,dnsfunc=self.dnsfunc,
                 minkey=512)
         self.assertTrue(result)
         dkim_header = dkim.fold(dkim_header)
@@ -143,9 +153,17 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
         pos = dkim_header.rindex(b'\r\n ')
         dkim_header = dkim_header[:pos]+b'\r\n\t'+dkim_header[pos+3:]
         result = dkim.verify(dkim_header + sample_msg,
-                dnsfunc=lambda x: _dns_responses[x], minkey=512)
+                dnsfunc=self.dnsfunc, minkey=512)
         self.assertTrue(result)
 
+    def test_degenerate_folding(self):
+        # <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=711751>
+        # degenerate folding is ugly but legal
+        message = read_test_data("test2.message")
+        dv = dkim.DKIM(message)
+        res = dv.verify(dnsfunc=self.dnsfunc)
+        self.assertTrue(res)
+    	
     def test_extra_headers(self):
         # <https://bugs.launchpad.net/dkimpy/+bug/737311>
         # extra headers above From caused failure
