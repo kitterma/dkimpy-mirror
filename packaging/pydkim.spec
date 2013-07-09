@@ -1,11 +1,12 @@
 %define __python python2.6
-%define pythonbase python26
+%define pythonbase python
 
 Summary: Python DKIM library
 Name: %{pythonbase}-pydkim
-Version: 0.5.3
+Version: 0.5.4
 Release: 1
 Source0: http://hewgill.com/pydkim/pydkim-%{version}.tar.bz2
+Patch: pydkim.patch
 License: BSD-like
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -27,9 +28,10 @@ Python DKIM library
 %{__python} setup.py build
 
 %install
+rm -rf $RPM_BUILD_ROOT
 %{__python} setup.py install --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 sed -i -e'/man1/d' INSTALLED_FILES
-#grep '\.pyc$' INSTALLED_FILE | sed -e's/c$/o/' >>INSTALLED_FILES
+#grep '\.pyc$' INSTALLED_FILES | sed -e's/c$/o/' >>INSTALLED_FILES
 mkdir -p ${RPM_BUILD_ROOT}%{_mandir}/man1
 cp -p man/*.1 ${RPM_BUILD_ROOT}%{_mandir}/man1
 
@@ -41,7 +43,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc ChangeLog README LICENSE TODO
 %{_mandir}/man1/dkimsign.1.gz
 %{_mandir}/man1/dkimverify.1.gz
-/usr/lib/%{__python}/site-packages/dkim/__main__.pyo
+#/usr/lib/%{__python}/site-packages/dkim/__main__.pyo
 
 %changelog
 * Sat Apr 21 2012 Stuart Gathman <stuart@bmsi.com> 0.5.3-1

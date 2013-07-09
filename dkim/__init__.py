@@ -171,14 +171,26 @@ def validate_signature_fields(sig):
             "l= value is not a decimal integer (%s)" % sig[b'l'])
     if b'q' in sig and sig[b'q'] != b"dns/txt":
         raise ValidationError("q= value is not dns/txt (%s)" % sig[b'q'])
-    if b't' in sig and re.match(br"\d+$", sig[b't']) is None:
-        raise ValidationError(
-            "t= value is not a decimal integer (%s)" % sig[b't'])
+    now = int(time.time())
+    slop = 36000		# 10H leeway for mailers with inaccurate clocks
+    t_sign = 0
+    if b't' in sig 
+        if re.match(br"\d+$", sig[b't']) is None:
+	    raise ValidationError(
+		"t= value is not a decimal integer (%s)" % sig[b't'])
+	t_sign = int(sig[b't'])
+	if t_sign > now + slop:
+	    raise ValidationError(
+		"t= value is in the future (%s)" % sig[b't'])
     if b'x' in sig:
         if re.match(br"\d+$", sig[b'x']) is None:
             raise ValidationError(
                 "x= value is not a decimal integer (%s)" % sig[b'x'])
-        if int(sig[b'x']) < int(sig[b't']):
+	x_sign = int(sig[b'x'])
+	if x_sign < now - slop:
+	    raise ValidationError(
+		"x= value is past (%s)" % sig[b'x'])
+        if x_sign < t_sign:
             raise ValidationError(
                 "x= value is less than t= value (x=%s t=%s)" %
                 (sig[b'x'], sig[b't']))
