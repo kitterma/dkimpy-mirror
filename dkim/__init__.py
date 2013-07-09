@@ -174,7 +174,7 @@ def validate_signature_fields(sig):
     now = int(time.time())
     slop = 36000		# 10H leeway for mailers with inaccurate clocks
     t_sign = 0
-    if b't' in sig 
+    if b't' in sig:
         if re.match(br"\d+$", sig[b't']) is None:
 	    raise ValidationError(
 		"t= value is not a decimal integer (%s)" % sig[b't'])

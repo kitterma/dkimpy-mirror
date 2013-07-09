@@ -4,7 +4,7 @@
 Summary: Python DKIM library
 Name: %{pythonbase}-pydkim
 Version: 0.5.4
-Release: 1
+Release: 2
 Source0: http://hewgill.com/pydkim/pydkim-%{version}.tar.bz2
 Patch: pydkim.patch
 License: BSD-like
@@ -23,6 +23,7 @@ Python DKIM library
 
 %prep
 %setup -n pydkim-%{version}
+%patch -b .sdg
 
 %build
 %{__python} setup.py build
@@ -46,7 +47,13 @@ rm -rf $RPM_BUILD_ROOT
 #/usr/lib/%{__python}/site-packages/dkim/__main__.pyo
 
 %changelog
-* Sat Apr 21 2012 Stuart Gathman <stuart@bmsi.com> 0.5.3-1
+* Tue Jul  9 2013 Stuart Gathman <stuart@gathman.org> 0.5.4-2
+- Fix x= with no t= bug
+
+* Tue Jul  9 2013 Stuart Gathman <stuart@gathman.org> 0.5.4-1
+- Fix FWS with no NL bug, add test case
+
+* Fri Jan 25 2013 Stuart Gathman <stuart@bmsi.com> 0.5.3-1
 - Raise KeyFormatError when public key less than 1024 bits by default
 - Fix TAB in FWS bug
 
