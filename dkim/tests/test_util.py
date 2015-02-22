@@ -62,7 +62,7 @@ class TestParseTagValue(unittest.TestCase):
             DuplicateTag, parse_tag_value, b'foo=bar;foo=baz')
 
     def test_trailing_whitespace(self):
-      hval = '''v=1; a=rsa-sha256; d=facebookmail.com; s=s1024-2011-q2; c=relaxed/simple;
+      hval = b'''v=1; a=rsa-sha256; d=facebookmail.com; s=s1024-2011-q2; c=relaxed/simple;
           q=dns/txt; i=@facebookmail.com; t=1308078492;
           h=From:Subject:Date:To:MIME-Version:Content-Type;
           bh=+qPyCOiDQkusTPstCoGjimgDgeZbUaJWIr1mdE6RFxk=;
@@ -71,7 +71,7 @@ class TestParseTagValue(unittest.TestCase):
           3KzW0yB9JHwiDCw1EioVkv+OMHhAYzoIypA0bQyi2bc=;
   '''
       sig = parse_tag_value(hval)
-      self.assertEquals(sig[b't'],'1308078492')
+      self.assertEquals(sig[b't'],b'1308078492')
       self.assertEquals(len(sig),11)
 
 

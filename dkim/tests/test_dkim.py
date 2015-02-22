@@ -108,14 +108,14 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
       # <https://bugs.launchpad.net/dkimpy/+bug/939128>
       # Simple-mode signature header verification is wrong
       # (should ignore FWS anywhere in signature tag: b=)
-      sample_msg = """\
+      sample_msg = b"""\
 From: mbp@canonical.com
 To: scottk@example.com
 Subject: this is my
     test message
-""".replace('\n', '\r\n')
+""".replace(b'\n', b'\r\n')
 
-      sample_privkey = """\
+      sample_privkey = b"""\
 -----BEGIN RSA PRIVATE KEY-----
 MIIBOwIBAAJBANmBe10IgY+u7h3enWTukkqtUD5PR52Tb/mPfjC0QJTocVBq6Za/
 PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQJAYFUKsD+uMlcFu1D3YNaR
@@ -136,7 +136,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
 
       for header_mode in [dkim.Relaxed, dkim.Simple]:
 
-        dkim_header = dkim.sign(sample_msg, 'example', 'canonical.com',
+        dkim_header = dkim.sign(sample_msg, b'example', b'canonical.com',
             sample_privkey, canonicalize=(header_mode, dkim.Relaxed))
         # Folding dkim_header affects b= tag only, since dkim.sign folds
         # sig_value with empty b= before hashing, and then appends the
@@ -173,7 +173,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
             for body_algo in (b"simple", b"relaxed"):
                 d = dkim.DKIM(message)
                 # bug requires a repeated header to manifest
-                d.should_not_sign.remove('received')
+                d.should_not_sign.remove(b'received')
                 sig = d.sign(b"test", b"example.com", self.key,
                     include_headers=d.all_sign_headers(),
                     canonicalize=(header_algo, body_algo))
@@ -220,8 +220,8 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
         identity = None
         try:
             sig = dkim.sign(message, selector, domain, read_test_data('test.private'), identity = identity)
-        except dkim.ParameterError as sigerror:
-            pass
+        except dkim.ParameterError as x:
+            sigerror = True
         self.assertTrue(sigerror)
 
 def test_suite():

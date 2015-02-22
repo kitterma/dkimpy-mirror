@@ -119,8 +119,8 @@ def select_headers(headers, include_headers):
     return sign_headers
 
 # FWS  =  ([*WSP CRLF] 1*WSP) /  obs-FWS ; Folding white space  [RFC5322]
-FWS = r'(?:(?:\s*\r?\n)?\s+)?'
-RE_BTAG = re.compile(r'([;\s]b'+FWS+r'=)(?:'+FWS+r'[a-zA-Z0-9+/=])*(?:\r?\n\Z)?')
+FWS = br'(?:(?:\s*\r?\n)?\s+)?'
+RE_BTAG = re.compile(br'([;\s]b'+FWS+br'=)(?:'+FWS+br'[a-zA-Z0-9+/=])*(?:\r?\n\Z)?')
 
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
                  sigheader, sig):
@@ -166,7 +166,7 @@ def validate_signature_fields(sig):
         raise ValidationError(
             "i= domain is not a subdomain of d= (i=%s d=%s)" %
             (sig[b'i'], sig[b'd']))
-    if b'l' in sig and re.match(br"\d{,76}$", sig['l']) is None:
+    if b'l' in sig and re.match(br"\d{,76}$", sig[b'l']) is None:
         raise ValidationError(
             "l= value is not a decimal integer (%s)" % sig[b'l'])
     if b'q' in sig and sig[b'q'] != b"dns/txt":
@@ -176,20 +176,20 @@ def validate_signature_fields(sig):
     t_sign = 0
     if b't' in sig:
         if re.match(br"\d+$", sig[b't']) is None:
-	    raise ValidationError(
-		"t= value is not a decimal integer (%s)" % sig[b't'])
-	t_sign = int(sig[b't'])
-	if t_sign > now + slop:
-	    raise ValidationError(
-		"t= value is in the future (%s)" % sig[b't'])
+            raise ValidationError(
+        	"t= value is not a decimal integer (%s)" % sig[b't'])
+        t_sign = int(sig[b't'])
+        if t_sign > now + slop:
+            raise ValidationError(
+        	"t= value is in the future (%s)" % sig[b't'])
     if b'x' in sig:
         if re.match(br"\d+$", sig[b'x']) is None:
             raise ValidationError(
                 "x= value is not a decimal integer (%s)" % sig[b'x'])
-	x_sign = int(sig[b'x'])
-	if x_sign < now - slop:
-	    raise ValidationError(
-		"x= value is past (%s)" % sig[b'x'])
+        x_sign = int(sig[b'x'])
+        if x_sign < now - slop:
+            raise ValidationError(
+        	"x= value is past (%s)" % sig[b'x'])
         if x_sign < t_sign:
             raise ValidationError(
                 "x= value is less than t= value (x=%s t=%s)" %
@@ -224,16 +224,28 @@ def rfc822_parse(message):
         i += 1
     return (headers, b"\r\n".join(lines[i:]))
 
-
+def text(s):
+    """Normalize bytes/str to str for python 2/3 compatible doctests.
+    >>> text(b'foo')
+    'foo'
+    >>> text(u'foo')
+    'foo'
+    >>> text('foo')
+    'foo'
+    """
+    if type(s) is str: return s
+    s = s.decode('ascii')
+    if type(s) is str: return s
+    return s.encode('ascii')
 
 def fold(header):
     """Fold a header line into multiple crlf-separated lines at column 72.
 
-    >>> fold(b'foo')
+    >>> text(fold(b'foo'))
     'foo'
-    >>> fold(b'foo  '+b'foo'*24).splitlines()[0]
+    >>> text(fold(b'foo  '+b'foo'*24).splitlines()[0])
     'foo  '
-    >>> fold(b'foo'*25).splitlines()[-1]
+    >>> text(fold(b'foo'*25).splitlines()[-1])
     ' foo'
     >>> len(fold(b'foo'*25).splitlines()[0])
     72
@@ -268,31 +280,31 @@ class DKIM(object):
   #: be in the default FROZEN list, but that could also make signatures 
   #: more fragile than necessary.  
   #: @since: 0.5
-  RFC5322_SINGLETON = ('date','from','sender','reply-to','to','cc','bcc',
-        'message-id','in-reply-to','references')
+  RFC5322_SINGLETON = (b'date',b'from',b'sender',b'reply-to',b'to',b'cc',b'bcc',
+        b'message-id',b'in-reply-to',b'references')
 
   #: Header fields to protect from additions by default.
   #: 
   #: The short list below is the result more of instinct than logic.
   #: @since: 0.5
-  FROZEN = ('from','date','subject')
+  FROZEN = (b'from',b'date',b'subject')
 
   #: The rfc4871 recommended header fields to sign
   #: @since: 0.5
   SHOULD = (
-    'sender', 'reply-to', 'subject', 'date', 'message-id', 'to', 'cc',
-    'mime-version', 'content-type', 'content-transfer-encoding', 'content-id',
-    'content- description', 'resent-date', 'resent-from', 'resent-sender',
-    'resent-to', 'resent-cc', 'resent-message-id', 'in-reply-to', 'references',
-    'list-id', 'list-help', 'list-unsubscribe', 'list-subscribe', 'list-post',
-    'list-owner', 'list-archive'
+    b'sender', b'reply-to', b'subject', b'date', b'message-id', b'to', b'cc',
+    b'mime-version', b'content-type', b'content-transfer-encoding',
+    b'content-id', b'content- description', b'resent-date', b'resent-from',
+    b'resent-sender', b'resent-to', b'resent-cc', b'resent-message-id',
+    b'in-reply-to', 'references', b'list-id', b'list-help', b'list-unsubscribe',
+    b'list-subscribe', b'list-post', b'list-owner', b'list-archive'
   )
 
   #: The rfc4871 recommended header fields not to sign.
   #: @since: 0.5
   SHOULD_NOT = (
-    'return-path', 'received', 'comments', 'keywords', 'bcc', 'resent-bcc',
-    'dkim-signature'
+    b'return-path',b'received',b'comments',b'keywords',b'bcc',b'resent-bcc',
+    b'dkim-signature'
   )
 
   #: Create a DKIM instance to sign and verify rfc5322 messages.
@@ -331,7 +343,7 @@ class DKIM(object):
 
     >>> dkim = DKIM()
     >>> dkim.add_frozen(DKIM.RFC5322_SINGLETON)
-    >>> sorted(dkim.frozen_sign)
+    >>> [text(x) for x in sorted(dkim.frozen_sign)]
     ['cc', 'date', 'from', 'in-reply-to', 'message-id', 'references', 'reply-to', 'sender', 'subject', 'to']
     """
     self.frozen_sign.update(x.lower() for x in s
@@ -430,7 +442,7 @@ class DKIM(object):
         include_headers = self.default_sign_headers()
 
     # rfc4871 says FROM is required
-    if 'from' not in ( x.lower() for x in include_headers ):
+    if b'from' not in ( x.lower() for x in include_headers ):
         raise ParameterError("The From header field MUST be signed")
 
     # raise exception for any SHOULD_NOT headers, call can modify 
@@ -552,6 +564,8 @@ class DKIM(object):
     if not s:
         raise KeyFormatError("missing public key: %s"%name)
     try:
+        if type(s) is str:
+          s = s.encode('ascii')
         pub = parse_tag_value(s)
     except InvalidTagValueList as e:
         raise KeyFormatError(e)
@@ -568,8 +582,8 @@ class DKIM(object):
     # fields when verifying.  Since there should be only one From header,
     # this shouldn't break any legitimate messages.  This could be
     # generalized to check for extras of other singleton headers.
-    if 'from' in include_headers:
-      include_headers.append('from')      
+    if b'from' in include_headers:
+      include_headers.append(b'from')      
     h = hasher()
     self.signed_headers = hash_headers(
         h, canon_policy, headers, include_headers, sigheaders[idx], sig)
