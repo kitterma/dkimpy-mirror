@@ -18,6 +18,7 @@
 
 import os.path
 import unittest
+import time
 
 import dkim
 
@@ -223,6 +224,36 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
         except dkim.ParameterError as x:
             sigerror = True
         self.assertTrue(sigerror)
+
+    def test_validate_signature_fields(self):
+      sig = {b'v': b'1',
+      b'a': b'rsa-sha256',
+      b'b': b'K/UUOt8lCtgjp3kSTogqBm9lY1Yax/NwZ+bKm39/WKzo5KYe3L/6RoIA/0oiDX4kO\n \t Qut49HCV6ZUe6dY9V5qWBwLanRs1sCnObaOGMpFfs8tU4TWpDSVXaNZAqn15XVW0WH\n \t EzOzUfVuatpa1kF4voIgSbmZHR1vN3WpRtcTBe/I=',
+      b'bh': b'n0HUwGCP28PkesXBPH82Kboy8LhNFWU9zUISIpAez7M=',
+      b'c': b'simple/simple',
+      b'd': b'kitterman.com',
+      b'h': b'From:To:Subject:Date:Cc:MIME-Version:Content-Type:\n \t Content-Transfer-Encoding:Message-Id',
+      b's': b'2007-00',
+      b't': b'1299525798'}
+      dkim.validate_signature_fields(sig)
+      # try new version
+      sigVer = sig.copy()
+      sigVer[b'v'] = 2
+      self.assertRaises(dkim.ValidationError, dkim.validate_signature_fields, sigVer)
+      # try with x
+      sigX = sig.copy()
+      sigX[b'x'] = b'1399525798'
+      dkim.validate_signature_fields(sig)
+      # try with late t
+      sigX[b't'] = b'1400000000'
+      self.assertRaises(dkim.ValidationError, dkim.validate_signature_fields, sigX)
+      # try without t
+      now = int(time.time())
+      sigX[b'x'] = str(now+400000).encode('ascii')
+      dkim.validate_signature_fields(sigX)
+      # try when expired a day ago
+      sigX[b'x'] = str(now - 24*3600).encode('ascii')
+      self.assertRaises(dkim.ValidationError, dkim.validate_signature_fields, sigX)
 
 def test_suite():
     from unittest import TestLoader
