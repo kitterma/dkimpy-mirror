@@ -161,7 +161,7 @@ def validate_signature_fields(sig):
     # Nasty hack to support both str and bytes... check for both the
     # character and integer values.
     if b'i' in sig and (
-        not sig[b'i'].endswith(sig[b'd']) or
+        not sig[b'i'].lower().endswith(sig[b'd'].lower()) or
         sig[b'i'][-len(sig[b'd'])-1] not in ('@', '.', 64, 46)):
         raise ValidationError(
             "i= domain is not a subdomain of d= (i=%s d=%s)" %
