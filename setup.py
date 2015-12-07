@@ -24,7 +24,7 @@
 from distutils.core import setup
 import os
 
-version = "0.5.4"
+version = "0.5.5"
 
 setup(
     name = "dkimpy",
