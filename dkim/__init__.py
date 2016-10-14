@@ -607,6 +607,7 @@ def sign(message, selector, domain, privkey, identity=None,
     @param privkey: a PKCS#1 private key in base64-encoded text form
     @param identity: the DKIM identity value for the signature (default "@"+domain)
     @param canonicalize: the canonicalization algorithms to use (default (Simple, Simple))
+    @param signature_algorithm: the signing algorithm to use when signing
     @param include_headers: a list of strings indicating which headers are to be signed (default all headers not listed as SHOULD NOT sign)
     @param length: true if the l= tag should be included to indicate body length (default False)
     @param logger: a logger to which debug info will be written (default None)
@@ -614,7 +615,7 @@ def sign(message, selector, domain, privkey, identity=None,
     @raise DKIMException: when the message, include_headers, or key are badly formed.
     """
 
-    d = DKIM(message,logger=logger)
+    d = DKIM(message,logger=logger,signature_algorithm=signature_algorithm)
     if not include_headers:
         include_headers = d.default_sign_headers()
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
