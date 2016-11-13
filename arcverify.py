@@ -30,7 +30,7 @@ from __future__ import print_function
 import logging
 import sys
 
-import arc
+import dkim
 
 if sys.version_info[0] >= 3:
     # Make sys.stdin a binary stream.
@@ -40,7 +40,7 @@ message = sys.stdin.read()
 verbose = '-v' in sys.argv
 if verbose:
   logging.basicConfig(level=10)
-  d = arc.ARC(message)
+  d = dkim.ARC(message)
   cv, results, comment = d.verify()
 else:
   cv, results, comment = arc.verify(message)

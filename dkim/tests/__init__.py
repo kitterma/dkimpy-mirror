@@ -15,6 +15,10 @@
 # 3. This notice may not be removed or altered from any source distribution.
 #
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
+#
+# This has been modified from the original software.
+# Copyright (c) 2016 Google, Inc.
+# Contact: Brandon Long <blong@google.com>
 
 import unittest
 
@@ -25,12 +29,14 @@ def test_suite():
         test_crypto,
         test_dkim,
         test_util,
+        test_arc,
         )
     modules = [
         test_canonicalization,
         test_crypto,
         test_dkim,
         test_util,
+        test_arc,
         ]
     suites = [x.test_suite() for x in modules]
     return unittest.TestSuite(suites)

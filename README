@@ -11,7 +11,7 @@ signing and verification.
 
 VERSION
 
-This is dkimpy 0.5.6.
+This is dkimpy 0.6.0.
 
 REQUIREMENTS
 
@@ -45,7 +45,8 @@ The dkimpy library offers one module called dkim. The sign() function takes an
 RFC822 formatted message, along with some signing options, and returns a
 DKIM-Signature header line that can be prepended to the message. The verify()
 function takes an RFC822 formatted message, and returns True or False depending
-on whether the signature verifies correctly.
+on whether the signature verifies correctly.  There is also a DKIM class which
+can be used to perform these functions in a more modern way.
 
 Two helper programs are also supplied: dkimsign.py and dkimverify.py.
 
@@ -60,6 +61,18 @@ The identity is optional and defaults to "@domain".
 dkimverify.py reads an RFC822 message on standard input, and returns with exit
 code 0 if the signature verifies successfully. Otherwise, it returns with exit
 code 1. 
+
+As of version 0.6, dkimpy provides experimental support for ARC (Authenticated
+Received Chain):
+
+https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-00
+
+This new functionality is marked experimental because the protocol is still
+under development.  There are no guarantees about API stability or
+compatibility.
+
+In addition to arcsign.py and arcverify.py, the dkim module now provides
+arc_sign and arc_verify functions as well as an ARC class.
 
 FEEDBACK
 

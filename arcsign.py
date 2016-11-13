@@ -31,7 +31,7 @@ import logging
 import re
 import sys
 
-import arc
+import dkim
 
 logging.basicConfig(level=10)
 
@@ -51,12 +51,12 @@ privatekeyfile = sys.argv[3]
 message = sys.stdin.read()
 
 # Pick a cv status
-cv = arc.CV_None
+cv = dkim.CV_None
 if re.search('arc-seal', message, re.IGNORECASE):
-  cv = arc.CV_Pass
+  cv = dkim.CV_Pass
 
 #try:
-sig = arc.sign(message, selector, domain, open(privatekeyfile, "rb").read(),
+sig = dkim.arc_sign(message, selector, domain, open(privatekeyfile, "rb").read(),
                domain + ": none", cv)
 for line in sig:
   sys.stdout.write(line)
