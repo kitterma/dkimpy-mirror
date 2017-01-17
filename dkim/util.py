@@ -16,6 +16,8 @@
 #
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
+import re
+
 import logging
 try:
     from logging import NullHandler
@@ -61,12 +63,14 @@ def parse_tag_value(tag_list):
         tag_specs.pop()
     for tag_spec in tag_specs:
         try:
-            key, value = tag_spec.split(b'=', 1)
+            key, value = [x.strip() for x in tag_spec.split(b'=', 1)]
         except ValueError:
             raise InvalidTagSpec(tag_spec)
-        if key.strip() in tags:
-            raise DuplicateTag(key.strip())
-        tags[key.strip()] = value.strip()
+        if re.match(br'^[a-zA-Z](\w)*', key) is None:
+            raise InvalidTagSpec(tag_spec)
+        if key in tags:
+            raise DuplicateTag(key)
+        tags[key] = value
     return tags
 
 
