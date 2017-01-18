@@ -72,7 +72,7 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         # A message verifies after being signed.
         sig_lines = dkim.arc_sign(
             self.message, b"test", b"example.com", self.key,
-            "test.domain: none", dkim.CV_None)
+            b"test.domain: none", dkim.CV_None)
         (cv, res, reason) = dkim.arc_verify(b''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
         self.assertEquals(cv, dkim.CV_Pass)
 
