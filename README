@@ -39,6 +39,22 @@ Alternatively, if you have testrepository installed:
     testr init
     testr run
 
+The included ARC tests are very limited.  The primary testing method for ARC
+is using the ARC test suite: https://github.com/ValiMail/arc_test_suite
+
+As of 0.6.0, all tests except as_fields_b_512 pass for both python2.7 and
+python3.5. The test suite ships with test runners for dkimpy.  After
+downloading the test suite, you can run the signing and validation tests like
+this:
+
+python2.7 ./testarc.py sign runners/arcsigntest.py
+python2.7 ./testarc.py validate runners/arcverifytest.py
+
+The reason for the test failure is that the ARC specification (as of 20170120)
+sets the minimum key size to 512 bits.  This is operationally inappropriate,
+so dkimpy sets the default minkey=1024, the same as is used for DKIM.  This
+can be overridden, but that is not recommended.
+
 USAGE
 
 The dkimpy library offers one module called dkim. The sign() function takes an
