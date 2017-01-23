@@ -24,6 +24,12 @@ To build and install dkimpy:
 
     python setup.py install
 
+DOCUMENTATION
+
+An online version of the package documentation can be found at:
+
+https://gathman.org/pydkim/
+
 TESTING
 
 To run dkimpy's test suite:
