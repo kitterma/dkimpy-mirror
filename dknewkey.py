@@ -18,7 +18,7 @@
 # Copyright (c) 2016 Google, Inc.
 # Contact: Brandon Long <blong@google.com>
 
-r"""Generates new domainkeys pairs.
+"""Generates new domainkeys pairs.
 
 Sample usage:
 
