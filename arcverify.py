@@ -40,10 +40,10 @@ message = sys.stdin.read()
 verbose = '-v' in sys.argv
 if verbose:
   logging.basicConfig(level=10)
-  d = dkim.ARC(message)
-  cv, results, comment = d.verify()
+  a = dkim.ARC(message)
+  cv, results, comment = a.verify()
 else:
-  cv, results, comment = arc.verify(message)
+  cv, results, comment = dkim.arc_verify(message)
 
 print("arc verification: cv=%s %s" % (cv, comment))
 if verbose:
