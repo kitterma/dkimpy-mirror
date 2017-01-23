@@ -4,8 +4,11 @@ include dkim/tests/data/*
 include README
 include ChangeLog
 include MANIFEST.in
+include dknewkey.py
 include dkimsign.py
 include dkimverify.py
+include arcsign.py
+include arcverify.py
 include dnsplug.py
 include man/*
 include test.py

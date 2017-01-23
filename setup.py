@@ -32,13 +32,15 @@ setup(
     description = "DKIM (DomainKeys Identified Mail)",
     long_description =
     """dkimpy is a Python library that implements DKIM (DomainKeys
-Identified Mail) email signing and verification.""",
+Identified Mail) and ARC (Authenticated Received Chain) email signing and 
+verification.""",
     author = "Scott Kitterman",
     author_email = "scott@kitterman.com",
     url = "https://launchpad.net/dkimpy",
     license = "BSD-like",
     packages = ["dkim"],
-    scripts = ["dkimsign.py", "dkimverify.py"],
+    scripts = ["arcsign.py", "arcverify.py", "dknewkey.py", "dkimsign.py",
+        "dkimverify.py"],
     data_files = [(os.path.join('share', 'man', 'man1'),
         ['man/dkimsign.1']), (os.path.join('share', 'man', 'man1'),
         ['man/dkimverify.1'])],
