@@ -127,34 +127,38 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "dkimsign 1"
-.TH dkimsign 1 "2017-01-23"
+.IX Title "dknewkey 1"
+.TH dknewkey 1 "2017-01-23"
 .SH "NAME"
-dkimsign
+dknewkey
 \-
-Script for DKIM signing messages on stdin
+Generates new DKIM public/private key pairs
 .SH "VERSION"
 .IX Header "VERSION"
 0\.6\.0
 
-.SH "DESCRIPTION"
-.IX Header "DESCRIPTION"
-
-dkimsign is a filter that reads an RFC822 message on standard input, and writes
-the same message on standard output with a DKIM-Signature line prepended.  
-
 .SH "USAGE"
 .IX Header "USAGE"
 
-The signing options are specified on the command line:
+NOTE: Depending on the packaging and distribution, the exact path and name for
+the executable may vary.
 
-dkimsign selector domain privatekeyfile [identity]
+dknewkey.py: <keyname>
 
-The identity is optional and defaults to "@domain".
+.SH "DESCRIPTION"
+.IX Header "DESCRIPTION"
+
+dknewykey generates new DKIM keys.
+
+It defaults to 2048 bit key size.  This is controlled by the BITS_REQUIRED
+variable.
+
+It uses openssl to do the generation.  By default it assumes this is located
+at /usr/bin/openssl.  This is controlled by the OPENSSL_BINARY variable.
 
 .SH "AUTHORS"
 .IX Header "AUTHORS"
-This version of \fBdkimsign\fR was written by Greg Hewgill <greg@hewgill.com>.
+This version of \fBdknewkey\fR was written by Brandon Long <blong@google.com>.
 .PP
 This man-page was created by Scott Kitterman <scott@kitterman.com> and is
 licensed under the same terms as dkimpy.

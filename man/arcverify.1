@@ -127,12 +127,12 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "dkimsign 1"
-.TH dkimsign 1 "2017-01-23"
+.IX Title "dkimverify 1"
+.TH dkimverify 1 "2017-01-23"
 .SH "NAME"
-dkimsign
+dkimverify
 \-
-Script for DKIM signing messages on stdin
+Script for DKIM verifying messages on stdin
 .SH "VERSION"
 .IX Header "VERSION"
 0\.6\.0
@@ -140,21 +140,15 @@ Script for DKIM signing messages on stdin
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 
-dkimsign is a filter that reads an RFC822 message on standard input, and writes
-the same message on standard output with a DKIM-Signature line prepended.  
-
-.SH "USAGE"
-.IX Header "USAGE"
-
-The signing options are specified on the command line:
-
-dkimsign selector domain privatekeyfile [identity]
-
-The identity is optional and defaults to "@domain".
+dkimverify reads an RFC822 message on standard input, and returns with exit
+code 0 if the signature verifies successfully. Otherwise, it returns with exit
+code 1.
 
 .SH "AUTHORS"
 .IX Header "AUTHORS"
-This version of \fBdkimsign\fR was written by Greg Hewgill <greg@hewgill.com>.
+This version of \fBarcverify\fR was written by Brandon Long <blong@google.com>
+and is derived from \fBdkimverify\fR, written by Greg Hewgill
+<greg@hewgill.com>.
 .PP
 This man-page was created by Scott Kitterman <scott@kitterman.com> and is
 licensed under the same terms as dkimpy.
