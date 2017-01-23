@@ -90,7 +90,7 @@ code 1.
 As of version 0.6.0, dkimpy provides experimental support for ARC (Authenticated
 Received Chain):
 
-https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-00
+https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-01
 
 This new functionality is marked experimental because the protocol is still
 under development.  There are no guarantees about API stability or
