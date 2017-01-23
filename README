@@ -87,7 +87,7 @@ dkimverify.py reads an RFC822 message on standard input, and returns with exit
 code 0 if the signature verifies successfully. Otherwise, it returns with exit
 code 1. 
 
-As of version 0.6, dkimpy provides experimental support for ARC (Authenticated
+As of version 0.6.0, dkimpy provides experimental support for ARC (Authenticated
 Received Chain):
 
 https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-00
