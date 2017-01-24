@@ -1,3 +1,6 @@
+UNRELEASED Version 0.6.1
+    - Fixed python3 dns lookup issue
+
 2017-01-23 Version 0.6.0
     - Add capability to sign and verify ARC signatures
     - Added new script, dknewkey.py, to generate DKIM keys
