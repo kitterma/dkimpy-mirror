@@ -80,6 +80,6 @@ def get_txt(name):
     except UnicodeDecodeError:
         return None
     txt = _get_txt(unicode_name)
-    if txt:
+    if type(txt) is str:
       txt = txt.encode('utf-8')
     return txt
