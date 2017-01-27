@@ -14,31 +14,22 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 #
-# Copyright (c) 2011 William Grant <me@williamgrant.id.au>
+# Copyright (c) 2017 Valimail Inc
+# Contact: Gene Shuman <gene@valimail.com>
 #
-# This has been modified from the original software.
-# Copyright (c) 2016 Google, Inc.
-# Contact: Brandon Long <blong@google.com>
 
 import unittest
+import dkim.dnsplug
 
+class TestDNSPlug(unittest.TestCase):
+    
+    def test_get_txt(self):
+        dkim.dnsplug._get_txt = {"in": "out"}.get
+        res = dkim.dnsplug.get_txt(b"in")
+        
+        self.assertEqual(res, b"out")
 
 def test_suite():
-    from dkim.tests import (
-        test_canonicalization,
-        test_crypto,
-        test_dkim,
-        test_util,
-        test_arc,
-        test_dnsplug,
-        )
-    modules = [
-        test_canonicalization,
-        test_crypto,
-        test_dkim,
-        test_util,
-        test_arc,
-        test_dnsplug,
-        ]
-    suites = [x.test_suite() for x in modules]
-    return unittest.TestSuite(suites)
+    from unittest import TestLoader
+    return TestLoader().loadTestsFromName(__name__)
+        
