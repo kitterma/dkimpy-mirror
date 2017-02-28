@@ -1,5 +1,5 @@
 UNRELEASED Version 0.6.2
-
+    - Fixed python3.4 string interpolation issue
 
 2017-01-27 Version 0.6.1
     - Fixed python3 dns lookup issue

@@ -508,7 +508,7 @@ class DomainSigner(object):
     idx = [i for i in range(len(fields)) if fields[i][0] == b'b'][0]
     fields[idx] = (b'b', base64.b64encode(bytes(sig2)))
     header_value = b"; ".join(b"=".join(x) for x in fields) + b"\r\n"
-    
+
     if not standardize:
       header_value = fold(header_value)
 
@@ -810,7 +810,7 @@ class ARC(DomainSigner):
     arc_headers = [y for x,y in arc_headers_w_instance]
 
     # Compute ARC-Authentication-Results
-    aar_value = b"i=%d; %s" % (instance, auth_results)
+    aar_value = (b"i=%d; " % instance) + auth_results
     if aar_value[-1] != b'\n': aar_value += b'\r\n'
 
     new_arc_set.append(b"ARC-Authentication-Results: " + aar_value)
@@ -1080,4 +1080,3 @@ def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
         if logger is not None:
             logger.error("%s" % x)
         return CV_Fail, [], "%s" % x
-
