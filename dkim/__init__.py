@@ -390,9 +390,9 @@ class DomainSigner(object):
   SHOULD = (
     b'sender', b'reply-to', b'subject', b'date', b'message-id', b'to', b'cc',
     b'mime-version', b'content-type', b'content-transfer-encoding',
-    b'content-id', b'content- description', b'resent-date', b'resent-from',
+    b'content-id', b'content-description', b'resent-date', b'resent-from',
     b'resent-sender', b'resent-to', b'resent-cc', b'resent-message-id',
-    b'in-reply-to', 'references', b'list-id', b'list-help', b'list-unsubscribe',
+    b'in-reply-to', b'references', b'list-id', b'list-help', b'list-unsubscribe',
     b'list-subscribe', b'list-post', b'list-owner', b'list-archive'
   )
 
@@ -656,7 +656,7 @@ class DKIM(DomainSigner):
         (b'c', canon_policy.to_c_value()),
         (b'd', domain),
         (b'i', identity or b"@"+domain),
-        length and (b'l', len(body)),
+        length and (b'l', str(len(body)).encode('ascii')),
         (b'q', b"dns/txt"),
         (b's', selector),
         (b't', str(int(time.time())).encode('ascii')),
@@ -810,7 +810,7 @@ class ARC(DomainSigner):
     arc_headers = [y for x,y in arc_headers_w_instance]
 
     # Compute ARC-Authentication-Results
-    aar_value = (b"i=%d; " % instance) + auth_results
+    aar_value = ("i=%d; " % instance).encode('utf-8') + auth_results
     if aar_value[-1] != b'\n': aar_value += b'\r\n'
 
     new_arc_set.append(b"ARC-Authentication-Results: " + aar_value)
