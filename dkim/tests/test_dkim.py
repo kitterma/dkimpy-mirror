@@ -16,6 +16,7 @@
 #
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
 
+import email
 import os.path
 import unittest
 import time
@@ -97,6 +98,14 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
                     include_headers=(b'from',) + dkim.DKIM.SHOULD)
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
+
+    def test_add_body_length(self):
+        sig = dkim.sign(
+            self.message, b"test", b"example.com", self.key, length=True)
+        msg = email.message_from_string(self.message)
+        self.assertIn('\n l=%s' % len(msg.get_payload() + '\n'), sig)
+        res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+        self.assertTrue(res)
 
     def test_altered_body_fails(self):
         # An altered body fails verification.
