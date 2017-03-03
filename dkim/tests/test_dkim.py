@@ -102,8 +102,8 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
     def test_add_body_length(self):
         sig = dkim.sign(
             self.message, b"test", b"example.com", self.key, length=True)
-        msg = email.message_from_string(self.message)
-        self.assertIn('\n l=%s' % len(msg.get_payload() + '\n'), sig)
+        msg = email.message_from_string(self.message.decode('utf-8'))
+        self.assertIn('\n l=%s' % len(msg.get_payload() + '\n'), sig.decode('utf-8'))
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertTrue(res)
 
@@ -163,7 +163,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
         # sig_value with empty b= before hashing, and then appends the
         # signature.  So folding dkim_header again adds FWS to
         # the b= tag only.  This should be ignored even with
-        # simple canonicalization.  
+        # simple canonicalization.
         # http://tools.ietf.org/html/rfc4871#section-3.5
         signed = dkim.fold(dkim_header) + sample_msg
         result = dkim.verify(signed,dnsfunc=self.dnsfunc,
@@ -184,7 +184,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
         dv = dkim.DKIM(message)
         res = dv.verify(dnsfunc=self.dnsfunc)
         self.assertTrue(res)
-    	
+
     def test_extra_headers(self):
         # <https://bugs.launchpad.net/dkimpy/+bug/737311>
         # extra headers above From caused failure
