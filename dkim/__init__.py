@@ -299,7 +299,7 @@ def text(s):
     if type(s) is str: return s
     return s.encode('ascii')
 
-def fold(header):
+def fold(header, namelen=0):
     """Fold a header line into multiple crlf-separated lines at column 72.
 
     >>> text(fold(b'foo'))
@@ -318,14 +318,18 @@ def fold(header):
         i += 3
         pre = header[:i]
         header = header[i:]
-    while len(header) > 72:
-        i = header[:72].rfind(b" ")
+    # 72 is the max line length we actually want, but the header field name
+    # has to fit in the first line too (See Debian Bug #863690).
+    maxleng = 72 - namelen
+    while len(header) > maxleng:
+        i = header[:maxleng].rfind(b" ")
         if i == -1:
-            j = 72
+            j = maxleng
         else:
             j = i + 1
         pre += header[:j] + b"\r\n "
         header = header[j:]
+        namelen = 0
     return pre + header
 
 def load_pk_from_dns(name, dnsfunc=get_txt):
@@ -485,7 +489,7 @@ class DomainSigner(object):
 
     header_value = b"; ".join(b"=".join(x) for x in fields)
     if not standardize:
-      header_value = fold(header_value)
+      header_value = fold(header_value, namelen=len(header_name))
     header_value = RE_BTAG.sub(b'\\1',header_value)
     header = (header_name, b' ' + header_value)
     h = HashThrough(self.hasher())
@@ -510,7 +514,7 @@ class DomainSigner(object):
     header_value = b"; ".join(b"=".join(x) for x in fields) + b"\r\n"
 
     if not standardize:
-      header_value = fold(header_value)
+      header_value = fold(header_value, namelen=len(header_name))
 
     return header_value
 
