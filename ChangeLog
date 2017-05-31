@@ -5,6 +5,10 @@ UNRELEASED Version 0.6.2
     - Fixed python3.4 string interpolation issue
     - Fix some byte casting issues & typos
     - Add test case for verification when should headers are signed
+    - Check and update references:
+      * Replace RFC 4871 withRFC 6376
+      * Replaace RFC 3447 with RFC 8017
+      * Add mention of DCRUP working group addressing key length issues
 
 2017-01-27 Version 0.6.1
     - Fixed python3 dns lookup issue
