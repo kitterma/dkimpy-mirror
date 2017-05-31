@@ -61,7 +61,10 @@ python2.7 ./testarc.py validate runners/arcverifytest.py
 The reason for the test failure is that the ARC specification (as of 20170120)
 sets the minimum key size to 512 bits.  This is operationally inappropriate,
 so dkimpy sets the default minkey=1024, the same as is used for DKIM.  This
-can be overridden, but that is not recommended.
+can be overridden, but that is not recommended.  The minimum key size
+requirement for DKIM (and thus ARC) is in the process of being updated to
+require at least a 1024 bit key.  Information about the status of this effort
+is at https://datatracker.ietf.org/doc/draft-ietf-dcrup-dkim-usage/
 
 USAGE
 
