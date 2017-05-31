@@ -83,7 +83,7 @@ HASH_ALGORITHMS = {
     b'rsa-sha256': hashlib.sha256,
     }
 
-# These values come from RFC 3447, section 9.2 Notes, page 43.
+# These values come from RFC 8017, section 9.2 Notes, page 46.
 HASH_ID_MAP = {
     'sha1': b"\x2b\x0e\x03\x02\x1a",
     'sha256': b"\x60\x86\x48\x01\x65\x03\x04\x02\x01",
@@ -104,7 +104,7 @@ def parse_public_key(data):
     """Parse an RSA public key.
 
     @param data: DER-encoded X.509 subjectPublicKeyInfo
-        containing an RFC3447 RSAPublicKey.
+        containing an RFC8017 RSAPublicKey.
     @return: RSA public key
     """
     try:
@@ -123,7 +123,7 @@ def parse_public_key(data):
 def parse_private_key(data):
     """Parse an RSA private key.
 
-    @param data: DER-encoded RFC3447 RSAPrivateKey.
+    @param data: DER-encoded RFC8017 RSAPrivateKey.
     @return: RSA private key
     """
     try:
@@ -147,7 +147,7 @@ def parse_private_key(data):
 def parse_pem_private_key(data):
     """Parse a PEM RSA private key.
 
-    @param data: RFC3447 RSAPrivateKey in PEM format.
+    @param data: RFC8017 RSAPrivateKey in PEM format.
     @return: RSA private key
     """
     m = re.search(b"--\n(.*?)\n--", data, re.DOTALL)
@@ -161,7 +161,7 @@ def parse_pem_private_key(data):
 
 
 def EMSA_PKCS1_v1_5_encode(hash, mlen):
-    """Encode a digest with RFC3447 EMSA-PKCS1-v1_5.
+    """Encode a digest with RFC8017 EMSA-PKCS1-v1_5.
 
     @param hash: hash object to encode
     @param mlen: desired message length
@@ -247,7 +247,7 @@ def rsa_encrypt(message, pk, mlen):
 
 
 def RSASSA_PKCS1_v1_5_sign(hash, private_key):
-    """Sign a digest with RFC3447 RSASSA-PKCS1-v1_5.
+    """Sign a digest with RFC8017 RSASSA-PKCS1-v1_5.
 
     @param hash: hash object to sign
     @param private_key: private key data
@@ -259,7 +259,7 @@ def RSASSA_PKCS1_v1_5_sign(hash, private_key):
 
 
 def RSASSA_PKCS1_v1_5_verify(hash, signature, public_key):
-    """Verify a digest signed with RFC3447 RSASSA-PKCS1-v1_5.
+    """Verify a digest signed with RFC8017 RSASSA-PKCS1-v1_5.
 
     @param hash: hash object to check
     @param signature: signed digest byte string
