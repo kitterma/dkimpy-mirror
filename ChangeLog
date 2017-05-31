@@ -1,4 +1,4 @@
-UNRELEASED Version 0.6.2
+2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be
       folded too long (Updated test test_add_body_length since l= tag is no
       longer at the beginning of a line)
