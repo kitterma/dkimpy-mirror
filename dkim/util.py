@@ -51,7 +51,7 @@ class InvalidTagSpec(InvalidTagValueList):
 def parse_tag_value(tag_list):
     """Parse a DKIM Tag=Value list.
 
-    Interprets the syntax specified by RFC4871 section 3.2.
+    Interprets the syntax specified by RFC6376 section 3.2.
     Assumes that folding whitespace is already unfolded.
 
     @param tag_list: A bytes string containing a DKIM Tag=Value list.

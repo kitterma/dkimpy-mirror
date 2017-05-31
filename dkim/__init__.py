@@ -370,9 +370,9 @@ class DomainSigner(object):
         raise ParameterError(
             "Unsupported signature algorithm: "+signature_algorithm)
     self.signature_algorithm = signature_algorithm
-    #: Header fields which should be signed.  Default from RFC4871
+    #: Header fields which should be signed.  Default as suggested by RFC6376
     self.should_sign = set(DKIM.SHOULD)
-    #: Header fields which should not be signed.  The default is from RFC4871.
+    #: Header fields which should not be signed.  The default is from RFC6376.
     #: Attempting to sign these headers results in an exception.
     #: If it is necessary to sign one of these, it must be removed
     #: from this list first.
@@ -389,7 +389,7 @@ class DomainSigner(object):
   #: @since: 0.5
   FROZEN = (b'from',b'date',b'subject')
 
-  #: The rfc4871 recommended header fields to sign
+  #: The rfc6376 recommended header fields to sign
   #: @since: 0.5
   SHOULD = (
     b'sender', b'reply-to', b'subject', b'date', b'message-id', b'to', b'cc',
@@ -400,7 +400,7 @@ class DomainSigner(object):
     b'list-subscribe', b'list-post', b'list-owner', b'list-archive'
   )
 
-  #: The rfc4871 recommended header fields not to sign.
+  #: The rfc6376 recommended header fields not to sign.
   #: @since: 0.5
   SHOULD_NOT = (
     b'return-path',b'received',b'comments',b'keywords',b'bcc',b'resent-bcc',
