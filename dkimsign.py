@@ -24,29 +24,28 @@
 from __future__ import print_function
 
 import sys
+import argparse
 
 import dkim
 
-if len(sys.argv) < 4 or len(sys.argv) > 5:
-    print("Usage: dkimsign.py selector domain privatekeyfile [identity]", file=sys.stderr)
-    sys.exit(1)
+# Backward compatibility hack because argparse doesn't support optional
+# positional arguments
+arguments=['--'+arg if arg[:8] == 'identity' else arg for arg in sys.argv[1:]]
+parser = argparse.ArgumentParser(description='Produce DKIM signature for email messages.')
+parser.add_argument('selector', action="store")
+parser.add_argument('domain', action="store")
+parser.add_argument('privatekeyfile', action="store")
+parser.add_argument('--identity', help='Optional value for i= tag.')
+args=parser.parse_args(arguments)
 
 if sys.version_info[0] >= 3:
     # Make sys.stdin and stdout binary streams.
     sys.stdin = sys.stdin.detach()
     sys.stdout = sys.stdout.detach()
 
-selector = sys.argv[1].encode('ascii')
-domain = sys.argv[2].encode('ascii')
-privatekeyfile = sys.argv[3]
-if len(sys.argv) > 5:
-    identity = sys.argv[4].encode('ascii')
-else:
-    identity = None
-
 message = sys.stdin.read()
 try:
-    sig = dkim.sign(message, selector, domain, open(privatekeyfile, "rb").read(), identity = identity)
+    sig = dkim.sign(message, args.selector, args.domain, open(args.privatekeyfile, "rb").read(), identity = args.identity)
     sys.stdout.write(sig)
     sys.stdout.write(message)
 except Exception as e:
