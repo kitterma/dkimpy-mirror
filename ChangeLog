@@ -1,6 +1,8 @@
 UNRELEASED Version 0.7.0
     - Port dkimsign.py to use argparse; now gives standard usage message and
       is more extensible
+    - Add command line options to dkimsign.py to select header and body
+      canonicalization algorithmns (LP: #1272724)
 
 2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be

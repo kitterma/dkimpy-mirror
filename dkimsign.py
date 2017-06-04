@@ -35,6 +35,8 @@ parser = argparse.ArgumentParser(description='Produce DKIM signature for email m
 parser.add_argument('selector', action="store")
 parser.add_argument('domain', action="store")
 parser.add_argument('privatekeyfile', action="store")
+parser.add_argument('--hcanon', choices=['simple', 'relaxed'], default='relaxed', type=bytes, help='Header canonicalization algorithm: default=relaxed')
+parser.add_argument('--bcanon', choices=['simple', 'relaxed'], default='simple', type=bytes, help='Body canonicalization algorithm: default=simple')
 parser.add_argument('--identity', help='Optional value for i= tag.')
 args=parser.parse_args(arguments)
 
@@ -45,7 +47,7 @@ if sys.version_info[0] >= 3:
 
 message = sys.stdin.read()
 try:
-    sig = dkim.sign(message, args.selector, args.domain, open(args.privatekeyfile, "rb").read(), identity = args.identity)
+    sig = dkim.sign(message, args.selector, args.domain, open(args.privatekeyfile, "rb").read(), identity = args.identity, canonicalize=(args.hcanon, args.bcanon))
     sys.stdout.write(sig)
     sys.stdout.write(message)
 except Exception as e:
