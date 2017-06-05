@@ -20,6 +20,7 @@
 #
 # This has been modified from the original software.
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
+# Copyright (c) 2017 Scott Kitterman <scott@kitterman.com>
 
 from __future__ import print_function
 
