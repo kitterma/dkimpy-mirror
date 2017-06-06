@@ -44,9 +44,11 @@ parser.add_argument('--hcanon', choices=['simple', 'relaxed'],
 parser.add_argument('--bcanon', choices=['simple', 'relaxed'],
     default='simple',
     help='Body canonicalization algorithm: default=simple')
+parser.add_argument('--signalg', choices=['rsa-sha256', 'rsa-sha1'],
+    default='rsa-sha256',
+    help='Signature algorithm: default=rsa-sha256')
 parser.add_argument('--identity', help='Optional value for i= tag.')
 args=parser.parse_args(arguments)
-signature_algorithm=b'rsa-sha256'
 include_headers = None
 length = None
 logger = None
@@ -58,6 +60,7 @@ if sys.version_info[0] >= 3:
         args.identity = bytes(args.identity, encoding='UTF-8')
     args.hcanon = bytes(args.hcanon, encoding='UTF-8')
     args.bcanon = bytes(args.bcanon, encoding='UTF-8')
+    args.signalg = bytes(args.signalg, encoding='UTF-8')
     # Make sys.stdin and stdout binary streams.
     sys.stdin = sys.stdin.detach()
     sys.stdout = sys.stdout.detach()
@@ -66,7 +69,7 @@ canonicalize = (args.hcanon, args.bcanon)
 message = sys.stdin.read()
 try:
     d = dkim.DKIM(message,logger=logger,
-                  signature_algorithm=signature_algorithm)
+                  signature_algorithm=args.signalg)
     sig = d.sign(args.selector, args.domain, open(
                  args.privatekeyfile, "rb").read(), identity = args.identity,
                  canonicalize=canonicalize, include_headers=include_headers,

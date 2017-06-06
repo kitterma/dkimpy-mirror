@@ -3,6 +3,7 @@ UNRELEASED Version 0.7.0
       is more extensible
     - Add command line options to dkimsign.py to select header and body
       canonicalization algorithmns (LP: #1272724)
+    - Add command line option to dkimsign.py to select signing algorithm
 
 2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be
