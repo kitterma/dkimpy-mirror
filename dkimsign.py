@@ -33,7 +33,8 @@ import dkim
 # positional arguments
 arguments=['--'+arg if arg[:8] == 'identity' else arg for arg in sys.argv[1:]]
 parser = argparse.ArgumentParser(
-    description='Produce DKIM signature for email messages.')
+    description='Produce DKIM signature for email messages.',
+    epilog="message to be signed follows commands on stdin")
 parser.add_argument('selector', action="store")
 parser.add_argument('domain', action="store")
 parser.add_argument('privatekeyfile', action="store")
