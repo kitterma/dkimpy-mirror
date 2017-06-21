@@ -17,6 +17,8 @@
 #
 # Copyright (c) 2016 Google, Inc.
 # Contact: Brandon Long <blong@google.com>
+# Modified by Scott Kitterman <scott@kitterman.com>
+# Copyright (c) 2017 Scott Kitterman
 
 """Generates new domainkeys pairs.
 
@@ -33,6 +35,9 @@ import tempfile
 
 # how strong are our keys?
 BITS_REQUIRED = 2048
+
+# limit to rsa-sha256?
+HTAG='sha256'
 
 # what openssl binary do we use to do key manipulation?
 OPENSSL_BINARY = '/usr/bin/openssl'
@@ -60,7 +65,10 @@ def ExtractDnsPublicKey(private_key_file, dns_file):
     os.unlink(working_file)
   dns_fp = open(dns_file, "w+")
   print >> sys.stderr, 'writing ' + dns_file
-  print >> dns_fp, "k=rsa; p=%s" % output
+  if HTAG:
+      print >> dns_fp, "k=rsa; h={0}; p={1}".format(HTAG,output)
+  else:
+      print >> dns_fp, "k=rsa; p=%s" % output
   dns_fp.close()
 
 
