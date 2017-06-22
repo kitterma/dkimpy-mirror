@@ -32,6 +32,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import argparse
 
 # how strong are our keys?
 BITS_REQUIRED = 2048
@@ -51,7 +52,7 @@ def GenKeys(private_key_file):
                          str(BITS_REQUIRED)])
 
 
-def ExtractDnsPublicKey(private_key_file, dns_file):
+def ExtractDnsPublicKey(private_key_file, dns_file, key_type='rsa'):
   """ Given a key, extract the bit we should place in DNS.
   """
   print >> sys.stderr, 'extracting ' + private_key_file
@@ -66,18 +67,28 @@ def ExtractDnsPublicKey(private_key_file, dns_file):
   dns_fp = open(dns_file, "w+")
   print >> sys.stderr, 'writing ' + dns_file
   if HTAG:
-      print >> dns_fp, "k=rsa; h={0}; p={1}".format(HTAG,output)
+      print >> dns_fp, "k={0} h={1}; p={2}".format(key_type,HTAG,output)
   else:
-      print >> dns_fp, "k=rsa; p=%s" % output
+      print >> dns_fp, "k={0}; p={1}".format(key_type, output)
   dns_fp.close()
 
 
 def main(argv):
-  if len(argv) != 2:
-    print >> sys.stderr, '%s: <keyname>' % argv[0]
-    sys.exit(1)
+  parser = argparse.ArgumentParser(
+    description='Produce DKIM keys.',)
+  parser.add_argument('key_name', action="store")
+  parser.add_argument('--ktype', choices=['rsa',],
+    default='rsa',
+    help='DKIM key type: Default is rsa')
+  args=parser.parse_args()
+  if sys.version_info[0] >= 3:
+    args.key_name = bytes(args.key_name, encoding='UTF-8')
+    args.ktype = bytes(args.ktype, encoding='UTF-8')
+    # Make sys.stdin and stdout binary streams.
+    sys.stdin = sys.stdin.detach()
+    sys.stdout = sys.stdout.detach()
 
-  key_name = argv[1]
+  key_name = args.key_name
   private_key_file = key_name + '.key'
   dns_file = key_name + '.dns'
 

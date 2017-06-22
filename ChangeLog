@@ -6,6 +6,8 @@ UNRELEASED Version 0.7.0
     - Add command line option to dkimsign.py to select signing algorithm
     - For dknewkey.py make default to include h=sha256 in the DNS record to
       exclude usage with sha1.  Can be overriden.
+    - Update dknewkey.py to use argparse.  Add --ktype option to specify
+      different key type options in anticipation of the DCRUP WG output.
 
 2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be
