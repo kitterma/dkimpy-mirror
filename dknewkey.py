@@ -93,7 +93,7 @@ def main(argv):
   dns_file = key_name + '.dns'
 
   GenKeys(private_key_file)
-  ExtractDnsPublicKey(private_key_file, dns_file)
+  ExtractDnsPublicKey(private_key_file, dns_file, key_type)
 
 
 if __name__ == '__main__':
