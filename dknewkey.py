@@ -30,12 +30,11 @@ import subprocess
 import sys
 import tempfile
 import argparse
+import hashlib
+import base64
 
 # how strong are our keys?
 BITS_REQUIRED = 2048
-
-# limit to rsa-sha256?
-HTAG='sha256'
 
 # what openssl binary do we use to do key manipulation?
 OPENSSL_BINARY = '/usr/bin/openssl'
@@ -49,7 +48,7 @@ def GenKeys(private_key_file):
                          str(BITS_REQUIRED)])
 
 
-def ExtractDnsPublicKey(private_key_file, dns_file, key_type='rsa'):
+def ExtractDnsPublicKey(private_key_file, dns_file, key_type='rsa', alg='sha256'):
   """ Given a key, extract the bit we should place in DNS.
   """
   print >> sys.stderr, 'extracting ' + private_key_file
@@ -63,8 +62,11 @@ def ExtractDnsPublicKey(private_key_file, dns_file, key_type='rsa'):
     os.unlink(working_file)
   dns_fp = open(dns_file, "w+")
   print >> sys.stderr, 'writing ' + dns_file
-  if HTAG:
-      print >> dns_fp, "k={0} h={1}; p={2}".format(key_type,HTAG,output)
+  if key_type == 'rsafp':
+      alg = False
+      output = base64.b64encode(hashlib.sha256(output).digest())
+  if alg:
+      print >> dns_fp, "k={0} h={1}; p={2}".format(key_type,alg,output)
   else:
       print >> dns_fp, "k={0}; p={1}".format(key_type, output)
   dns_fp.close()
@@ -77,6 +79,9 @@ def main(argv):
   parser.add_argument('--ktype', choices=['rsa', 'rsafp'],
     default='rsa',
     help='DKIM key type: Default is rsa')
+  parser.add_argument('--alg', choices=['', 'sha256'],
+    default='sha256',
+    help='Acceptable signing algorithm for the key')
   args=parser.parse_args()
   if sys.version_info[0] >= 3:
     args.key_name = bytes(args.key_name, encoding='UTF-8')
@@ -87,11 +92,12 @@ def main(argv):
 
   key_name = args.key_name
   key_type = args.ktype
+  alg = args.alg
   private_key_file = key_name + '.key'
   dns_file = key_name + '.dns'
 
   GenKeys(private_key_file)
-  ExtractDnsPublicKey(private_key_file, dns_file, key_type)
+  ExtractDnsPublicKey(private_key_file, dns_file, key_type, alg)
 
 
 if __name__ == '__main__':
