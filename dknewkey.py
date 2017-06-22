@@ -22,9 +22,6 @@
 
 """Generates new domainkeys pairs.
 
-Sample usage:
-
-   dknewkey.py <keyname>
 """
 
 
@@ -77,7 +74,7 @@ def main(argv):
   parser = argparse.ArgumentParser(
     description='Produce DKIM keys.',)
   parser.add_argument('key_name', action="store")
-  parser.add_argument('--ktype', choices=['rsa',],
+  parser.add_argument('--ktype', choices=['rsa', 'rsafp'],
     default='rsa',
     help='DKIM key type: Default is rsa')
   args=parser.parse_args()
@@ -89,6 +86,7 @@ def main(argv):
     sys.stdout = sys.stdout.detach()
 
   key_name = args.key_name
+  key_type = args.ktype
   private_key_file = key_name + '.key'
   dns_file = key_name + '.dns'
 
