@@ -63,7 +63,6 @@ def ExtractDnsPublicKey(private_key_file, dns_file, key_type='rsa', alg='sha256'
   dns_fp = open(dns_file, "w+")
   print >> sys.stderr, 'writing ' + dns_file
   if key_type == 'rsafp':
-      print 'public key being hashed:' + output
       alg = False
       output = base64.b64encode(hashlib.sha256(output).digest())
   if alg:
