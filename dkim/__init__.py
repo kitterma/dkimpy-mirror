@@ -49,6 +49,7 @@ from dkim.crypto import (
     HASH_ALGORITHMS,
     parse_pem_private_key,
     parse_public_key,
+    get_rsa_pubkey,
     RSASSA_PKCS1_v1_5_sign,
     RSASSA_PKCS1_v1_5_verify,
     UnparsableKeyError,
@@ -361,7 +362,7 @@ class DomainSigner(object):
   #: @param logger: a logger to which debug info will be written (default None)
   #: @param signature_algorithm: the signing algorithm to use when signing
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256',
-        minkey=1024):
+        minkey=1024,ktype=b'rsa'):
     self.set_message(message)
     if logger is None:
         logger = get_default_logger()
@@ -382,6 +383,8 @@ class DomainSigner(object):
     #: Minimum public key size.  Shorter keys raise KeyFormatError. The
     #: default is 1024
     self.minkey = minkey
+    #: Key type to use.  rsa, rsafp (DCRUP)
+    self.ktype = ktype
 
   #: Header fields to protect from additions by default.
   #:
@@ -620,12 +623,16 @@ class DKIM(DomainSigner):
   #: @raise DKIMException: when the message, include_headers, or key are badly
   #: formed.
   def sign(self, selector, domain, privkey, identity=None,
-        canonicalize=(b'relaxed',b'simple'), include_headers=None, length=False):
+        canonicalize=(b'relaxed',b'simple'), include_headers=None,
+        length=False):
     try:
         pk = parse_pem_private_key(privkey)
     except UnparsableKeyError as e:
         raise KeyFormatError(str(e))
-
+    if self.ktype == b'rsafp':
+        pubkey = get_rsa_pubkey(privkey)
+    else:
+        pubkey = False
     if identity is not None and not identity.endswith(domain):
         raise ParameterError("identity must end with domain")
 
@@ -653,10 +660,13 @@ class DKIM(DomainSigner):
     h = self.hasher()
     h.update(body)
     bodyhash = base64.b64encode(h.digest())
-
+    if self.ktype == b'rsafp':
+        atag = b'rsafp-sha256'
+    else:
+        atag = self.signature_algorithm
     sigfields = [x for x in [
         (b'v', b"1"),
-        (b'a', self.signature_algorithm),
+        (b'a', atag),
         (b'c', canon_policy.to_c_value()),
         (b'd', domain),
         (b'i', identity or b"@"+domain),
@@ -665,6 +675,7 @@ class DKIM(DomainSigner):
         (b's', selector),
         (b't', str(int(time.time())).encode('ascii')),
         (b'h', b" : ".join(include_headers)),
+        pubkey and (b'k', pubkey),
         (b'bh', bodyhash),
         # Force b= to fold onto it's own line so that refolding after
         # adding sig doesn't change whitespace for previous tags.

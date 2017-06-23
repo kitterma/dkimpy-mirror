@@ -25,6 +25,7 @@ __all__ = [
     'parse_pem_private_key',
     'parse_private_key',
     'parse_public_key',
+    'get_rsa_pubkey',
     'RSASSA_PKCS1_v1_5_sign',
     'RSASSA_PKCS1_v1_5_verify',
     'UnparsableKeyError',
@@ -33,6 +34,7 @@ __all__ = [
 import base64
 import hashlib
 import re
+import rsa
 
 from dkim.asn1 import (
     ASN1FormatError,
@@ -233,6 +235,14 @@ def rsa_decrypt(message, pk, mlen):
 
     return int2str(m2 + h * pk['prime2'], mlen)
 
+def get_rsa_pubkey(privkey):
+    """Extract RSA public key from PEM encoded RSA private key for use with
+    rsafp.  Returns base64 encoded public key suitable for use in DKIM key
+    records.  Using python-rsa instead of making a stack of custom code.
+    @since: 0.7"""
+    pkobj = rsa.PrivateKey.load_pkcs1(privkey, 'PEM')
+    pubobj = rsa.key.PublicKey(pkobj.n, pkobj.e)
+    return(base64.b64encode(rsa.PublicKey.save_pkcs1(pubobj, 'DER')))
 
 def rsa_encrypt(message, pk, mlen):
     """Perform RSA encryption/verification
