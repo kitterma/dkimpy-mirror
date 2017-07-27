@@ -37,9 +37,14 @@ import hashlib
 import logging
 import re
 import time
+import sys
 
-from authres import *
-from authres.arc import *
+# only needed for arc
+try:
+  from authres import AuthenticationResultsHeader
+except:
+  pass
+
 
 from dkim.canonicalization import (
     CanonicalizationPolicy,
@@ -142,6 +147,10 @@ class ParameterError(DKIMException):
 
 class ValidationError(DKIMException):
     """Validation error."""
+    pass
+
+class AuthresNotFoundError(DKIMException):
+    """ Authres Package not installed, needed for ARC """
     pass
 
 def select_headers(headers, include_headers):
@@ -499,7 +508,6 @@ class DomainSigner(object):
     sig = dict(fields)
 
     headers = canon_policy.canonicalize_headers(self.headers)
-
     self.signed_headers = hash_headers(
         h, canon_policy, headers, include_headers, header, sig)
     self.logger.debug("sign %s headers: %r" % (header_name, h.hashed()))
@@ -777,6 +785,14 @@ class ARC(DomainSigner):
   #: formed.
   def sign(self, selector, domain, privkey, srv_id, include_headers=None,
            timestamp=None, standardize=False):
+
+    # check if authres has been imported
+    try:
+        AuthenticationResultsHeader
+    except:
+        self.logger.debug("authres package not installed")
+        raise AuthresNotFoundError
+
     try:
         pk = parse_pem_private_key(privkey)
     except UnparsableKeyError as e:
