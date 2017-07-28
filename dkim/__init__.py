@@ -37,7 +37,6 @@ import hashlib
 import logging
 import re
 import time
-import sys
 
 # only needed for arc
 try:
