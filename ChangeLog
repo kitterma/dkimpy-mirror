@@ -1,4 +1,7 @@
 UNRELEASED Version 0.7.0
+    - Updated ARC implementation to support https://tools.ietf.org/html/
+      draft-ietf-dmarc-arc-protocol-08
+    - Authres module now required for ARC
     - Ported dkimsign.py to use argparse; now gives standard usage message and
       is more extensible
     - Added command line options to dkimsign.py to select header and body
@@ -12,6 +15,7 @@ UNRELEASED Version 0.7.0
       draft-ietf-dcrup-dkim-crypto-02
     - Added generation of rsafp DKIM signatures per
       draft-ietf-dcrup-dkim-crypto-02
+
 2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be
       folded too long (Updated test test_add_body_length since l= tag is no
