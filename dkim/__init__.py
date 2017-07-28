@@ -37,6 +37,14 @@ import hashlib
 import logging
 import re
 import time
+import sys
+
+# only needed for arc
+try:
+  from authres import AuthenticationResultsHeader
+except:
+  pass
+
 
 from dkim.canonicalization import (
     CanonicalizationPolicy,
@@ -140,6 +148,10 @@ class ParameterError(DKIMException):
 
 class ValidationError(DKIMException):
     """Validation error."""
+    pass
+
+class AuthresNotFoundError(DKIMException):
+    """ Authres Package not installed, needed for ARC """
     pass
 
 def select_headers(headers, include_headers):
@@ -776,26 +788,58 @@ class ARC(DomainSigner):
   #: @param selector: the DKIM selector value for the signature
   #: @param domain: the DKIM domain value for the signature
   #: @param privkey: a PKCS#1 private key in base64-encoded text form
-  #: @param auth_results: RFC 7601 Authentication-Results header value for the message
-  #: @param chain_validation_status: CV_Pass, CV_Fail, CV_None
+  #: @param srv_id: an srv_id for identitfying AR headers to sign & extract cv from
   #: @param include_headers: a list of strings indicating which headers
   #: are to be signed (default rfc4871 recommended headers)
   #: @return: list of ARC set header fields
   #: @raise DKIMException: when the message, include_headers, or key are badly
   #: formed.
-  def sign(self, selector, domain, privkey, auth_results, chain_validation_status,
-           include_headers=None, timestamp=None, standardize=False):
+  def sign(self, selector, domain, privkey, srv_id, include_headers=None,
+           timestamp=None, standardize=False):
+
+    # check if authres has been imported
+    try:
+        AuthenticationResultsHeader
+    except:
+        self.logger.debug("authres package not installed")
+        raise AuthresNotFoundError
+
     try:
         pk = parse_pem_private_key(privkey)
     except UnparsableKeyError as e:
         raise KeyFormatError(str(e))
 
+    # extract, parse, filter & group AR headers
+    ar_headers = [res.strip() for [ar, res] in self.headers if ar == b'Authentication-Results']
+    grouped_headers = [(res, AuthenticationResultsHeader.parse('Authentication-Results: ' + res.decode('utf-8')))
+                       for res in ar_headers]
+    auth_headers = [res for res in grouped_headers if res[1].authserv_id == srv_id.decode('utf-8')]
+
+    if len(auth_headers) == 0:
+      self.logger.debug("no AR headers found, chain terminated")
+      return b''
+
+    # consolidate headers
+    results_lists = [raw.replace(srv_id + b';', b'').strip() for (raw, parsed) in auth_headers]
+    results_lists = [tags.split(b';') for tags in results_lists]
+    results = [tag.strip() for sublist in results_lists for tag in sublist]
+    auth_results = srv_id + b'; ' + b';\r\n  '.join(results)
+
+    # extract cv
+    parsed_auth_results = AuthenticationResultsHeader.parse('Authentication-Results: ' + auth_results.decode('utf-8'))
+    arc_results = [res for res in parsed_auth_results.results if res.method == 'arc']
+    if len(arc_results) == 0:
+      self.logger.debug("no AR arc stamps found, chain terminated")
+      return b''
+    elif len(arc_results) != 1:
+      self.logger.debug("multiple AR arc stamps found, failing chain")
+      chain_validation_status = CV_Fail
+    else:
+      chain_validation_status = arc_results[0].result.lower().encode('utf-8')
+
     # Setup headers
     if include_headers is None:
         include_headers = self.default_sign_headers()
-
-    if b'arc-authentication-results' not in include_headers:
-        include_headers.append(b'arc-authentication-results')
 
     include_headers = tuple([x.lower() for x in include_headers])
 
@@ -822,7 +866,10 @@ class ARC(DomainSigner):
       raise ParameterError("cv=none not allowed on instance %d" % instance)
 
     new_arc_set = []
-    arc_headers = [y for x,y in arc_headers_w_instance]
+    if chain_validation_status != CV_Fail:
+      arc_headers = [y for x,y in arc_headers_w_instance]
+    else: # don't include previous sets for a failed/invalid chain
+      arc_headers = []
 
     # Compute ARC-Authentication-Results
     aar_value = ("i=%d; " % instance).encode('utf-8') + auth_results
@@ -880,6 +927,11 @@ class ARC(DomainSigner):
     as_include_headers = [x[0].lower() for x in arc_headers]
     as_include_headers.reverse()
 
+    # if our chain is failing or invalid, we only grab the most recent set
+    # reversing the order of the headers accomplishes this
+    if chain_validation_status == CV_Fail:
+      self.headers.reverse()
+
     res = self.gen_header(as_fields, as_include_headers, canon_policy,
                            b"ARC-Seal", pk, standardize)
 
@@ -898,7 +950,7 @@ class ARC(DomainSigner):
   #: @param dnsfunc: an optional function to lookup TXT resource records
   #: for a DNS domain.  The default uses dnspython or pydns.
   #: @return: True if signature verifies or False otherwise
-  #: @return: three-tuple of (CV Result (CV_Pass, CV_Fail or CV_None), list of
+  #: @return: three-tuple of (CV Result (CV_Pass, CV_Fail, CV_None or None, for a chain that has ended), list of
   #: result dictionaries, result reason)
   #: @raise DKIMException: when the message, signature, or key are badly formed
   def verify(self,dnsfunc=get_txt):
@@ -918,10 +970,10 @@ class ARC(DomainSigner):
     if not result_data[0]['ams-valid']:
         return CV_Fail, result_data, "Most recent ARC-Message-Signature did not validate"
     for result in result_data:
-      if not result['as-valid']:
-        return CV_Fail, result_data, "ARC-Seal[%d] did not validate" % result['instance']
       if result['cv'] == CV_Fail:
-        return CV_Fail, result_data, "ARC-Seal[%d] reported failure" % result['instance']
+        return None, result_data, "ARC-Seal[%d] reported failure, the chain is terminated" % result['instance']
+      elif not result['as-valid']:
+        return CV_Fail, result_data, "ARC-Seal[%d] did not validate" % result['instance']
       elif (result['instance'] == 1) and (result['cv'] != CV_None):
         return CV_Fail, result_data, "ARC-Seal[%d] reported invalid status %s" % (result['instance'], result['cv'])
       elif (result['instance'] != 1) and (result['cv'] == CV_None):
@@ -988,7 +1040,18 @@ class ARC(DomainSigner):
         raise ParameterError("The Arc-Message-Signature MUST NOT sign ARC-Seal")
 
     ams_header = (b'ARC-Message-Signature', b' ' + ams_value)
-    ams_valid = self.verify_sig(sig, include_headers, ams_header, dnsfunc)
+
+
+    # we can't use the AMS provided above, as it's already been canonicalized relaxed
+    # for use in validating the AS.  However the AMS is included in the AMS itself,
+    # and this can use simple canonicalization
+    raw_ams_header = [(x, y) for (x, y) in self.headers if x.lower() == b'arc-message-signature'][0]
+
+    try:
+      ams_valid = self.verify_sig(sig, include_headers, raw_ams_header, dnsfunc)
+    except DKIMException as e:
+      self.logger.error("%s" % e)
+      ams_valid = False
 
     output['ams-valid'] = ams_valid
     self.logger.debug("ams valid: %r" % ams_valid)
@@ -1009,7 +1072,11 @@ class ARC(DomainSigner):
     as_include_headers = [x[0].lower() for x in arc_headers]
     as_include_headers.reverse()
     as_header = (b'ARC-Seal', b' ' + as_value)
-    as_valid = self.verify_sig(sig, as_include_headers[:-1], as_header, dnsfunc)
+    try:
+      as_valid = self.verify_sig(sig, as_include_headers[:-1], as_header, dnsfunc)
+    except DKIMException as e:
+      self.logger.error("%s" % e)
+      as_valid = False
 
     output['as-valid'] = as_valid
     self.logger.debug("as valid: %r" % as_valid)
@@ -1056,8 +1123,7 @@ dkim_sign = sign
 dkim_verify = verify
 
 def arc_sign(message, selector, domain, privkey,
-             auth_results, chain_validation_status,
-             signature_algorithm=b'rsa-sha256',
+             srv_id, signature_algorithm=b'rsa-sha256',
              include_headers=None, timestamp=None,
              logger=None, standardize=False):
     """Sign an RFC822 message and return the ARC set header lines for the next instance
@@ -1065,19 +1131,19 @@ def arc_sign(message, selector, domain, privkey,
     @param selector: the DKIM selector value for the signature
     @param domain: the DKIM domain value for the signature
     @param privkey: a PKCS#1 private key in base64-encoded text form
-    @param auth_results: the RFC 7601 authentication-results header field value for this instance
-    @param chain_validation_status: the validation status of the existing chain on the message (P (pass), F (fail)) or N (none) for no existing chain
+    @param srv_id: the authserv_id used to identify the ADMD's AR headers
     @param signature_algorithm: the signing algorithm to use when signing
     @param include_headers: a list of strings indicating which headers are to be signed (default all headers not listed as SHOULD NOT sign)
     @param logger: a logger to which debug info will be written (default None)
     @return: A list containing the ARC set of header fields for the next instance
     @raise DKIMException: when the message, include_headers, or key are badly formed.
     """
+
     a = ARC(message,logger=logger,signature_algorithm=signature_algorithm)
     if not include_headers:
         include_headers = a.default_sign_headers()
-    return a.sign(selector, domain, privkey, auth_results, chain_validation_status,
-                  include_headers=include_headers, timestamp=timestamp, standardize=standardize)
+    return a.sign(selector, domain, privkey, srv_id, include_headers=include_headers,
+                  timestamp=timestamp, standardize=standardize)
 
 def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
     """Verify the ARC chain on an RFC822 formatted message.
