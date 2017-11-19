@@ -1019,7 +1019,7 @@ class ARC(DomainSigner):
 
     self.logger.debug("ams sig[%d]: %r" % (instance, sig))
 
-    validate_signature_fields(sig, [b'i', b'a', b'b', b'c', b'bh', b'd', b'h', b's'], True)
+    validate_signature_fields(sig, [b'i', b'a', b'b', b'bh', b'd', b'h', b's'], True)
     output['ams-domain'] = sig[b'd']
     output['ams-selector'] = sig[b's']
 
@@ -1052,7 +1052,7 @@ class ARC(DomainSigner):
 
     self.logger.debug("as sig[%d]: %r" % (instance, sig))
 
-    validate_signature_fields(sig, [b'i', b'a', b'b', b'cv', b'd', b's', b't'], True)
+    validate_signature_fields(sig, [b'i', b'a', b'b', b'cv', b'd', b's'], True)
     output['as-domain'] = sig[b'd']
     output['as-selector'] = sig[b's']
     output['cv'] = sig[b'cv']
