@@ -8,6 +8,8 @@ UNRELEASED Version 0.7.0
       exclude usage with sha1.  Can be overriden.
     - Update ARC processing to current draft.
     - Fix arcverify tag requirements (LP: #1710312)
+    - Fix empty body canonicalization for relaxed canonicalization (LP: #1727319)
+       * Thanks to Matthew Palmer for the report and the proposed fix
 
 2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be

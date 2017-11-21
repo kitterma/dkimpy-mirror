@@ -48,6 +48,13 @@ def unfold_header_value(content):
     return re.sub(b"\r\n", b"", content)
 
 
+def correct_empty_body(content):
+    if content == b"\r\n":
+        return b""
+    else:
+        return content
+
+
 class Simple:
     """Class that represents the "simple" canonicalization algorithm."""
 
@@ -85,8 +92,8 @@ class Relaxed:
         # Remove all trailing WSP at end of lines.
         # Compress non-line-ending WSP to single space.
         # Ignore all empty lines at the end of the message body.
-        return strip_trailing_lines(
-            compress_whitespace(strip_trailing_whitespace(body)))
+        return correct_empty_body(strip_trailing_lines(
+            compress_whitespace(strip_trailing_whitespace(body))))
 
 
 class CanonicalizationPolicy:

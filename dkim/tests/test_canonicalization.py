@@ -53,6 +53,26 @@ class TestSimpleAlgorithmBody(BaseCanonicalizationTest):
             b'Foo  \tbar    \r\n',
             b'Foo  \tbar    \r\n\r\n')
 
+    def test_adds_crlf(self):
+        self.assertCanonicalForm(
+            b'Foo bar\r\n',
+            b'Foo bar')
+
+    def test_empty_body(self):
+        self.assertCanonicalForm(
+            b'\r\n',
+            b'')
+
+    def test_single_crlf_body(self):
+        self.assertCanonicalForm(
+            b'\r\n',
+            b'\r\n')
+
+    def test_multiple_crlf_body(self):
+        self.assertCanonicalForm(
+            b'\r\n',
+            b'\r\n\r\n')
+
 
 class TestRelaxedAlgorithmHeaders(BaseCanonicalizationTest):
 
@@ -97,6 +117,26 @@ class TestRelaxedAlgorithmBody(BaseCanonicalizationTest):
         self.assertCanonicalForm(
             b'Foo\r\nbar\r\n',
             b'Foo\r\nbar\r\n\r\n\r\n')
+
+    def test_adds_crlf(self):
+        self.assertCanonicalForm(
+            b'Foo bar\r\n',
+            b'Foo bar')
+
+    def test_empty_body(self):
+        self.assertCanonicalForm(
+            b'',
+            b'')
+
+    def test_single_crlf_body(self):
+        self.assertCanonicalForm(
+            b'',
+            b'\r\n')
+
+    def test_multiple_crlf_body(self):
+        self.assertCanonicalForm(
+            b'',
+            b'\r\n\r\n')
 
 
 class TestCanonicalizationPolicyFromCValue(unittest.TestCase):
