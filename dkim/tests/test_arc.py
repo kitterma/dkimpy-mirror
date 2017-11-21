@@ -68,78 +68,17 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
-    def test_verifies(self):
+    def test_signs_and_verifies(self):
         # A message verifies after being signed.
         sig_lines = dkim.arc_sign(
-            self.message, b"test", b"example.com", self.key,
-            b"test.domain: none", dkim.CV_None)
+            self.message, b"test", b"example.com", self.key, b"lists.example.org", timestamp="12345")
+
+        expected_sig = [b'ARC-Seal: i=1; cv=none; a=rsa-sha256; d=example.com; s=test; t=12345; \r\n b=3jOfBfTKcq+3r3Xv158DybT4mWFxrGcop+cgyLUX2ETCMHqNXYwGx2h+NY46tr\r\n k0Lg6R8i+560+KC8PLcCURYYJNJUHLHPIifhddy1aMNL9l4CoI+Oz+rocd2IZeb/\r\n I9V5amOUOWnAlOvyrSt0XfzLJRTS8qJW3Is1CRkkgyLoI=\r\n', b'ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; \r\n d=example.com; s=test; t=12345; h=message-id : \r\n date : from : to : subject : date : from : \r\n subject; \r\n bh=wE7NXSkgnx9PGiavN4OZhJztvkqPDlemV3OGuEnLwNo=; \r\n b=Bj/AEKhmzMbltWXrfLA8UZNp6/5cj8/IzqbgQec4vGobDZRsa\r\n C0YIPM4tcqK2uTS62kwh40cndXTDsCppvRsBy1sIO3eRNyuLUOh\r\n 0XGrz0AdLQMv+IOdyQqZfMVkq8DuQ4Qdl7ee99uYf3D8S+L7GuD\r\n wJSk7dyH+P2BKxz2nyB0=\r\n', b'ARC-Authentication-Results: i=1; lists.example.org; arc=none;\r\n  spf=pass smtp.mfrom=jqd@d1.example;\r\n  dkim=pass (1024-bit key) header.i=@d1.example;\r\n  dmarc=pass\r\n']
+
+        self.assertEquals(expected_sig, sig_lines)
+
         (cv, res, reason) = dkim.arc_verify(b''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
         self.assertEquals(cv, dkim.CV_Pass)
-
-    """def test_multiple_instances_verify(self):
-        # A message verifies after being signed multiple times.
-        message = self.message
-        sig_lines = dkim.arc_sign(
-            message, b"test", b"example.com", self.key,
-            "test.domain: none", dkim.CV_None)
-        message = ''.join(sig_lines) + message
-        (cv, res, reason) = dkim.arc_verify(message, dnsfunc=self.dnsfunc)
-        self.assertEquals(cv, dkim.CV_Pass)
-
-        for x in range(10):
-          sig_lines = dkim.arc_sign(
-              message, b"test", b"example.com", self.key,
-              "test.domain: arc=pass", dkim.CV_Pass)
-          message = ''.join(sig_lines) + message
-          (cv, res, reason) = dkim.arc_verify(message, dnsfunc=self.dnsfunc)
-          self.assertEquals(cv, dkim.CV_Pass)
-
-    def test_multiple_instances_verify_fail(self):
-        # A message return CV_Fail if signed as failure.
-        message = self.message
-        sig_lines = dkim.arc_sign(
-            message, b"test", b"example.com", self.key,
-            "test.domain: none", dkim.CV_None)
-        message = ''.join(sig_lines) + message
-        (cv, res, reason) = dkim.arc_verify(message, dnsfunc=self.dnsfunc)
-        self.assertEquals(cv, dkim.CV_Pass)
-
-        sig_lines = dkim.arc_sign(
-            message, b"test", b"example.com", self.key,
-            "test.domain: arc=pass", dkim.CV_Fail)
-        message = ''.join(sig_lines) + message
-        # A conforming signer wouldn't sign as pass after a fail.
-        sig_lines = dkim.arc_sign(
-            message, b"test", b"example.com", self.key,
-            "test.domain: arc=pass", dkim.CV_Pass)
-        message = ''.join(sig_lines) + message
-
-        (cv, res, reason) = dkim.arc_verify(message, dnsfunc=self.dnsfunc)
-        self.assertEquals(cv, dkim.CV_Fail)
-
-    def test_altered_body_fails(self):
-        # An altered body fails verification.
-        sig_lines = dkim.arc_sign(
-            self.message, b"test", b"example.com", self.key,
-            "test.domain: none", dkim.CV_None)
-        (cv, res, reason) = dkim.arc_verify(''.join(sig_lines) + self.message + b"foo", dnsfunc=self.dnsfunc)
-        self.assertEquals(cv, dkim.CV_Fail)
-
-    def test_dns_pk_mismatch_fails(self):
-        # DNS public key doesn't match signing private key.
-        sig_lines = dkim.arc_sign(
-            self.message, b"example", b"canonical.com", self.key,
-            "test.domain: none", dkim.CV_None)
-        (cv, res, reason) = dkim.arc_verify(''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
-        self.assertEquals(cv, dkim.CV_Fail)
-
-    def test_dns_missing_fails(self):
-        # DNS public key missing fails verify
-        sig_lines = dkim.arc_sign(
-            self.message, b"missing", b"example.com", self.key,
-            "test.domain: none", dkim.CV_None)
-        (cv, res, reason) = dkim.arc_verify(''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
-        self.assertEquals(cv, dkim.CV_Fail)"""
 
 def test_suite():
     from unittest import TestLoader
