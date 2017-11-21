@@ -39,7 +39,7 @@ BITS_REQUIRED = 2048
 # what openssl binary do we use to do key manipulation?
 OPENSSL_BINARY = '/usr/bin/openssl'
 
-def GenKeys(private_key_file):
+def GenRSAKeys(private_key_file):
   """ Generates a suitable private key.  Output is unprotected.
   You should encrypt your keys.
   """
@@ -47,8 +47,21 @@ def GenKeys(private_key_file):
   subprocess.check_call([OPENSSL_BINARY, 'genrsa', '-out', private_key_file,
                          str(BITS_REQUIRED)])
 
+def GenEd25519Keys(private_key_file):
+    """Generates a base64 encoded private key for ed25519 DKIM signing.
+    Output is unprotected.  You should encrypt your keys.
+    """
+    import nacl.signing # Yes, pep-8, but let's not make everyone install nacl
+    import os
+    skg = nacl.signing.SigningKey(seed=os.urandom(32))
+    priv_key = skg.generate()
+    print >> sys.stderr, 'generating ' + private_key_file
+    pkf = open(private_key_file, "w+")
+    print >> pkf, base64.b64encode(bytes(priv_key))
+    pkf.close()
+    return(priv_key)
 
-def ExtractDnsPublicKey(private_key_file, dns_file, key_type='rsa', alg='sha256'):
+def ExtractRSADnsPublicKey(private_key_file, dns_file):
   """ Given a key, extract the bit we should place in DNS.
   """
   print >> sys.stderr, 'extracting ' + private_key_file
@@ -62,26 +75,25 @@ def ExtractDnsPublicKey(private_key_file, dns_file, key_type='rsa', alg='sha256'
     os.unlink(working_file)
   dns_fp = open(dns_file, "w+")
   print >> sys.stderr, 'writing ' + dns_file
-  if key_type == 'rsafp':
-      alg = False
-      output = base64.b64encode(hashlib.sha256(output).digest())
-  if alg:
-      print >> dns_fp, "k={0} h={1}; p={2}".format(key_type,alg,output)
-  else:
-      print >> dns_fp, "k={0}; p={1}".format(key_type, output)
+  print >> dns_fp, "k=rsa; h=sha-256; p={0}".format(output)
   dns_fp.close()
 
+def ExtractEd25519PublicKey(private_key_file, dns_file, priv_key):
+    """ Given a ed25519 key, extract the bit we should place in DNS.
+    """
+    output = base64.b64encode(bytes(priv_key.verify_key))
+    dns_fp = open(dns_file, "w+")
+    print >> sys.stderr, 'writing ' + dns_file
+    print >> dns_fp, "k=ed25519; p={0}".format(output)
+    dns_fp.close()
 
 def main(argv):
   parser = argparse.ArgumentParser(
     description='Produce DKIM keys.',)
   parser.add_argument('key_name', action="store")
-  parser.add_argument('--ktype', choices=['rsa', 'rsafp'],
+  parser.add_argument('--ktype', choices=['rsa', 'ed25519'],
     default='rsa',
     help='DKIM key type: Default is rsa')
-  parser.add_argument('--alg', choices=['', 'sha256'],
-    default='sha256',
-    help='Acceptable signing algorithm for the key')
   args=parser.parse_args()
   if sys.version_info[0] >= 3:
     args.key_name = bytes(args.key_name, encoding='UTF-8')
@@ -92,12 +104,17 @@ def main(argv):
 
   key_name = args.key_name
   key_type = args.ktype
-  alg = args.alg
   private_key_file = key_name + '.key'
   dns_file = key_name + '.dns'
 
-  GenKeys(private_key_file)
-  ExtractDnsPublicKey(private_key_file, dns_file, key_type, alg)
+  if key_type == 'rsa':
+      GenRSAKeys(private_key_file)
+      ExtractRSADnsPublicKey(private_key_file, dns_file)
+  elif key_type == 'ed25519':
+      priv_key = GenEd25519Keys(private_key_file)
+      ExtractEd25519PublicKey(private_key_file, dns_file, priv_key)
+  else:
+      print >> sys.stderr, "Unknown key type - no key generated."
 
 
 if __name__ == '__main__':
