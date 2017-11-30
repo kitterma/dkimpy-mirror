@@ -12,6 +12,9 @@ UNRELEASED Version 0.7.0
     - Fix arcverify tag requirements (LP: #1710312)
     - Fix empty body canonicalization for relaxed canonicalization (LP: #1727319)
        * Thanks to Matthew Palmer for the report and the proposed fix
+    - Add new test, test_implicit_k, to verify that RSA processing is still
+      correct when the optional k= tag is not present in the DKIM public key
+      record
 
 2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be
