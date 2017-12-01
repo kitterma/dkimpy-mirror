@@ -34,7 +34,8 @@ if sys.version_info[0] >= 3:
 message = sys.stdin.read()
 verbose = '-v' in sys.argv
 if verbose:
-  d = dkim.DKIM(message)
+  import logging
+  d = dkim.DKIM(message, logger=logging)
   res = d.verify()
 else:
   res = dkim.verify(message)
