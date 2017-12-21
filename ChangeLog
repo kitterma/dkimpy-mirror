@@ -16,6 +16,8 @@ UNRELEASED Version 0.7.0
       correct when the optional k= tag is not present in the DKIM public key
       record
     - Fix -v verbose reporting in dkimverify.py
+    - Fix unbound local variable error when processing signatures with an x
+      tag, but no t tag (LP: #1739637)
 
 2017-05-30 Version 0.6.2
     - Fixed problem with header folding that caused the first line to be

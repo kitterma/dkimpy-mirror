@@ -260,6 +260,8 @@ def validate_signature_fields(sig, mandatory_fields=[b'v', b'a', b'b', b'bh', b'
             raise ValidationError(
               "x= value is not a decimal integer (%s)" % sig[b'x'])
         x_sign = int(sig[b'x'])
+        now = int(time.time())
+        slop = 36000 # 10H leeway for mailers with inaccurate clocks
         if x_sign < now - slop:
             raise ValidationError(
                 "x= value is past (%s)" % sig[b'x'])
