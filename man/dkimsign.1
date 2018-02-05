@@ -128,14 +128,14 @@
 .\" ========================================================================
 .\"
 .IX Title "dkimsign 1"
-.TH dkimsign 1 "2017-01-23"
+.TH dkimsign 1 "2018-02-05"
 .SH "NAME"
 dkimsign
 \-
 Script for DKIM signing messages on stdin
 .SH "VERSION"
 .IX Header "VERSION"
-0\.6\.0
+0\.7\.0
 
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
@@ -146,15 +146,32 @@ the same message on standard output with a DKIM-Signature line prepended.
 .SH "USAGE"
 .IX Header "USAGE"
 
-The signing options are specified on the command line:
+usage: dkimsign.py [\-h] [\-\-hcanon {simple,relaxed}]
+                   [\-\-bcanon {simple,relaxed}]
+                   [\-\-signalg {rsa\-sha256,ed25519\-sha256,rsa\-sha1}]
+                   [\-\-identity IDENTITY]
+                   selector domain privatekeyfile
 
-dkimsign selector domain privatekeyfile [identity]
+mandatory positional arguments:
+  selector
+  domain
+  privatekeyfile
 
-The identity is optional and defaults to "@domain".
+optional arguments:
+  \-h, \-\-help            show this help message and exit
+  \-\-hcanon {simple,relaxed}
+                        Header canonicalization algorithm: default=relaxed
+  \-\-bcanon {simple,relaxed}
+                        Body canonicalization algorithm: default=simple
+  \-\-signalg {rsa\-sha256,ed25519\-sha256,rsa\-sha1}
+                        Signature algorithm: default=rsa\-sha256
+  \-\-identity IDENTITY   Optional value for i= tag.
 
 .SH "AUTHORS"
 .IX Header "AUTHORS"
-This version of \fBdkimsign\fR was written by Greg Hewgill <greg@hewgill.com>.
+The original version of \fBdkimsign\fR was written by Greg Hewgill
+<greg@hewgill.com>.  It has been substantially rewritten by Scott Kitterman
+<scott@kitterman.com>.
 .PP
 This man-page was created by Scott Kitterman <scott@kitterman.com> and is
 licensed under the same terms as dkimpy.

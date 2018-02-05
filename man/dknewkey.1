@@ -128,37 +128,48 @@
 .\" ========================================================================
 .\"
 .IX Title "dknewkey 1"
-.TH dknewkey 1 "2017-01-23"
+.TH dknewkey 1 "2018-02-05"
 .SH "NAME"
 dknewkey
 \-
 Generates new DKIM public/private key pairs
 .SH "VERSION"
 .IX Header "VERSION"
-0\.6\.0
-
-.SH "USAGE"
-.IX Header "USAGE"
-
-NOTE: Depending on the packaging and distribution, the exact path and name for
-the executable may vary.
-
-dknewkey.py: <keyname>
+0\.7\.0
 
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 
 dknewykey generates new DKIM keys.
 
-It defaults to 2048 bit key size.  This is controlled by the BITS_REQUIRED
-variable.
+For RSA keys, it defaults to 2048 bit key size.  This is controlled by the
+BITS_REQUIRED variable. ed25519 keys do not have a variable size.
 
-It uses openssl to do the generation.  By default it assumes this is located
-at /usr/bin/openssl.  This is controlled by the OPENSSL_BINARY variable.
+For RSA keys, it uses openssl to do the generation.  By default it assumes
+this is located at /usr/bin/openssl.  This is controlled by the OPENSSL_BINARY
+variable.  For ed25519 keys, PyNaCl (python-nacl in Debian and derivatives) is
+used.
+
+.SH "USAGE"
+.IX Header "USAGE"
+
+dknewkey.py [\-h] [\-\-ktype {rsa,ed25519}] key_name
+
+mandatory positional arguments:
+  key_name
+
+optional arguments:
+  \-h, \-\-help            show this help message and exit
+  \-\-ktype {rsa,ed25519}
+                        DKIM key type: Default is rsa
+
+NOTE: Depending on the packaging and distribution, the exact path and name for
+the executable may vary.
 
 .SH "AUTHORS"
 .IX Header "AUTHORS"
 This version of \fBdknewkey\fR was written by Brandon Long <blong@google.com>.
+It has been substantially rewritten by Scott Kitterman <scott@kitterman.com>.
 .PP
 This man-page was created by Scott Kitterman <scott@kitterman.com> and is
 licensed under the same terms as dkimpy.
