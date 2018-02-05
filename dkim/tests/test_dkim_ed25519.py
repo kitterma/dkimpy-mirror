@@ -100,7 +100,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
 
     def test_verify_third_party(self):
         # Message signed by prototype Exim implementation
-        res = dkim.verify(self.message2)
+        res = dkim.verify(self.message2, dnsfunc=self.dnsfunc)
         self.assertTrue(res)
 
     def test_add_body_length(self):
