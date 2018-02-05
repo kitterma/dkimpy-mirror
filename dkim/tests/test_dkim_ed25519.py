@@ -15,7 +15,7 @@
 # 3. This notice may not be removed or altered from any source distribution.
 #
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
-# Copyright (c) 2017 Scott Kitterman <scott@kitterman.com>
+# Copyright (c) 2018 Scott Kitterman <scott@kitterman.com>
 
 import email
 import os.path

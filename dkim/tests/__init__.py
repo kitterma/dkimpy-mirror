@@ -19,6 +19,7 @@
 # This has been modified from the original software.
 # Copyright (c) 2016 Google, Inc.
 # Contact: Brandon Long <blong@google.com>
+# Copyright (c) 2018 Scott Kitterman <scott@kitterman.com>
 
 import unittest
 

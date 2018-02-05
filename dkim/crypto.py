@@ -18,6 +18,7 @@
 #
 # This has been modified from the original software.
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
+# Copyright (c) 2018 Scott Kitterman <scott@kitterman.com>
 
 __all__ = [
     'DigestTooLargeError',

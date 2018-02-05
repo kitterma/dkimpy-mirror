@@ -18,7 +18,7 @@
 # Copyright (c) 2016 Google, Inc.
 # Contact: Brandon Long <blong@google.com>
 # Modified by Scott Kitterman <scott@kitterman.com>
-# Copyright (c) 2017 Scott Kitterman
+# Copyright (c) 2017,2018 Scott Kitterman
 
 """Generates new domainkeys pairs.
 
