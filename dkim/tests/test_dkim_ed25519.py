@@ -82,7 +82,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
                     self.message, b"test", b"example.com", self.key,
-                    canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519')
+                    canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519-sha256')
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
@@ -94,7 +94,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
                     self.message, b"test", b"example.com", self.key,
                     canonicalize=(header_algo, body_algo),
                     include_headers=(b'from',) + dkim.DKIM.SHOULD,
-                    signature_algorithm=b'ed25519')
+                    signature_algorithm=b'ed25519-sha256')
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
@@ -106,7 +106,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
     def test_add_body_length(self):
         sig = dkim.sign(
             self.message, b"test", b"example.com", self.key, length=True,
-                signature_algorithm=b'ed25519')
+                signature_algorithm=b'ed25519-sha256')
         msg = email.message_from_string(self.message.decode('utf-8'))
         self.assertIn('; l=%s' % len(msg.get_payload() + '\n'), sig.decode('utf-8'))
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
@@ -118,7 +118,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
                     self.message, b"test", b"example.com", self.key,
-                    signature_algorithm=b'ed25519')
+                    signature_algorithm=b'ed25519-sha256')
                 res = dkim.verify(
                     sig + self.message + b"foo", dnsfunc=self.dnsfunc)
                 self.assertFalse(res)
@@ -126,7 +126,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
     def test_badly_encoded_domain_fails(self):
         # Domains should be ASCII. Bad ASCII causes verification to fail.
         sig = dkim.sign(self.message, b"test", b"example.com\xe9", self.key,
-            signature_algorithm=b'ed25519')
+            signature_algorithm=b'ed25519-sha256')
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertFalse(res)
 
@@ -155,7 +155,7 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
 
         dkim_header = dkim.sign(sample_msg, b'example', b'canonical.com',
             sample_privkey, canonicalize=(header_mode, dkim.Relaxed),
-            signature_algorithm=b'ed25519')
+            signature_algorithm=b'ed25519-sha256')
         # Folding dkim_header affects b= tag only, since dkim.sign folds
         # sig_value with empty b= before hashing, and then appends the
         # signature.  So folding dkim_header again adds FWS to
@@ -184,7 +184,7 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
                 # bug requires a repeated header to manifest
                 d.should_not_sign.remove(b'received')
                 sig = d.sign(b"test", b"example.com", self.key,
-                    signature_algorithm=b'ed25519',
+                    signature_algorithm=b'ed25519-sha256',
                     include_headers=d.all_sign_headers(),
                     canonicalize=(header_algo, body_algo))
                 dv = dkim.DKIM(sig + message)
@@ -204,7 +204,7 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
                     self.message, b"test", b"example.com", self.key,
-                    signature_algorithm=b'ed25519')
+                    signature_algorithm=b'ed25519-sha256')
                 # adding an unknown header still verifies
                 h1 = h+b'\r\n'+b'X-Foo: bar'
                 message = b'\n\n'.join((h1,b))
@@ -232,14 +232,14 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
         try:
             sig = dkim.sign(message, selector, domain,
                 read_test_data('ed25519test.key'), identity = identity,
-                signature_algorithm=b'ed25519')
+                signature_algorithm=b'ed25519-sha256')
         except dkim.ParameterError as x:
             sigerror = True
         self.assertTrue(sigerror)
 
     def test_validate_signature_fields(self):
       sig = {b'v': b'1',
-      b'a': b'ed25519',
+      b'a': b'ed25519-sha256',
       b'b': b'K/UUOt8lCtgjp3kSTogqBm9lY1Yax/NwZ+bKm39/WKzo5KYe3L/6RoIA/0oiDX4kO\n \t Qut49HCV6ZUe6dY9V5qWBwLanRs1sCnObaOGMpFfs8tU4TWpDSVXaNZAqn15XVW0WH\n \t EzOzUfVuatpa1kF4voIgSbmZHR1vN3WpRtcTBe/I=',
       b'bh': b'n0HUwGCP28PkesXBPH82Kboy8LhNFWU9zUISIpAez7M=',
       b'c': b'simple/simple',

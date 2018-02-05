@@ -1,9 +1,9 @@
-DKIM-Signature: v=1; a=ed25519; c=relaxed/simple; d=kitterman.org;
- i=@kitterman.org; q=dns/txt; s=ed25519; t=1517819503;
- h=message-id : date : from : to : subject : date : from :
- subject; bh=wE7NXSkgnx9PGiavN4OZhJztvkqPDlemV3OGuEnLwNo=;
- b=79R3A+GEIghZIWWOfAxXUEVI/NhyOCH0QWVhYV2+sN8MPVfPfYQAMRi0
- mlXux2AHLc7yihFV5SJWrsvqm62uCw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/simple; d=kitterman.org; 
+ i=@kitterman.org; q=dns/txt; s=ed25519; t=1517847601; 
+ h=message-id : date : from : to : subject : date : from : 
+ subject; bh=wE7NXSkgnx9PGiavN4OZhJztvkqPDlemV3OGuEnLwNo=; 
+ b=sEnnE99Xsjpcqa/cNf8k/KQCEgjJ/4tswIKoNvq2q0fFQL6XBORJ2fQb
+ Fvt34Tb4sOxlZtBYu01kEJlmGz4uCw==
 Authentication-Results: lists.example.org; arc=none; spf=pass smtp.mfrom=example.com; dmarc=pass
 Received: from localhost
 Message-ID: <example@example.com>
@@ -13,4 +13,3 @@ To: somebody@example.com
 Subject: Testing
 
 This is a test message.
-

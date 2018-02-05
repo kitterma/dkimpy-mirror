@@ -556,7 +556,7 @@ class DomainSigner(object):
             sig2 = RSASSA_PKCS1_v1_5_sign(h, pk)
         except DigestTooLargeError:
             raise ParameterError("digest too large for modulus")
-    elif self.signature_algorithm == b'ed25519':
+    elif self.signature_algorithm == b'ed25519-sha256':
         sigobj = pk.sign(h.digest())
         sig2 = sigobj.signature
     # Folding b= is explicity allowed, but yahoo and live.com are broken
@@ -692,7 +692,7 @@ class DKIM(DomainSigner):
             pk = parse_pem_private_key(privkey)
         except UnparsableKeyError as e:
             raise KeyFormatError(str(e))
-    elif self.signature_algorithm == b'ed25519':
+    elif self.signature_algorithm == b'ed25519-sha256':
         pk = nacl.signing.SigningKey(privkey, encoder=nacl.encoding.Base64Encoder)
 
     if identity is not None and not identity.endswith(domain):
