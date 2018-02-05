@@ -81,6 +81,7 @@ ASN1_RSAPrivateKey = [
 HASH_ALGORITHMS = {
     b'rsa-sha1': hashlib.sha1,
     b'rsa-sha256': hashlib.sha256,
+    b'ed25519': hashlib.sha256
     }
 
 # These values come from RFC 8017, section 9.2 Notes, page 46.

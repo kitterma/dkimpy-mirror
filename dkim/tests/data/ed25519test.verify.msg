@@ -1,0 +1,16 @@
+DKIM-Signature: v=1; a=ed25519; c=relaxed/simple; d=example.com;
+ i=@example.com; q=dns/txt; s=test; t=5; h=message-id :
+ date : from : to : subject : date : from : subject;
+ bh=wE7NXSkgnx9PGiavN4OZhJztvkqPDlemV3OGuEnLwNo=;
+ b=wt7P+9DoBwcln1RKE3LN7069ZEEiSyVE/NH1YXnqnJy4JcrSCZUbeIEh
+ vXssPHelX4yNSXG9eTGTwwk5NxYqBw==
+Authentication-Results: lists.example.org; arc=none; spf=pass smtp.mfrom=jqd@d1.example; dkim=pass (1024-bit key) header.i=@d1.example; dmarc=pass
+Received: from localhost
+Message-ID: <example@example.com>
+Date: Mon, 01 Jan 2011 01:02:03 +0400
+From: Test User <test@example.com>
+To: somebody@example.com
+Subject: Testing
+
+This is a test message.
+

@@ -44,7 +44,7 @@ parser.add_argument('--hcanon', choices=['simple', 'relaxed'],
 parser.add_argument('--bcanon', choices=['simple', 'relaxed'],
     default='simple',
     help='Body canonicalization algorithm: default=simple')
-parser.add_argument('--signalg', choices=['rsa-sha256', 'rsa-sha1'],
+parser.add_argument('--signalg', choices=['rsa-sha256', 'ed25519', 'rsa-sha1'],
     default='rsa-sha256',
     help='Signature algorithm: default=rsa-sha256')
 parser.add_argument('--identity', help='Optional value for i= tag.')

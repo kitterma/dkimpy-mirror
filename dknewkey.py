@@ -52,12 +52,13 @@ def GenEd25519Keys(private_key_file):
     Output is unprotected.  You should encrypt your keys.
     """
     import nacl.signing # Yes, pep-8, but let's not make everyone install nacl
+    import nacl.encoding
     import os
     skg = nacl.signing.SigningKey(seed=os.urandom(32))
     priv_key = skg.generate()
     print >> sys.stderr, 'generating ' + private_key_file
     pkf = open(private_key_file, "w+")
-    print >> pkf, base64.b64encode(bytes(priv_key))
+    print >> pkf, priv_key.encode(encoder=nacl.encoding.Base64Encoder)
     pkf.close()
     return(priv_key)
 
@@ -81,7 +82,9 @@ def ExtractRSADnsPublicKey(private_key_file, dns_file):
 def ExtractEd25519PublicKey(private_key_file, dns_file, priv_key):
     """ Given a ed25519 key, extract the bit we should place in DNS.
     """
-    output = base64.b64encode(bytes(priv_key.verify_key))
+    import nacl.encoding # Yes, pep-8, but let's not make everyone install nacl
+    pubkey = priv_key.verify_key
+    output = pubkey.encode(encoder=nacl.encoding.Base64Encoder)
     dns_fp = open(dns_file, "w+")
     print >> sys.stderr, 'writing ' + dns_file
     print >> dns_fp, "k=ed25519; p={0}".format(output)

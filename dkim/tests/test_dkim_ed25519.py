@@ -15,6 +15,7 @@
 # 3. This notice may not be removed or altered from any source distribution.
 #
 # Copyright (c) 2011 William Grant <me@williamgrant.id.au>
+# Copyright (c) 2017 Scott Kitterman <scott@kitterman.com>
 
 import email
 import os.path
@@ -51,49 +52,22 @@ class TestSignAndVerify(unittest.TestCase):
     """End-to-end signature and verification tests."""
 
     def setUp(self):
-        self.message = read_test_data("test.message")
-        self.key = read_test_data("test.private")
+        self.message = read_test_data("ed25519test.msg")
+        self.message2 = read_test_data("ed25519test2.msg")
+        self.key = read_test_data("ed25519test.key")
 
     def dnsfunc(self, domain):
         sample_dns = """\
-k=rsa; \
-p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
-b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
+k=ed25519; \
+p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y="""
 
         _dns_responses = {
           'example._domainkey.canonical.com.': sample_dns,
-          'test._domainkey.example.com.': read_test_data("test.txt"),
-          '20120113._domainkey.gmail.com.': """k=rsa; \
-p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1Kd87/UeJjenpabgbFwh\
-+eBCsSTrqmwIYYvywlbhbqoo2DymndFkbjOVIPIldNs/m40KF+yzMn1skyoxcTUGCQ\
-s8g3FgD2Ap3ZB5DekAo5wMmk4wimDO+U8QzI3SD07y2+07wlNWwIt8svnxgdxGkVbb\
-hzY8i+RQ9DpSVpPbF7ykQxtKXkv/ahW3KjViiAH+ghvvIhkx4xYSIc9oSwVmAl5Oct\
-MEeWUwg8Istjqz8BZeTWbf41fbNhte7Y+YqZOwq1Sd0DbvYAD9NOZK9vlfuac0598H\
-Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
-        }
-        try:
-            domain = domain.decode('ascii')
-        except UnicodeDecodeError:
-            return None
-        self.assertTrue(domain in _dns_responses,domain)
-        return _dns_responses[domain]
-
-    def dnsfunc2(self, domain):
-        sample_dns = """\
-k=rsa; \
-p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
-b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
-
-        _dns_responses = {
-          'example._domainkey.canonical.com.': sample_dns,
-          'test._domainkey.example.com.': read_test_data("test2.txt"),
-          '20120113._domainkey.gmail.com.': """\
-p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1Kd87/UeJjenpabgbFwh\
-+eBCsSTrqmwIYYvywlbhbqoo2DymndFkbjOVIPIldNs/m40KF+yzMn1skyoxcTUGCQ\
-s8g3FgD2Ap3ZB5DekAo5wMmk4wimDO+U8QzI3SD07y2+07wlNWwIt8svnxgdxGkVbb\
-hzY8i+RQ9DpSVpPbF7ykQxtKXkv/ahW3KjViiAH+ghvvIhkx4xYSIc9oSwVmAl5Oct\
-MEeWUwg8Istjqz8BZeTWbf41fbNhte7Y+YqZOwq1Sd0DbvYAD9NOZK9vlfuac0598H\
-Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
+          'test._domainkey.example.com.': """v=DKIM1; k=ed25519; \
+p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
+          '20120113._domainkey.gmail.com.': """k=ed25519; \
+p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
+          'sed._domainkey.test.ex.': read_test_data("eximtest.dns")
         }
         try:
             domain = domain.decode('ascii')
@@ -108,18 +82,8 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
                     self.message, b"test", b"example.com", self.key,
-                    canonicalize=(header_algo, body_algo))
+                    canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519')
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
-                self.assertTrue(res)
-
-    def test_implicit_k(self):
-        # A message verifies after being signed when k= tag is not provided.
-        for header_algo in (b"simple", b"relaxed"):
-            for body_algo in (b"simple", b"relaxed"):
-                sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key,
-                    canonicalize=(header_algo, body_algo))
-                res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc2)
                 self.assertTrue(res)
 
     def test_simple_signature(self):
@@ -129,13 +93,20 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
                 sig = dkim.sign(
                     self.message, b"test", b"example.com", self.key,
                     canonicalize=(header_algo, body_algo),
-                    include_headers=(b'from',) + dkim.DKIM.SHOULD)
+                    include_headers=(b'from',) + dkim.DKIM.SHOULD,
+                    signature_algorithm=b'ed25519')
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
+    def test_verify_third_party(self):
+        # Message signed by prototype Exim implementation
+        res = dkim.verify(self.message2)
+        self.assertTrue(res)
+
     def test_add_body_length(self):
         sig = dkim.sign(
-            self.message, b"test", b"example.com", self.key, length=True)
+            self.message, b"test", b"example.com", self.key, length=True,
+                signature_algorithm=b'ed25519')
         msg = email.message_from_string(self.message.decode('utf-8'))
         self.assertIn('; l=%s' % len(msg.get_payload() + '\n'), sig.decode('utf-8'))
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
@@ -146,14 +117,16 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key)
+                    self.message, b"test", b"example.com", self.key,
+                    signature_algorithm=b'ed25519')
                 res = dkim.verify(
                     sig + self.message + b"foo", dnsfunc=self.dnsfunc)
                 self.assertFalse(res)
 
     def test_badly_encoded_domain_fails(self):
         # Domains should be ASCII. Bad ASCII causes verification to fail.
-        sig = dkim.sign(self.message, b"test", b"example.com\xe9", self.key)
+        sig = dkim.sign(self.message, b"test", b"example.com\xe9", self.key,
+            signature_algorithm=b'ed25519')
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertFalse(res)
 
@@ -171,28 +144,18 @@ Subject: this is my
 """.replace(b'\n', b'\r\n')
 
       sample_privkey = b"""\
------BEGIN RSA PRIVATE KEY-----
-MIIBOwIBAAJBANmBe10IgY+u7h3enWTukkqtUD5PR52Tb/mPfjC0QJTocVBq6Za/
-PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQJAYFUKsD+uMlcFu1D3YNaR
-EGYGXjJ6w32jYGJ/P072M3yWOq2S1dvDthI3nRT8MFjZ1wHDAYHrSpfDNJ3v2fvZ
-cQIhAPgRPmVYn+TGd59asiqG1SZqh+p+CRYHW7B8BsicG5t3AiEA4HYNOohlgWan
-8tKgqLJgUdPFbaHZO1nDyBgvV8hvWZUCIQDDdCq6hYKuKeYUy8w3j7cgJq3ih922
-2qNWwdJCfCWQbwIgTY0cBvQnNe0067WQIpj2pG7pkHZR6qqZ9SE+AjNTHX0CIQCI
-Mgq55Y9MCq5wqzy141rnxrJxTwK9ABo3IAFMWEov3g==
------END RSA PRIVATE KEY-----
+fL+5V9EquCZAovKik3pA6Lk9zwCzoEtjIuIqK9ZXHHA=\
 """
 
       sample_pubkey = """\
------BEGIN PUBLIC KEY-----
-MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T
-b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
------END PUBLIC KEY-----
+yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
 """
 
       for header_mode in [dkim.Relaxed, dkim.Simple]:
 
         dkim_header = dkim.sign(sample_msg, b'example', b'canonical.com',
-            sample_privkey, canonicalize=(header_mode, dkim.Relaxed))
+            sample_privkey, canonicalize=(header_mode, dkim.Relaxed),
+            signature_algorithm=b'ed25519')
         # Folding dkim_header affects b= tag only, since dkim.sign folds
         # sig_value with empty b= before hashing, and then appends the
         # signature.  So folding dkim_header again adds FWS to
@@ -200,24 +163,15 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
         # simple canonicalization.
         # http://tools.ietf.org/html/rfc4871#section-3.5
         signed = dkim.fold(dkim_header) + sample_msg
-        result = dkim.verify(signed,dnsfunc=self.dnsfunc,
-                minkey=512)
+        result = dkim.verify(signed,dnsfunc=self.dnsfunc)
         self.assertTrue(result)
         dkim_header = dkim.fold(dkim_header)
         # use a tab for last fold to test tab in FWS bug
         pos = dkim_header.rindex(b'\r\n ')
         dkim_header = dkim_header[:pos]+b'\r\n\t'+dkim_header[pos+3:]
         result = dkim.verify(dkim_header + sample_msg,
-                dnsfunc=self.dnsfunc, minkey=512)
+                dnsfunc=self.dnsfunc)
         self.assertTrue(result)
-
-    def test_degenerate_folding(self):
-        # <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=711751>
-        # degenerate folding is ugly but legal
-        message = read_test_data("test2.message")
-        dv = dkim.DKIM(message)
-        res = dv.verify(dnsfunc=self.dnsfunc)
-        self.assertTrue(res)
 
     def test_extra_headers(self):
         # <https://bugs.launchpad.net/dkimpy/+bug/737311>
@@ -230,6 +184,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
                 # bug requires a repeated header to manifest
                 d.should_not_sign.remove(b'received')
                 sig = d.sign(b"test", b"example.com", self.key,
+                    signature_algorithm=b'ed25519',
                     include_headers=d.all_sign_headers(),
                     canonicalize=(header_algo, body_algo))
                 dv = dkim.DKIM(sig + message)
@@ -248,7 +203,8 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key)
+                    self.message, b"test", b"example.com", self.key,
+                    signature_algorithm=b'ed25519')
                 # adding an unknown header still verifies
                 h1 = h+b'\r\n'+b'X-Foo: bar'
                 message = b'\n\n'.join((h1,b))
@@ -274,14 +230,16 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
         domain = 'example.com'
         identity = None
         try:
-            sig = dkim.sign(message, selector, domain, read_test_data('test.private'), identity = identity)
+            sig = dkim.sign(message, selector, domain,
+                read_test_data('ed25519test.key'), identity = identity,
+                signature_algorithm=b'ed25519')
         except dkim.ParameterError as x:
             sigerror = True
         self.assertTrue(sigerror)
 
     def test_validate_signature_fields(self):
       sig = {b'v': b'1',
-      b'a': b'rsa-sha256',
+      b'a': b'ed25519',
       b'b': b'K/UUOt8lCtgjp3kSTogqBm9lY1Yax/NwZ+bKm39/WKzo5KYe3L/6RoIA/0oiDX4kO\n \t Qut49HCV6ZUe6dY9V5qWBwLanRs1sCnObaOGMpFfs8tU4TWpDSVXaNZAqn15XVW0WH\n \t EzOzUfVuatpa1kF4voIgSbmZHR1vN3WpRtcTBe/I=',
       b'bh': b'n0HUwGCP28PkesXBPH82Kboy8LhNFWU9zUISIpAez7M=',
       b'c': b'simple/simple',

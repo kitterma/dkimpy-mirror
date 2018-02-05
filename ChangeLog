@@ -1,6 +1,6 @@
 UNRELEASED Version 0.7.0
-    - Initial ed25519 implementation assuming use of ed25519-sh512 and base64
-      encoded keys - experimental - IETF draft not updated yet
+    - Initial ed25519 implementation based on draft-ietf-dcrup-dkim-crypto-08
+      experimental - IETF draft, design not finalized
     - Port dkimsign.py to use argparse; now gives standard usage message and
       is more extensible
     - Add command line options to dkimsign.py to select header and body
