@@ -94,6 +94,15 @@ verifying rsa-sha1 signatures.  There are still some significant users of
 rsa-sha1 signatures, so operationally it's premature to disable verification
 of rsa-sha1.
 
+As of version 0.7, experimental signing and verifying of DKIM Ed25519
+signatures is supported as described in draft-ietf-dcrup-dkim-crypto:
+
+https://datatracker.ietf.org/doc/draft-ietf-dcrup-dkim-crypto/
+
+The dkimpy 0.7 implementation matches the -08 revision of the draft, except it
+uses Ed25519 vice Ed25519ph (a change to Ed25519 is planned for -09, but that
+had not been published yet as of the release of dkimpy 0.7).
+
 Three helper programs are also supplied: dknewkey.py, dkimsign.py and
 dkimverify.py.
 
