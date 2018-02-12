@@ -54,7 +54,9 @@ class TestSignAndVerify(unittest.TestCase):
     def setUp(self):
         self.message = read_test_data("ed25519test.msg")
         self.message2 = read_test_data("ed25519test2.msg")
+        self.message3 = read_test_data("rfc6376.msg")
         self.key = read_test_data("ed25519test.key")
+        self.rfckey = read_test_data("rfc8032_7_1.key")
 
     def dnsfunc(self, domain):
         sample_dns = """\
@@ -63,11 +65,11 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y="""
 
         _dns_responses = {
           'example._domainkey.canonical.com.': sample_dns,
-          'test._domainkey.example.com.': """v=DKIM1; k=ed25519; \
+          'test._domainkey.example.net.': """v=DKIM1; k=ed25519; \
 p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
-          '20120113._domainkey.gmail.com.': """k=ed25519; \
-p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
-          'sed._domainkey.test.ex.': read_test_data("eximtest.dns")
+          'sed._domainkey.test.ex.': read_test_data("eximtest.dns"),
+          'brisbane._domainkey.football.example.com.': """v=DKIM1; k=ed25519; \
+p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
         }
         try:
             domain = domain.decode('ascii')
@@ -81,9 +83,20 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key,
+                    self.message, b"test", b"example.net", self.key,
                     canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519-sha256')
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+                self.assertTrue(res)
+
+    def test_rfc8032_verifies(self):
+        # A message using RFC 8032 sample keys verifies after being signed.
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message3, b"brisbane", b"football.example.com", self.rfckey,
+                    canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519-sha256')
+                print(sig)
+                res = dkim.verify(sig + self.message3, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
     def test_simple_signature(self):
@@ -91,7 +104,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
         for header_algo in (b"simple", b"relaxed"):
              for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key,
+                    self.message, b"test", b"example.net", self.key,
                     canonicalize=(header_algo, body_algo),
                     include_headers=(b'from',) + dkim.DKIM.SHOULD,
                     signature_algorithm=b'ed25519-sha256')
@@ -105,7 +118,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
 
     def test_add_body_length(self):
         sig = dkim.sign(
-            self.message, b"test", b"example.com", self.key, length=True,
+            self.message, b"test", b"example.net", self.key, length=True,
                 signature_algorithm=b'ed25519-sha256')
         msg = email.message_from_string(self.message.decode('utf-8'))
         self.assertIn('; l=%s' % len(msg.get_payload() + '\n'), sig.decode('utf-8'))
@@ -117,7 +130,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key,
+                    self.message, b"test", b"example.net", self.key,
                     signature_algorithm=b'ed25519-sha256')
                 res = dkim.verify(
                     sig + self.message + b"foo", dnsfunc=self.dnsfunc)
@@ -125,7 +138,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
 
     def test_badly_encoded_domain_fails(self):
         # Domains should be ASCII. Bad ASCII causes verification to fail.
-        sig = dkim.sign(self.message, b"test", b"example.com\xe9", self.key,
+        sig = dkim.sign(self.message, b"test", b"example.net\xe9", self.key,
             signature_algorithm=b'ed25519-sha256')
         res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
         self.assertFalse(res)
@@ -138,7 +151,7 @@ p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=""",
       # (should ignore FWS anywhere in signature tag: b=)
       sample_msg = b"""\
 From: mbp@canonical.com
-To: scottk@example.com
+To: scottk@example.net
 Subject: this is my
     test message
 """.replace(b'\n', b'\r\n')
@@ -183,7 +196,7 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
                 d = dkim.DKIM(message)
                 # bug requires a repeated header to manifest
                 d.should_not_sign.remove(b'received')
-                sig = d.sign(b"test", b"example.com", self.key,
+                sig = d.sign(b"test", b"example.net", self.key,
                     signature_algorithm=b'ed25519-sha256',
                     include_headers=d.all_sign_headers(),
                     canonicalize=(header_algo, body_algo))
@@ -203,7 +216,7 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
         for header_algo in (b"simple", b"relaxed"):
             for body_algo in (b"simple", b"relaxed"):
                 sig = dkim.sign(
-                    self.message, b"test", b"example.com", self.key,
+                    self.message, b"test", b"example.net", self.key,
                     signature_algorithm=b'ed25519-sha256')
                 # adding an unknown header still verifies
                 h1 = h+b'\r\n'+b'X-Foo: bar'
@@ -227,7 +240,7 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
         sig = ''
         message = read_test_data('test_nofrom.message')
         selector = 'test'
-        domain = 'example.com'
+        domain = 'example.net'
         identity = None
         try:
             sig = dkim.sign(message, selector, domain,
