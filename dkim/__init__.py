@@ -863,7 +863,7 @@ class ARC(DomainSigner):
 
     if len(auth_headers) == 0:
       self.logger.debug("no AR headers found, chain terminated")
-      return b''
+      return []
 
     # consolidate headers
     results_lists = [raw.replace(srv_id + b';', b'').strip() for (raw, parsed) in auth_headers]
@@ -876,7 +876,7 @@ class ARC(DomainSigner):
     arc_results = [res for res in parsed_auth_results.results if res.method == 'arc']
     if len(arc_results) == 0:
       self.logger.debug("no AR arc stamps found, chain terminated")
-      return b''
+      return []
     elif len(arc_results) != 1:
       self.logger.debug("multiple AR arc stamps found, failing chain")
       chain_validation_status = CV_Fail

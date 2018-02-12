@@ -1,6 +1,9 @@
 UNRELEASED Version 0.7.1
     - Update ed25519 tests, including using sample keys from RFC 8032 Section
       7.1 and the sample message from RFC 6376
+    - Return an empty list (as expected) when no AR headers are found or no AR
+      arc stamps are found and the chain terminated (LP: #1748146)
+
 2018-02-07 Version 0.7.0
     - Initial ed25519 implementation based on draft-ietf-dcrup-dkim-crypto
       experimental - IETF draft, design not finalized, See README for details
