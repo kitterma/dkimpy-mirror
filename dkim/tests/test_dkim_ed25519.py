@@ -55,6 +55,7 @@ class TestSignAndVerify(unittest.TestCase):
         self.message = read_test_data("ed25519test.msg")
         self.message2 = read_test_data("ed25519test2.msg")
         self.message3 = read_test_data("rfc6376.msg")
+        self.message4 = read_test_data("rfc6376.signed.msg")
         self.key = read_test_data("ed25519test.key")
         self.rfckey = read_test_data("rfc8032_7_1.key")
 
@@ -96,6 +97,19 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                     self.message3, b"brisbane", b"football.example.com", self.rfckey,
                     canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519-sha256')
                 res = dkim.verify(sig + self.message3, dnsfunc=self.dnsfunc)
+                self.assertTrue(res)
+
+    def test_rfc8032_previous_verifies(self):
+        # A message previously signed using RFC 8032 sample keys verifies after being signed.
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message3, b"brisbane", b"football.example.com", self.rfckey,
+                    canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519-sha256')
+                print(header_algo, body_algo)
+                print(sig)
+                d = dkim.DKIM(self.message4)
+                res = d.verify(dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
     def test_simple_signature(self):
