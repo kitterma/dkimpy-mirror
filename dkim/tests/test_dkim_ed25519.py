@@ -95,7 +95,6 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                 sig = dkim.sign(
                     self.message3, b"brisbane", b"football.example.com", self.rfckey,
                     canonicalize=(header_algo, body_algo), signature_algorithm=b'ed25519-sha256')
-                print(sig)
                 res = dkim.verify(sig + self.message3, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
