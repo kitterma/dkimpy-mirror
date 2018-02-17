@@ -76,7 +76,7 @@ def ExtractRSADnsPublicKey(private_key_file, dns_file):
     os.unlink(working_file)
   dns_fp = open(dns_file, "w+")
   print >> sys.stderr, 'writing ' + dns_file
-  print >> dns_fp, "k=rsa; h=sha-256; p={0}".format(output)
+  print >> dns_fp, "k=rsa; h=sha256; p={0}".format(output)
   dns_fp.close()
 
 def ExtractEd25519PublicKey(private_key_file, dns_file, priv_key):
