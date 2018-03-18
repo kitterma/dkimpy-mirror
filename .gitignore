@@ -1,0 +1,7 @@
+dkim/__init__.pyc
+dkim/__pycache__/
+dkim/asn1.pyc
+dkim/canonicalization.pyc
+dkim/crypto.pyc
+dkim/dnsplug.pyc
+dkim/util.pyc
