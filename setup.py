@@ -21,7 +21,7 @@
 # This has been modified from the original software.
 # Copyright (c) 2011,2012 Scott Kitterman <scott@kitterman.com>
 
-from distutils.core import setup
+from setuptools import setup
 import os
 
 version = "0.8.0"
@@ -39,8 +39,15 @@ verification.""",
     url = "https://launchpad.net/dkimpy",
     license = "BSD-like",
     packages = ["dkim"],
-    scripts = ["arcsign.py", "arcverify.py", "dknewkey.py", "dkimsign.py",
-        "dkimverify.py"],
+    entry_points = {
+        'console_scripts' : [
+            'arcsign = dkim.arcsign',
+            'arverify = dkim.arcverify',
+            'dkimgsign = dkim.dkimsign',
+            'dkimverify = dkim.dkimverify',
+            'dknewkey = dkim.dknewkey'
+        ],
+    },
     data_files = [(os.path.join('share', 'man', 'man1'),
         ['man/arcsign.1']), (os.path.join('share', 'man', 'man1'),
         ['man/arcverify.1']),(os.path.join('share', 'man', 'man1'),
