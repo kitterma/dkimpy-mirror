@@ -1,4 +1,6 @@
 Unreleased Version 0.8.0
+    - Change from distutils to setuptools with entry points because it's the
+      future
 
 2018-02-17 Version 0.7.1
     - Update ed25519 tests, including using sample keys from RFC 8032 Section

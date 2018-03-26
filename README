@@ -25,9 +25,12 @@ REQUIREMENTS
 
 INSTALLATION
 
-To build and install dkimpy:
+This package includes a scripts and man pages.  For those to be installed when
+installing using setup.py, the following incantation is required because
+setuptools developers decided not being able to do this by default is a
+feature:
 
-    python setup.py install
+python setup.py install --single-version-externally-managed --record=/dev/null
 
 DOCUMENTATION
 
