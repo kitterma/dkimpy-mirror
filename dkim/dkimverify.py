@@ -27,19 +27,23 @@ import sys
 
 import dkim
 
-if sys.version_info[0] >= 3:
-    # Make sys.stdin a binary stream.
-    sys.stdin = sys.stdin.detach()
+def main():
+    if sys.version_info[0] >= 3:
+        # Make sys.stdin a binary stream.
+        sys.stdin = sys.stdin.detach()
 
-message = sys.stdin.read()
-verbose = '-v' in sys.argv
-if verbose:
-  import logging
-  d = dkim.DKIM(message, logger=logging)
-  res = d.verify()
-else:
-  res = dkim.verify(message)
-if not res:
-    print("signature verification failed")
-    sys.exit(1)
-print("signature ok")
+    message = sys.stdin.read()
+    verbose = '-v' in sys.argv
+    if verbose:
+        import logging
+        d = dkim.DKIM(message, logger=logging)
+        res = d.verify()
+    else:
+        res = dkim.verify(message)
+    if not res:
+        print("signature verification failed")
+        sys.exit(1)
+    print("signature ok")
+
+if __name__ == "__main__":
+    main()

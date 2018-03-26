@@ -32,19 +32,23 @@ import sys
 
 import dkim
 
-if sys.version_info[0] >= 3:
-    # Make sys.stdin a binary stream.
-    sys.stdin = sys.stdin.detach()
+def main():
+    if sys.version_info[0] >= 3:
+        # Make sys.stdin a binary stream.
+        sys.stdin = sys.stdin.detach()
 
-message = sys.stdin.read()
-verbose = '-v' in sys.argv
-if verbose:
-  logging.basicConfig(level=10)
-  a = dkim.ARC(message)
-  cv, results, comment = a.verify()
-else:
-  cv, results, comment = dkim.arc_verify(message)
+    message = sys.stdin.read()
+    verbose = '-v' in sys.argv
+    if verbose:
+        logging.basicConfig(level=10)
+        a = dkim.ARC(message)
+        cv, results, comment = a.verify()
+    else:
+        cv, results, comment = dkim.arc_verify(message)
 
-print("arc verification: cv=%s %s" % (cv, comment))
-if verbose:
-  print(repr(results))
+    print("arc verification: cv=%s %s" % (cv, comment))
+    if verbose:
+        print(repr(results))
+
+if __name__ == "__main__":
+    main()

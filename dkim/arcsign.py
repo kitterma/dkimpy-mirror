@@ -35,32 +35,36 @@ import dkim
 
 logging.basicConfig(level=10)
 
-if len(sys.argv) != 4:
-    print("Usage: arcsign.py selector domain privatekeyfile", file=sys.stderr)
-    sys.exit(1)
+def main():
+    if len(sys.argv) != 4:
+        print("Usage: arcsign.py selector domain privatekeyfile", file=sys.stderr)
+        sys.exit(1)
 
-if sys.version_info[0] >= 3:
-    # Make sys.stdin and stdout binary streams.
-    sys.stdin = sys.stdin.detach()
-    sys.stdout = sys.stdout.detach()
+    if sys.version_info[0] >= 3:
+        # Make sys.stdin and stdout binary streams.
+        sys.stdin = sys.stdin.detach()
+        sys.stdout = sys.stdout.detach()
 
-selector = sys.argv[1].encode('ascii')
-domain = sys.argv[2].encode('ascii')
-privatekeyfile = sys.argv[3]
+    selector = sys.argv[1].encode('ascii')
+    domain = sys.argv[2].encode('ascii')
+    privatekeyfile = sys.argv[3]
 
-message = sys.stdin.read()
+    message = sys.stdin.read()
 
-# Pick a cv status
-cv = dkim.CV_None
-if re.search('arc-seal', message, re.IGNORECASE):
-  cv = dkim.CV_Pass
+    # Pick a cv status
+    cv = dkim.CV_None
+    if re.search('arc-seal', message, re.IGNORECASE):
+        cv = dkim.CV_Pass
 
-#try:
-sig = dkim.arc_sign(message, selector, domain, open(privatekeyfile, "rb").read(),
-               domain + ": none", cv)
-for line in sig:
-  sys.stdout.write(line)
-sys.stdout.write(message)
-#except Exception as e:
-#    print(e, file=sys.stderr)
-    #sys.stdout.write(message)
+    #try:
+    sig = dkim.arc_sign(message, selector, domain, open(privatekeyfile, "rb").read(),
+                   domain + ": none", cv)
+    for line in sig:
+        sys.stdout.write(line)
+    sys.stdout.write(message)
+    #except Exception as e:
+    #    print(e, file=sys.stderr)
+        #sys.stdout.write(message)
+
+if __name__ == "__main__":
+    main()

@@ -90,7 +90,7 @@ def ExtractEd25519PublicKey(private_key_file, dns_file, priv_key):
     print >> dns_fp, "k=ed25519; p={0}".format(output)
     dns_fp.close()
 
-def main(argv):
+def main():
   parser = argparse.ArgumentParser(
     description='Produce DKIM keys.',)
   parser.add_argument('key_name', action="store")
@@ -121,4 +121,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  main(sys.argv)
+  main()

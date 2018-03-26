@@ -41,11 +41,11 @@ verification.""",
     packages = ["dkim"],
     entry_points = {
         'console_scripts' : [
-            'arcsign = dkim.arcsign',
-            'arverify = dkim.arcverify',
-            'dkimgsign = dkim.dkimsign',
-            'dkimverify = dkim.dkimverify',
-            'dknewkey = dkim.dknewkey'
+            'arcsign = dkim.arcsign:main',
+            'arverify = dkim.arcverify:main',
+            'dkimgsign = dkim.dkimsign:main',
+            'dkimverify = dkim.dkimverify:main',
+            'dknewkey = dkim.dknewkey:main'
         ],
     },
     data_files = [(os.path.join('share', 'man', 'man1'),
