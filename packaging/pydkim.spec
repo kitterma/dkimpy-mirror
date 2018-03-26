@@ -3,7 +3,7 @@
 
 Summary: Python DKIM library
 Name: %{pythonbase}-pydkim
-Version: 0.7.1
+Version: 0.8.0
 Release: 1
 Source0: http://hewgill.com/pydkim/pydkim-%{version}.tar.bz2
 Patch: pydkim.patch
