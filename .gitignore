@@ -1,3 +1,4 @@
 dkim/__pycache__/
 dkim/*.pyc
 dkimpy.egg-info
+dist
