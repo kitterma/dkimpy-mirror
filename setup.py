@@ -43,7 +43,7 @@ verification.""",
         'console_scripts' : [
             'arcsign = dkim.arcsign:main',
             'arcverify = dkim.arcverify:main',
-            'dkimgsign = dkim.dkimsign:main',
+            'dkimsign = dkim.dkimsign:main',
             'dkimverify = dkim.dkimverify:main',
             'dknewkey = dkim.dknewkey:main'
         ],
