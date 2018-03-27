@@ -26,6 +26,13 @@ import os
 
 version = "0.8.0"
 
+kw = {}  # Work-around for lack of 'or' requires in setuptools.
+try:
+    import DNS
+    kw['install_requires'] = ['PyDNS']
+except ImportError:  # If PyDNS is not installed, prefer dnspython
+    kw['install_requires'] = ['dnspython']
+
 setup(
     name = "dkimpy",
     version = version,
@@ -67,7 +74,13 @@ verification.""",
       'Topic :: Communications :: Email :: Filters',
       'Topic :: Internet :: Name Service (DNS)',
       'Topic :: Software Development :: Libraries :: Python Modules'
-      ]
+      ],
+    zip_safe = False,
+    extras_require={
+        'ed25519':  ['PyNaCl'],
+        'ARC': ['authres']
+    },
+    **kw
 )
 
 if os.name != 'posix':
