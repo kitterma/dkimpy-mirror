@@ -42,7 +42,7 @@ verification.""",
     entry_points = {
         'console_scripts' : [
             'arcsign = dkim.arcsign:main',
-            'arverify = dkim.arcverify:main',
+            'arcverify = dkim.arcverify:main',
             'dkimgsign = dkim.dkimsign:main',
             'dkimverify = dkim.dkimverify:main',
             'dknewkey = dkim.dknewkey:main'
