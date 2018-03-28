@@ -135,7 +135,7 @@ dknewkey
 Generates new DKIM public/private key pairs
 .SH "VERSION"
 .IX Header "VERSION"
-0\.7\.1
+0\.8\.0
 
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
@@ -148,7 +148,7 @@ BITS_REQUIRED variable. ed25519 keys do not have a variable size.
 For RSA keys, it uses openssl to do the generation.  By default it assumes
 this is located at /usr/bin/openssl.  This is controlled by the OPENSSL_BINARY
 variable.  For ed25519 keys, PyNaCl (python-nacl in Debian and derivatives) is
-used.  For RSA keys k=2ha256 is now included in the public DNS record to
+used.  For RSA keys k=sha256 is now included in the public DNS record to
 prevent inadvertent use with the now obsolete sha1 hash algorithm (See RFC
 8301).
 
