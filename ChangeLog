@@ -6,6 +6,8 @@ Unreleased Version 0.8.0
     - Fix typo in dknewky(1) for k= tag (Thanks to Andreas Schulze for
       reporting)
     - Detect incorrect version in DKIM public key record (LP: #1763815)
+    - Detect unknown algorithm in k= tag and raise an appropriate error, vice
+      failing with a traceback
     - Indicate that ed25519-sha256 is no longer experimental
 
 2018-02-17 Version 0.7.1

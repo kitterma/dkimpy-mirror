@@ -406,6 +406,8 @@ def load_pk_from_dns(name, dnsfunc=get_txt):
       except (TypeError,UnparsableKeyError) as e:
           raise KeyFormatError("could not parse public key (%s): %s" % (pub[b'p'],e))
       ktag = b'rsa'
+  if pub[b'k'] != b'rsa' and pub[b'k'] != b'ed25519':
+      raise KeyFormatError('unknown algorithm in k= tag: {0}'.format(pub[b'k']))
   return pk, keysize, ktag
 
 #: Abstract base class for holding messages and options during DKIM/ARC signing and verification.
