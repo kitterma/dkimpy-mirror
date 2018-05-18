@@ -386,8 +386,9 @@ def load_pk_from_dns(name, dnsfunc=get_txt):
       raise KeyFormatError(e)
   try:
       if pub[b'v'] != b'DKIM1':
-          raise KeyFormatError("Unknown DKIM version in public key record: '{0}'".format(pub[b'v']))
+          raise KeyFormatError("bad version")
   except KeyError as e:
+      # Version not required in key record: RFC 6376 3.6.1
       pass
   try:
       if pub[b'k'] == b'ed25519':
