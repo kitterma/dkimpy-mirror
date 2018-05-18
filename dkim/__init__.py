@@ -385,6 +385,11 @@ def load_pk_from_dns(name, dnsfunc=get_txt):
   except InvalidTagValueList as e:
       raise KeyFormatError(e)
   try:
+      if pub[b'v'] != b'DKIM1':
+          raise KeyFormatError("Unknown DKIM version in public key record: '{0}'".format(pub[b'v']))
+  except KeyError as e:
+      pass
+  try:
       if pub[b'k'] == b'ed25519':
           pk = nacl.signing.VerifyKey(pub[b'p'], encoder=nacl.encoding.Base64Encoder)
           keysize = 256
