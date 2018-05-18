@@ -102,6 +102,30 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
+    def dnsfunc3(self, domain):
+        sample_dns = """\
+k=rsa; \
+p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
+b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
+
+        _dns_responses = {
+          'example._domainkey.canonical.com.': sample_dns,
+          'test._domainkey.example.com.': read_test_data("badversion.txt"),
+          '20120113._domainkey.gmail.com.': """\
+p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1Kd87/UeJjenpabgbFwh\
++eBCsSTrqmwIYYvywlbhbqoo2DymndFkbjOVIPIldNs/m40KF+yzMn1skyoxcTUGCQ\
+s8g3FgD2Ap3ZB5DekAo5wMmk4wimDO+U8QzI3SD07y2+07wlNWwIt8svnxgdxGkVbb\
+hzY8i+RQ9DpSVpPbF7ykQxtKXkv/ahW3KjViiAH+ghvvIhkx4xYSIc9oSwVmAl5Oct\
+MEeWUwg8Istjqz8BZeTWbf41fbNhte7Y+YqZOwq1Sd0DbvYAD9NOZK9vlfuac0598H\
+Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
+        }
+        try:
+            domain = domain.decode('ascii')
+        except UnicodeDecodeError:
+            return None
+        self.assertTrue(domain in _dns_responses,domain)
+        return _dns_responses[domain]
+
     def test_verifies(self):
         # A message verifies after being signed.
         for header_algo in (b"simple", b"relaxed"):
@@ -121,6 +145,16 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
                     canonicalize=(header_algo, body_algo))
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc2)
                 self.assertTrue(res)
+
+    def test_bad_version(self):
+        # A error is detected if a bad version is used.
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message, b"test", b"example.com", self.key,
+                    canonicalize=(header_algo, body_algo))
+                res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc3)
+                self.assertFalse(res)
 
     def test_simple_signature(self):
         # A message verifies after being signed with SHOULD headers
