@@ -27,7 +27,7 @@ extras_requires feature 'ARC' will add the extra dependencies needed for ARC.
    installed to satisfy the DNS module requirement if neither are installed.
  - argparse.  Standard library in python2.7 and later.
  - authres.  Needed for ARC.
- - PyNaCl.  Needed for use of experimental ed25519 capability.
+ - PyNaCl.  Needed for use of ed25519 capability.
 
 INSTALLATION
 
@@ -111,6 +111,12 @@ https://datatracker.ietf.org/doc/draft-ietf-dcrup-dkim-crypto/
 The dkimpy 0.7 implementation matches the -08 revision of the draft, except it
 uses Ed25519 vice Ed25519ph (a change to Ed25519 is planned for -09, but that
 had not been published yet as of the release of dkimpy 0.7).
+
+draft-ietf-dcrup-dkim-crypto-09 has been released and dkimpy 0.7 and later are
+aligned to its requirements.  As of 0.8, ed25519 need not be considered
+experimental.  The dkimpy implementation has successfully interoperated with
+three other implementations and the technical parameters for ed25519-sha256
+are defined and stable.
 
 Three helper programs are also supplied: dknewkey, dkimsign and
 dkimverify
