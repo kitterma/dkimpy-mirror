@@ -1,4 +1,4 @@
-Unreleased Version 0.8.0
+2018-05-18 Version 0.8.0
     - Change from distutils to setuptools with entry points because it's the
       future
     - Use install_requires and extras_requires to document external
