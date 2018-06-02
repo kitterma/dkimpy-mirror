@@ -52,7 +52,10 @@ class TestSignAndVerify(unittest.TestCase):
 
     def setUp(self):
         self.message = read_test_data("test.message")
+        self.message3 = read_test_data("rfc6376.msg")
+        self.message4 = read_test_data("rfc6376.signed.msg")
         self.key = read_test_data("test.private")
+        self.rfckey = read_test_data("rfc8032_7_1.key")
 
     def dnsfunc(self, domain):
         sample_dns = """\
@@ -150,6 +153,25 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
+    def dnsfunc5(self, domain):
+        sample_dns = """\
+k=rsa; \
+p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
+b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
+
+        _dns_responses = {
+          'example._domainkey.canonical.com.': sample_dns,
+          'test._domainkey.football.example.com.': read_test_data("test.txt"),
+          'brisbane._domainkey.football.example.com.': """v=DKIM1; k=ed25519; \
+p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
+        }
+        try:
+            domain = domain.decode('ascii')
+        except UnicodeDecodeError:
+            return None
+        self.assertTrue(domain in _dns_responses,domain)
+        return _dns_responses[domain]
+
     def test_verifies(self):
         # A message verifies after being signed.
         for header_algo in (b"simple", b"relaxed"):
@@ -158,6 +180,27 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
                     self.message, b"test", b"example.com", self.key,
                     canonicalize=(header_algo, body_algo))
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+                self.assertTrue(res)
+
+    def test_double_verifies(self):
+        # A message also containing a ed25519 signature verifies after being signed with rsa.
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message3, b"test", b"football.example.com", self.key,
+                    canonicalize=(header_algo, body_algo), signature_algorithm=b'rsa-sha256')
+                res = dkim.verify(sig + self.message3, dnsfunc=self.dnsfunc5)
+                self.assertTrue(res)
+
+    def test_double_previous_verifies(self):
+        # A message previously signed using both rsa and ed25519 verifies after being signed.
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message3, b"test", b"football.example.com", self.key,
+                    canonicalize=(header_algo, body_algo), signature_algorithm=b'rsa-sha256')
+                d = dkim.DKIM(self.message4)
+                res = d.verify(dnsfunc=self.dnsfunc5)
                 self.assertTrue(res)
 
     def test_implicit_k(self):
