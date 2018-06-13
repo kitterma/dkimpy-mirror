@@ -40,15 +40,15 @@ import time
 
 # only needed for arc
 try:
-  from authres import AuthenticationResultsHeader
-except:
-  pass
+    from authres import AuthenticationResultsHeader
+except ImportError:
+    pass
 
 # only needed for ed25519 signing/verification
 try:
     import nacl.signing
     import nacl.encoding
-except:
+except ImportError:
     pass
 
 from dkim.canonicalization import (
@@ -67,10 +67,10 @@ from dkim.crypto import (
     UnparsableKeyError,
     )
 try:
-  from dkim.dnsplug import get_txt
-except:
-  def get_txt(s):
-    raise RuntimeError("DKIM.verify requires DNS or dnspython module")
+    from dkim.dnsplug import get_txt
+except ImportError:
+    def get_txt(s):
+        raise RuntimeError("DKIM.verify requires DNS or dnspython module")
 from dkim.util import (
     get_default_logger,
     InvalidTagValueList,
