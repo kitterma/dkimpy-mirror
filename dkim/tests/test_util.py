@@ -71,8 +71,8 @@ class TestParseTagValue(unittest.TestCase):
           3KzW0yB9JHwiDCw1EioVkv+OMHhAYzoIypA0bQyi2bc=;
   '''
       sig = parse_tag_value(hval)
-      self.assertEquals(sig[b't'],b'1308078492')
-      self.assertEquals(len(sig),11)
+      self.assertEqual(sig[b't'],b'1308078492')
+      self.assertEqual(len(sig),11)
 
 
 def test_suite():

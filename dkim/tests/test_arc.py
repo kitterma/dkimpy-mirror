@@ -75,10 +75,10 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
 
         expected_sig = [b'ARC-Seal: i=1; cv=none; a=rsa-sha256; d=example.com; s=test; t=12345; \r\n b=3jOfBfTKcq+3r3Xv158DybT4mWFxrGcop+cgyLUX2ETCMHqNXYwGx2h+NY46tr\r\n k0Lg6R8i+560+KC8PLcCURYYJNJUHLHPIifhddy1aMNL9l4CoI+Oz+rocd2IZeb/\r\n I9V5amOUOWnAlOvyrSt0XfzLJRTS8qJW3Is1CRkkgyLoI=\r\n', b'ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; \r\n d=example.com; s=test; t=12345; h=message-id : \r\n date : from : to : subject : date : from : \r\n subject; \r\n bh=wE7NXSkgnx9PGiavN4OZhJztvkqPDlemV3OGuEnLwNo=; \r\n b=Bj/AEKhmzMbltWXrfLA8UZNp6/5cj8/IzqbgQec4vGobDZRsa\r\n C0YIPM4tcqK2uTS62kwh40cndXTDsCppvRsBy1sIO3eRNyuLUOh\r\n 0XGrz0AdLQMv+IOdyQqZfMVkq8DuQ4Qdl7ee99uYf3D8S+L7GuD\r\n wJSk7dyH+P2BKxz2nyB0=\r\n', b'ARC-Authentication-Results: i=1; lists.example.org; arc=none;\r\n  spf=pass smtp.mfrom=jqd@d1.example;\r\n  dkim=pass (1024-bit key) header.i=@d1.example;\r\n  dmarc=pass\r\n']
 
-        self.assertEquals(expected_sig, sig_lines)
+        self.assertEqual(expected_sig, sig_lines)
 
         (cv, res, reason) = dkim.arc_verify(b''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
-        self.assertEquals(cv, dkim.CV_Pass)
+        self.assertEqual(cv, dkim.CV_Pass)
 
 def test_suite():
     from unittest import TestLoader

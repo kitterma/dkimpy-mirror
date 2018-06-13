@@ -213,10 +213,10 @@ yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y=\
                     canonicalize=(header_algo, body_algo))
                 dv = dkim.DKIM(sig + message)
                 res = dv.verify(dnsfunc=self.dnsfunc)
-                self.assertEquals(d.include_headers,dv.include_headers)
+                self.assertEqual(d.include_headers,dv.include_headers)
                 s = dkim.select_headers(d.headers,d.include_headers)
                 sv = dkim.select_headers(dv.headers,dv.include_headers)
-                self.assertEquals(s,sv)
+                self.assertEqual(s,sv)
                 self.assertTrue(res)
 
     def test_multiple_from_fails(self):
