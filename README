@@ -59,6 +59,11 @@ Alternatively, if you have testrepository installed:
     testr init
     testr run
 
+You should install all optional dependencies, e.g. by creating a virtualenv
+and using:
+
+    pip install -e '.[testing]'
+
 The included ARC tests are very limited.  The primary testing method for ARC
 is using the ARC test suite: https://github.com/ValiMail/arc_test_suite
 

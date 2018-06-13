@@ -77,7 +77,11 @@ verification.""",
       ],
     zip_safe = False,
     extras_require={
-        'ed25519':  ['PyNaCl'],
+        'testing': [
+            'authres',
+            'pynacl',
+        ],
+        'ed25519':  ['pynacl'],
         'ARC': ['authres']
     },
     **kw
