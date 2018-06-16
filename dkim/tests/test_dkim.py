@@ -244,6 +244,17 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
+    def test_string_include(self):
+        # A message can be signed when the include_headers is string
+        for header_algo in (b"simple", b"relaxed"):
+             for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message, b"test", b"example.com", self.key,
+                    canonicalize=(header_algo, body_algo),
+                    include_headers=('from',) )
+                res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+                self.assertTrue(res)
+
     def test_add_body_length(self):
         sig = dkim.sign(
             self.message, b"test", b"example.com", self.key, length=True)

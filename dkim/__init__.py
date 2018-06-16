@@ -724,6 +724,12 @@ class DKIM(DomainSigner):
 
     if include_headers is None:
         include_headers = self.default_sign_headers()
+    try:
+        include_headers = [bytes(x, 'utf-8') for x in include_headers]
+    except TypeError:
+        # TypeError means it's already bytes and we're good or we're in
+        # Python 2 and we don't care.  See LP: #1776775.
+        pass
 
     include_headers = tuple([x.lower() for x in include_headers])
     # record what verify should extract
