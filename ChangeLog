@@ -3,6 +3,9 @@
       zero length lines and adding a blank line and adding an exra cr/lf for
       lines near max length (LP: #1717576)
       - Thanks to Christian Jørgensen and John Levine for reporting the issue
+    - Add testing extras option to setup.py (Daniel Hahler)
+    - Fix deprecation warnings in test asserts (Daniel Hahler)
+    - Correctly limit try/except for imports to import errors (Daniel Hahler)
 
 2018-05-18 Version 0.8.0
     - Change from distutils to setuptools with entry points because it's the
