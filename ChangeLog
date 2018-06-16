@@ -1,9 +1,15 @@
+2018-06-16 Version 0.8.1
+    - Correctly fold lines at or near the maximum line length (fix folding
+      zero length lines and adding a blank line and adding an exra cr/lf for
+      lines near max length (LP: #1717576)
+      - Thanks to Christian Jørgensen and John Levine for reporting the issue
+
 2018-05-18 Version 0.8.0
     - Change from distutils to setuptools with entry points because it's the
       future
     - Use install_requires and extras_requires to document external
       dependencies for dkimpy (LP: #1227526)
-    - Fix typo in dknewky(1) for k= tag (Thanks to Andreas Schulze for
+    - Fix typo in dknewkey(1) for k= tag (Thanks to Andreas Schulze for
       reporting)
     - Detect incorrect version in DKIM public key record (LP: #1763815)
     - Detect unknown algorithm in k= tag and raise an appropriate error, vice

@@ -352,7 +352,18 @@ def fold(header, namelen=0):
     ' foo'
     >>> len(fold(b'foo'*25).splitlines()[0])
     72
+    >>> text(fold(b'x'))
+    'x'
+    >>> text(fold(b'xyz'*24))
+    'xyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyz'
     """
+    # 72 is the max line length we actually want, but the header field name
+    # has to fit in the first line too (See Debian Bug #863690).
+    maxleng = 72 - namelen
+    if len(header) <= maxleng:
+        return header
+    if len(header) - header.rfind(b"\r\n") == 2 and len(header) <= maxleng +2:
+        return header
     i = header.rfind(b"\r\n ")
     if i == -1:
         pre = b""
@@ -360,9 +371,6 @@ def fold(header, namelen=0):
         i += 3
         pre = header[:i]
         header = header[i:]
-    # 72 is the max line length we actually want, but the header field name
-    # has to fit in the first line too (See Debian Bug #863690).
-    maxleng = 72 - namelen
     while len(header) > maxleng:
         i = header[:maxleng].rfind(b" ")
         if i == -1:
@@ -372,7 +380,13 @@ def fold(header, namelen=0):
         pre += header[:j] + b"\r\n "
         header = header[j:]
         namelen = 0
-    return pre + header
+    if len(header) > 2:
+        return pre + header
+    else:
+        if pre[0] == b' ':
+            return pre[:-1]
+        else:
+            return pre + header
 
 def load_pk_from_dns(name, dnsfunc=get_txt):
   s = dnsfunc(name)
