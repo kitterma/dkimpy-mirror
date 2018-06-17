@@ -19,17 +19,21 @@
 # Copyright (c) 2008 Greg Hewgill http://hewgill.com
 #
 # This has been modified from the original software.
-# Copyright (c) 2011,2012 Scott Kitterman <scott@kitterman.com>
+# Copyright (c) 2011,2012,2018 Scott Kitterman <scott@kitterman.com>
 
 from setuptools import setup
 import os
+import sys
 
 version = "0.8.1"
 
 kw = {}  # Work-around for lack of 'or' requires in setuptools.
 try:
     import DNS
-    kw['install_requires'] = ['PyDNS']
+    if sys.version_info[0] == 2:
+        kw['install_requires'] = ['PyDNS']
+    else:
+        kw['install_requires'] = ['Py3DNS']
 except ImportError:  # If PyDNS is not installed, prefer dnspython
     kw['install_requires'] = ['dnspython']
 

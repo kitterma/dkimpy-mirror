@@ -7,6 +7,7 @@
     - Fix deprecation warnings in test asserts (Daniel Hahler)
     - Correctly limit try/except for imports to import errors (Daniel Hahler)
     - Don't error out in Python 3 if include headers is string (LP: #1776775)
+    - Correct requires invocation for py3dns
 
 2018-05-18 Version 0.8.0
     - Change from distutils to setuptools with entry points because it's the
