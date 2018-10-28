@@ -1184,6 +1184,7 @@ def sign(message, selector, domain, privkey, identity=None,
          canonicalize=(b'relaxed', b'simple'),
          signature_algorithm=b'rsa-sha256',
          include_headers=None, length=False, logger=None):
+    # type: (bytes, bytes, bytes, bytes, bytes, tuple, bytes, list, bool, any) -> bytes
     """Sign an RFC822 message and return the DKIM-Signature header line.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param selector: the DKIM selector value for the signature
@@ -1209,6 +1210,7 @@ def verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
     @param logger: a logger to which debug info will be written (default None)
     @return: True if signature verifies or False otherwise
     """
+    # type: (bytes, any, function, int) -> bool
     d = DKIM(message,logger=logger,minkey=minkey)
     try:
         return d.verify(dnsfunc=dnsfunc)
@@ -1226,6 +1228,7 @@ def arc_sign(message, selector, domain, privkey,
              srv_id, signature_algorithm=b'rsa-sha256',
              include_headers=None, timestamp=None,
              logger=None, standardize=False):
+    # type: (bytes, bytes, bytes, bytes, bytes, bytes, list, any, any, bool) -> list
     """Sign an RFC822 message and return the ARC set header lines for the next instance
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param selector: the DKIM selector value for the signature
@@ -1247,6 +1250,7 @@ def arc_sign(message, selector, domain, privkey,
 
 
 def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
+    # type: (bytes, any, function, int) -> tuple
     """Verify the ARC chain on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
