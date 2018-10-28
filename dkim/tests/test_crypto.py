@@ -115,6 +115,7 @@ class TestParseKeys(unittest.TestCase):
         except UnparsableKeyError: return
         self.fail("failed to reject invalid public key")
 
+
 class TestEMSA_PKCS1_v1_5(unittest.TestCase):
 
     def test_encode_sha256(self):

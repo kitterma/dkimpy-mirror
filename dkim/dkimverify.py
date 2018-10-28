@@ -27,6 +27,7 @@ import sys
 
 import dkim
 
+
 def main():
     if sys.version_info[0] >= 3:
         # Make sys.stdin a binary stream.
@@ -44,6 +45,7 @@ def main():
         print("signature verification failed")
         sys.exit(1)
     print("signature ok")
+
 
 if __name__ == "__main__":
     main()

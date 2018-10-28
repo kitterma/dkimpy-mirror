@@ -21,6 +21,7 @@
 import unittest
 import dkim.dnsplug
 
+
 class TestDNSPlug(unittest.TestCase):
     
     def test_get_txt(self):
@@ -29,7 +30,7 @@ class TestDNSPlug(unittest.TestCase):
         
         self.assertEqual(res, b"out")
 
+
 def test_suite():
     from unittest import TestLoader
     return TestLoader().loadTestsFromName(__name__)
-        

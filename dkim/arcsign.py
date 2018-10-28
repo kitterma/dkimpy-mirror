@@ -35,6 +35,7 @@ import dkim
 
 logging.basicConfig(level=10)
 
+
 def main():
     if len(sys.argv) != 4:
         print("Usage: arcsign.py selector domain privatekeyfile", file=sys.stderr)
@@ -65,6 +66,7 @@ def main():
     #except Exception as e:
     #    print(e, file=sys.stderr)
         #sys.stdout.write(message)
+
 
 if __name__ == "__main__":
     main()

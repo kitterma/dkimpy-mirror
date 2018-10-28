@@ -109,6 +109,7 @@ CV_Pass = b'pass'
 CV_Fail = b'fail'
 CV_None = b'none'
 
+
 class HashThrough(object):
   def __init__(self, hasher):
     self.data = []
@@ -128,44 +129,55 @@ class HashThrough(object):
   def hashed(self):
     return b''.join(self.data)
 
+
 def bitsize(x):
     """Return size of long in bits."""
     return len(bin(x)) - 2
+
 
 class DKIMException(Exception):
     """Base class for DKIM errors."""
     pass
 
+
 class InternalError(DKIMException):
     """Internal error in dkim module. Should never happen."""
     pass
+
 
 class KeyFormatError(DKIMException):
     """Key format error while parsing an RSA public or private key."""
     pass
 
+
 class MessageFormatError(DKIMException):
     """RFC822 message format error."""
     pass
+
 
 class ParameterError(DKIMException):
     """Input parameter error."""
     pass
 
+
 class ValidationError(DKIMException):
     """Validation error."""
     pass
+
 
 class AuthresNotFoundError(DKIMException):
     """ Authres Package not installed, needed for ARC """
     pass
 
+
 class NaClNotFoundError(DKIMException):
     """ Nacl package not installed, needed for ed25119 signatures """
     pass
 
+
 class UnknownKeyTypeError(DKIMException):
     """ Key type (k tag) is not known (rsa/ed25519) """
+
 
 def select_headers(headers, include_headers):
     """Select message header fields to be signed/verified.
@@ -192,9 +204,11 @@ def select_headers(headers, include_headers):
         lastindex[h] = i
     return sign_headers
 
+
 # FWS  =  ([*WSP CRLF] 1*WSP) /  obs-FWS ; Folding white space  [RFC5322]
 FWS = br'(?:(?:\s*\r?\n)?\s+)?'
 RE_BTAG = re.compile(br'([;\s]b'+FWS+br'=)(?:'+FWS+br'[a-zA-Z0-9+/=])*(?:\r?\n\Z)?')
+
 
 def hash_headers(hasher, canonicalize_headers, headers, include_headers,
                  sigheader, sig):
@@ -212,6 +226,7 @@ def hash_headers(hasher, canonicalize_headers, headers, include_headers,
         hasher.update(y)
     return sign_headers
 
+
 def hash_headers_ed25519(pk, canonicalize_headers, headers, include_headers,
                  sigheader, sig):
     """Update hash for signed message header fields."""
@@ -226,6 +241,7 @@ def hash_headers_ed25519(pk, canonicalize_headers, headers, include_headers,
     for x,y in sign_headers + [(x, y.rstrip()) for x,y in cheaders]:
         hash_header += x + y
     return sign_headers, hash_header
+
 
 def validate_signature_fields(sig, mandatory_fields=[b'v', b'a', b'b', b'bh', b'd', b'h', b's'], arc=False):
     """Validate DKIM or ARC Signature fields.
@@ -299,6 +315,7 @@ def validate_signature_fields(sig, mandatory_fields=[b'v', b'a', b'b', b'bh', b'
                     "x= value is less than t= value (x=%s t=%s)" %
                     (sig[b'x'], sig[b't']))
 
+
 def rfc822_parse(message):
     """Parse a message in RFC822 format.
 
@@ -327,6 +344,7 @@ def rfc822_parse(message):
         i += 1
     return (headers, b"\r\n".join(lines[i:]))
 
+
 def text(s):
     """Normalize bytes/str to str for python 2/3 compatible doctests.
     >>> text(b'foo')
@@ -340,6 +358,7 @@ def text(s):
     s = s.decode('ascii')
     if type(s) is str: return s
     return s.encode('ascii')
+
 
 def fold(header, namelen=0):
     """Fold a header line into multiple crlf-separated lines at column 72.
@@ -388,6 +407,7 @@ def fold(header, namelen=0):
         else:
             return pre + header
 
+
 def load_pk_from_dns(name, dnsfunc=get_txt):
   s = dnsfunc(name)
   if not s:
@@ -423,6 +443,7 @@ def load_pk_from_dns(name, dnsfunc=get_txt):
   if pub[b'k'] != b'rsa' and pub[b'k'] != b'ed25519':
       raise KeyFormatError('unknown algorithm in k= tag: {0}'.format(pub[b'k']))
   return pk, keysize, ktag
+
 
 #: Abstract base class for holding messages and options during DKIM/ARC signing and verification.
 class DomainSigner(object):
@@ -668,6 +689,7 @@ class DomainSigner(object):
     else:
         raise UnknownKeyTypeError(ktag)
 
+
 #: Hold messages and options during DKIM signing and verification.
 class DKIM(DomainSigner):
   #: Sign an RFC822 message and return the DKIM-Signature header line.
@@ -806,6 +828,7 @@ class DKIM(DomainSigner):
     self.include_headers = tuple(include_headers)
 
     return self.verify_sig(sig, include_headers, sigheaders[idx], dnsfunc)
+
 
 #: Hold messages and options during ARC signing and verification.
 class ARC(DomainSigner):
@@ -1156,6 +1179,7 @@ class ARC(DomainSigner):
     self.logger.debug("as valid: %r" % as_valid)
     return output
 
+
 def sign(message, selector, domain, privkey, identity=None,
          canonicalize=(b'relaxed', b'simple'),
          signature_algorithm=b'rsa-sha256',
@@ -1178,6 +1202,7 @@ def sign(message, selector, domain, privkey, identity=None,
     d = DKIM(message,logger=logger,signature_algorithm=signature_algorithm)
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
+
 def verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
     """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
@@ -1195,6 +1220,7 @@ def verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
 # For consistency with ARC
 dkim_sign = sign
 dkim_verify = verify
+
 
 def arc_sign(message, selector, domain, privkey,
              srv_id, signature_algorithm=b'rsa-sha256',
@@ -1218,6 +1244,7 @@ def arc_sign(message, selector, domain, privkey,
         include_headers = a.default_sign_headers()
     return a.sign(selector, domain, privkey, srv_id, include_headers=include_headers,
                   timestamp=timestamp, standardize=standardize)
+
 
 def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
     """Verify the ARC chain on an RFC822 formatted message.

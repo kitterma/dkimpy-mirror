@@ -432,6 +432,7 @@ b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ==
       sigX[b'x'] = str(now - 24*3600).encode('ascii')
       self.assertRaises(dkim.ValidationError, dkim.validate_signature_fields, sigX)
 
+
 def test_suite():
     from unittest import TestLoader
     return TestLoader().loadTestsFromName(__name__)

@@ -94,6 +94,7 @@ def asn1_parse(template, data):
     except IndexError:
       raise ASN1FormatError("Data truncated at byte %d"%i)
 
+
 def asn1_length(n):
     """Return a string representing a field length in ASN.1 format.
 

@@ -46,6 +46,7 @@ def get_txt_pydns(name):
         return None
     return b''.join(response.answers[0]['data'])
 
+
 def get_txt_Milter_dns(name):
     """Return a TXT record associated with a DNS name."""
     # Older pydns releases don't like a trailing dot.
@@ -55,6 +56,7 @@ def get_txt_Milter_dns(name):
     a = sess.dns(name,'TXT')
     if a: return b''.join(a[0])
     return None
+
 
 # Prefer dnspython if it's there, otherwise use pydns.
 try:
@@ -68,6 +70,7 @@ except ImportError:
         import DNS
         DNS.DiscoverNameServers()
         _get_txt = get_txt_pydns
+
 
 def get_txt(name):
     """Return a TXT record associated with a DNS name.

@@ -80,6 +80,7 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         (cv, res, reason) = dkim.arc_verify(b''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
         self.assertEqual(cv, dkim.CV_Pass)
 
+
 def test_suite():
     from unittest import TestLoader
     return TestLoader().loadTestsFromName(__name__)

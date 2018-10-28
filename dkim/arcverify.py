@@ -32,6 +32,7 @@ import sys
 
 import dkim
 
+
 def main():
     if sys.version_info[0] >= 3:
         # Make sys.stdin a binary stream.
@@ -49,6 +50,7 @@ def main():
     print("arc verification: cv=%s %s" % (cv, comment))
     if verbose:
         print(repr(results))
+
 
 if __name__ == "__main__":
     main()

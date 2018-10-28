@@ -29,6 +29,7 @@ import argparse
 
 import dkim
 
+
 def main():
     # Backward compatibility hack because argparse doesn't support optional
     # positional arguments
@@ -80,6 +81,7 @@ def main():
     except Exception as e:
         print(e, file=sys.stderr)
         sys.stdout.write(message)
+
 
 if __name__ == "__main__":
     main()

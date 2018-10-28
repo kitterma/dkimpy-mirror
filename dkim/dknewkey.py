@@ -39,6 +39,7 @@ BITS_REQUIRED = 2048
 # what openssl binary do we use to do key manipulation?
 OPENSSL_BINARY = '/usr/bin/openssl'
 
+
 def GenRSAKeys(private_key_file):
   """ Generates a suitable private key.  Output is unprotected.
   You should encrypt your keys.
@@ -46,6 +47,7 @@ def GenRSAKeys(private_key_file):
   print >> sys.stderr, 'generating ' + private_key_file
   subprocess.check_call([OPENSSL_BINARY, 'genrsa', '-out', private_key_file,
                          str(BITS_REQUIRED)])
+
 
 def GenEd25519Keys(private_key_file):
     """Generates a base64 encoded private key for ed25519 DKIM signing.
@@ -61,6 +63,7 @@ def GenEd25519Keys(private_key_file):
     print >> pkf, priv_key.encode(encoder=nacl.encoding.Base64Encoder)
     pkf.close()
     return(priv_key)
+
 
 def ExtractRSADnsPublicKey(private_key_file, dns_file):
   """ Given a key, extract the bit we should place in DNS.
@@ -79,6 +82,7 @@ def ExtractRSADnsPublicKey(private_key_file, dns_file):
   print >> dns_fp, "k=rsa; h=sha256; p={0}".format(output)
   dns_fp.close()
 
+
 def ExtractEd25519PublicKey(private_key_file, dns_file, priv_key):
     """ Given a ed25519 key, extract the bit we should place in DNS.
     """
@@ -89,6 +93,7 @@ def ExtractEd25519PublicKey(private_key_file, dns_file, priv_key):
     print >> sys.stderr, 'writing ' + dns_file
     print >> dns_fp, "k=ed25519; p={0}".format(output)
     dns_fp.close()
+
 
 def main():
   parser = argparse.ArgumentParser(
