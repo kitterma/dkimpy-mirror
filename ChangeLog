@@ -3,6 +3,8 @@ UNRELEASED Version 0.9.0
       (Thomas Ward)
     - PEP8 Blank Lines Style Issues (LP: #1782596)
       (Thomas Ward)
+    - Python 3.7 compatibility fixup for dkim.canonicalization.
+      strip_trailing_lines due to changed RE.sub() processing (LP: #1800313)
 
 2018-06-16 Version 0.8.1
     - Correctly fold lines at or near the maximum line length (fix folding

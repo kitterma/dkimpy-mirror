@@ -41,7 +41,14 @@ def compress_whitespace(content):
 
 
 def strip_trailing_lines(content):
-    return re.sub(b"(\r\n)*$", b"\r\n", content)
+    content =  re.sub(b"(\r\n)*$", b"\r\n", content)
+    # Yes, this is horrible, but regex processing changed in python3.7 and it
+    # is the least horrible solution I came up with for python2.7, python3.7,
+    # and python3 << 3.7 combined support.  Better solution welcome.
+    if len(content) >= 4:
+        if (content[len(content)-4:] == b'\r\n\r\n'):
+            content = content[:len(content)-2]
+    return content
 
 
 def unfold_header_value(content):
