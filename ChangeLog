@@ -1,3 +1,9 @@
+UNRELEASED Version 0.9.0
+    - Add type Hinting for sign and verify functions (LP: #1782596)
+      (Thomas Ward)
+    - PEP8 Blank Lines Style Issues (LP: #1782596)
+      (Thomas Ward)
+
 2018-06-16 Version 0.8.1
     - Correctly fold lines at or near the maximum line length (fix folding
       zero length lines and adding a blank line and adding an exra cr/lf for
