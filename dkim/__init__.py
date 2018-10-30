@@ -899,6 +899,7 @@ class ARC(DomainSigner):
   def sign(self, selector, domain, privkey, srv_id, include_headers=None,
            timestamp=None, standardize=False):
 
+    INSTANCE_LIMIT = 50 # Maximum allowed i= value
     # check if authres has been imported
     try:
         AuthenticationResultsHeader
@@ -961,6 +962,8 @@ class ARC(DomainSigner):
     instance = 1
     if len(arc_headers_w_instance) != 0:
         instance = max_instance + 1
+    if instance > INSTANCE_LIMIT:
+        raise ParameterError("Maximum instance tag value exceeded")
 
     if instance == 1 and chain_validation_status != CV_None:
         raise ParameterError("No existing chain found on message, cv should be none")
