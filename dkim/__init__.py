@@ -539,7 +539,7 @@ class DomainSigner(object):
   def add_should_not(self,s):
     """ Add headers not in should_not_sign to frozen_sign.
     @param s: list of headers to add to frozen_sign
-    @since: 0.5
+    @since: 0.9
 
     >>> dkim = DKIM()
     >>> dkim.add_should_not(DKIM.RFC5322_SINGLETON)
