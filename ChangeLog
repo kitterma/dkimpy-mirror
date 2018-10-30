@@ -1,4 +1,4 @@
-UNRELEASED Version 0.9.0
+2018-10-30 Version 0.9.0
     - Update oversigned (frozen) header field list to reduce signature
       fragility (removes 'date' and 'subject' fields from being oversigned by
       default - see usage section of README for information on how to restore
