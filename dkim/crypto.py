@@ -23,6 +23,7 @@
 __all__ = [
     'DigestTooLargeError',
     'HASH_ALGORITHMS',
+    'ARC_HASH_ALGORITHMS',
     'parse_pem_private_key',
     'parse_private_key',
     'parse_public_key',
@@ -83,6 +84,10 @@ HASH_ALGORITHMS = {
     b'rsa-sha1': hashlib.sha1,
     b'rsa-sha256': hashlib.sha256,
     b'ed25519-sha256': hashlib.sha256
+    }
+
+ARC_HASH_ALGORITHMS = {
+    b'rsa-sha256': hashlib.sha256,
     }
 
 # These values come from RFC 8017, section 9.2 Notes, page 46.

@@ -1,4 +1,7 @@
 UNRELEASED Version 0.8.2
+    - Updates for experimental ARC support:
+      - Limit to rsa-sha256, rsa-sha1 not used by ARC and multi-signature
+        design TBD
     - Fix DNS lookups to be compatible with EAI addresses in domains and
       selectors (John Levine)
     - Add type Hinting for sign and verify functions (LP: #1782596)

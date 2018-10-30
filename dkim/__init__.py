@@ -60,6 +60,7 @@ from dkim.canonicalization import Relaxed as RelaxedCanonicalization
 from dkim.crypto import (
     DigestTooLargeError,
     HASH_ALGORITHMS,
+    ARC_HASH_ALGORITHMS,
     parse_pem_private_key,
     parse_public_key,
     RSASSA_PKCS1_v1_5_sign,
@@ -251,11 +252,15 @@ def validate_signature_fields(sig, mandatory_fields=[b'v', b'a', b'b', b'bh', b'
     @param mandatory_fields: A list of non-optional fields
     @param arc: flag to differentiate between dkim & arc
     """
+    if arc:
+        hashes = ARC_HASH_ALGORITHMS
+    else:
+        hashes = HASH_ALGORITHMS
     for field in mandatory_fields:
         if field not in sig:
             raise ValidationError("missing %s=" % field)
 
-    if b'a' in sig and not sig[b'a'] in HASH_ALGORITHMS:
+    if b'a' in sig and not sig[b'a'] in hashes:
         raise ValidationError("unknown signature algorithm: %s" % sig[b'a'])
 
     if b'b' in sig:
@@ -1242,7 +1247,7 @@ def arc_sign(message, selector, domain, privkey,
     @raise DKIMException: when the message, include_headers, or key are badly formed.
     """
 
-    a = ARC(message,logger=logger,signature_algorithm=signature_algorithm)
+    a = ARC(message,logger=logger,signature_algorithm=b'rsa-sha256')
     if not include_headers:
         include_headers = a.default_sign_headers()
     return a.sign(selector, domain, privkey, srv_id, include_headers=include_headers,
