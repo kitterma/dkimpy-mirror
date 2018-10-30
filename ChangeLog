@@ -14,6 +14,8 @@ UNRELEASED Version 0.9.0
       - Raise error when ARC signing if i= instance limit value of 50 is
         exceeded
       - Specified that for ARC, Authentication-Results should not be signed
+      - Added missing documentation for timestamp function dkim.arc_sign
+        (LP: #1800314)
     - Fix DNS lookups to be compatible with EAI addresses in domains and
       selectors (John Levine)
     - Add type Hinting for sign and verify functions (LP: #1782596)

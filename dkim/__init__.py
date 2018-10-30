@@ -1265,6 +1265,7 @@ def arc_sign(message, selector, domain, privkey,
     @param srv_id: the authserv_id used to identify the ADMD's AR headers
     @param signature_algorithm: the signing algorithm to use when signing
     @param include_headers: a list of strings indicating which headers are to be signed (default all headers not listed as SHOULD NOT sign)
+    @param timestamp: the time in integer seconds when the message is sealed (default is int(time.time) based on platform, can be string or int)
     @param logger: a logger to which debug info will be written (default None)
     @return: A list containing the ARC set of header fields for the next instance
     @raise DKIMException: when the message, include_headers, or key are badly formed.
