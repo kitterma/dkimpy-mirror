@@ -53,7 +53,7 @@ def get_txt_Milter_dns(name):
     if name.endswith('.'):
         name = name[:-1]
     sess = Session()
-    a = sess.dns(name,'TXT')
+    a = sess.dns(name.encode('idna'),'TXT')
     if a: return b''.join(a[0])
     return None
 
@@ -79,7 +79,7 @@ def get_txt(name):
     """
     # pydns needs Unicode, but DKIM's d= is ASCII (already punycoded).
     try:
-        unicode_name = name.decode('ascii')
+        unicode_name = name.decode('UTF-8')
     except UnicodeDecodeError:
         return None
     txt = _get_txt(unicode_name)
