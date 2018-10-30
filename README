@@ -11,7 +11,7 @@ signing and verification.
 
 VERSION
 
-This is dkimpy 0.8.0.
+This is dkimpy 0.9.0.
 
 REQUIREMENTS
 
@@ -91,6 +91,17 @@ function takes an RFC822 formatted message, and returns True or False depending
 on whether the signature verifies correctly.  There is also a DKIM class which
 can be used to perform these functions in a more modern way.
 
+In version 0.9.0, the default set of header fields that are oversigned was
+changed from 'from', 'subject', 'date' to 'from' to reduce fragility of
+signatures.  To restore the previous behavior, you can add them back after
+instantiating your DKIM class using the add_frozen function as shown in the
+following example:
+
+>>> dkim = DKIM()
+>>> dkim.add_frozen((b'date',b'subject'))
+>>> [text(x) for x in sorted(dkim.frozen_sign)]
+['date', 'from', 'subject']
+
 RFC8301 updated DKIM requirements in two ways:
 
 1.  It set the minimum valid RSA key size to 1024 bits.
@@ -145,7 +156,7 @@ code 1.
 As of version 0.6.0, dkimpy provides experimental support for ARC (Authenticated
 Received Chain):
 
-https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-01
+https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-18
 
 This new functionality is marked experimental because the protocol is still
 under development.  There are no guarantees about API stability or

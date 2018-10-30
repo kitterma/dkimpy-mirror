@@ -486,12 +486,12 @@ class DomainSigner(object):
   #:
   #: The short list below is the result more of instinct than logic.
   #: @since: 0.5
-  FROZEN = (b'from',b'date',b'subject')
+  FROZEN = (b'from',)
 
   #: The rfc6376 recommended header fields to sign
   #: @since: 0.5
   SHOULD = (
-    b'sender', b'reply-to', b'subject', b'date', b'message-id', b'to', b'cc',
+    b'from', b'sender', b'reply-to', b'subject', b'date', b'message-id', b'to', b'cc',
     b'mime-version', b'content-type', b'content-transfer-encoding',
     b'content-id', b'content-description', b'resent-date', b'resent-from',
     b'resent-sender', b'resent-to', b'resent-cc', b'resent-message-id',
@@ -526,10 +526,29 @@ class DomainSigner(object):
     >>> dkim = DKIM()
     >>> dkim.add_frozen(DKIM.RFC5322_SINGLETON)
     >>> [text(x) for x in sorted(dkim.frozen_sign)]
-    ['cc', 'date', 'from', 'in-reply-to', 'message-id', 'references', 'reply-to', 'sender', 'subject', 'to']
+    ['cc', 'date', 'from', 'in-reply-to', 'message-id', 'references', 'reply-to', 'sender', 'to']
+    >>> dkim2 = DKIM()
+    >>> dkim2.add_frozen((b'date',b'subject'))
+    >>> [text(x) for x in sorted(dkim2.frozen_sign)]
+    ['date', 'from', 'subject']
     """
     self.frozen_sign.update(x.lower() for x in s
         if x.lower() not in self.should_not_sign)
+
+
+  def add_should_not(self,s):
+    """ Add headers not in should_not_sign to frozen_sign.
+    @param s: list of headers to add to frozen_sign
+    @since: 0.5
+
+    >>> dkim = DKIM()
+    >>> dkim.add_should_not(DKIM.RFC5322_SINGLETON)
+    >>> [text(x) for x in sorted(dkim.should_not_sign)]
+    ['bcc', 'cc', 'comments', 'date', 'dkim-signature', 'in-reply-to', 'keywords', 'message-id', 'received', 'references', 'reply-to', 'resent-bcc', 'return-path', 'sender', 'to']
+    """
+    self.should_not_sign.update(x.lower() for x in s
+        if x.lower() not in self.frozen_sign)
+
 
   #: Load a new message to be signed or verified.
   #: @param message: an RFC822 formatted message to be signed or verified
@@ -900,6 +919,7 @@ class ARC(DomainSigner):
            timestamp=None, standardize=False):
 
     INSTANCE_LIMIT = 50 # Maximum allowed i= value
+    self.add_should_not(('Authentication-Results',))
     # check if authres has been imported
     try:
         AuthenticationResultsHeader

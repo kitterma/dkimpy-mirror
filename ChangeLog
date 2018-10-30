@@ -1,9 +1,19 @@
-UNRELEASED Version 0.8.2
+UNRELEASED Version 0.9.0
+    - Update oversigned (frozen) header field list to reduce signature
+      fragility (removes 'date' and 'subject' fields from being oversigned by
+      default - see usage section of README for information on how to restore
+      the previous behavior)
+    - Added new add_should_not for DKIM/ARC classes to prevent additional
+      header fields from being signed
+    - Added 'from' to should sign list (to prevent it from not being signed at
+      all in the unusual event that 'from' is locally removed from the frozen
+      header field set (LP: #1525048)
     - Updates for experimental ARC support:
       - Limit to rsa-sha256, rsa-sha1 not used by ARC and multi-signature
         design TBD
       - Raise error when ARC signing if i= instance limit value of 50 is
         exceeded
+      - Specified that for ARC, Authentication-Results should not be signed
     - Fix DNS lookups to be compatible with EAI addresses in domains and
       selectors (John Levine)
     - Add type Hinting for sign and verify functions (LP: #1782596)
