@@ -81,6 +81,15 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         (cv, res, reason) = dkim.arc_verify(b''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
         self.assertEqual(cv, dkim.CV_Pass)
 
+    def test_fails_h_in_as(self):
+        # ARC 4.1.3, h= not allowed in AS
+        self.maxDiff = None
+        sig_lines = [b'ARC-Seal: i=1; cv=none; a=rsa-sha256; d=example.com; s=test; t=12345; \r\n h=message-id : date : from : to : subject : from; \r\n b=mIurIuLl0/wAxWhA4DBS1wsUE15IBnmJ7o3sH15hIuesdD4smz1cCLXVhRtxQE\r\n rVtVLv4OgNCgdFsB5zbSOUao2bSSYP6y0BGyCWvr+hU4tai5axIc1Kfwbtv/0Mqg\r\n waiGJPreOAAeZOJ4vPfdaAbSXlN5MI4PHW89U82FSIBKI=\r\n', b'ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; \r\n d=example.com; s=test; t=12345; h=message-id : \r\n date : from : to : subject : from; \r\n bh=wE7NXSkgnx9PGiavN4OZhJztvkqPDlemV3OGuEnLwNo=; \r\n b=a0f6qc3k9eECTSR155A0TQS+LjqPFWfI/brQBA83EUz00SNxj\r\n 1wmWykvs1hhBVeM0r1kEQc6CKbzRYaBNSiFj4q8JBpRIujLz1qL\r\n yGmPuAI6ddu/Z/1hQxgpVcp/odmI1UMV2R+d+yQ7tUp3EQxF/GY\r\n Nt22rV4rNmDmANZVqJ90=\r\n', b'ARC-Authentication-Results: i=1; lists.example.org; arc=none;\r\n  spf=pass smtp.mfrom=jqd@d1.example;\r\n  dkim=pass (1024-bit key) header.i=@d1.example;\r\n  dmarc=pass\r\n']
+
+        (cv, res, reason) = dkim.arc_verify(b''.join(sig_lines) + self.message, dnsfunc=self.dnsfunc)
+        self.assertEqual(cv, dkim.CV_Fail)
+
+
 
 def test_suite():
     from unittest import TestLoader

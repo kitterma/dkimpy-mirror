@@ -1056,7 +1056,8 @@ class ARC(DomainSigner):
     # reversing the order of the headers accomplishes this
     if chain_validation_status == CV_Fail:
       self.headers.reverse()
-
+    if b'h' in as_fields:
+        raise ValidationError("h= tag not permitted in ARC-Seal header field")    
     res = self.gen_header(as_fields, as_include_headers, canon_policy,
                            b"ARC-Seal", pk, standardize)
 
@@ -1190,6 +1191,9 @@ class ARC(DomainSigner):
     self.logger.debug("as sig[%d]: %r" % (instance, sig))
 
     validate_signature_fields(sig, [b'i', b'a', b'b', b'cv', b'd', b's'], True)
+    if b'h' in sig:
+        raise ValidationError("h= tag not permitted in ARC-Seal header field")
+
     output['as-domain'] = sig[b'd']
     output['as-selector'] = sig[b's']
     output['cv'] = sig[b'cv']
