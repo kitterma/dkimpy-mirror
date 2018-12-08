@@ -1,6 +1,8 @@
 UNRELEASED Version 0.9.1
     - Fixed ARC verification to fail if h= tag is present in Arc-Seal and
       added tests
+    - Refactored dknewkey so that it correctly writes out text instead of
+      bytes
 
 2018-10-30 Version 0.9.0
     - Update oversigned (frozen) header field list to reduce signature
