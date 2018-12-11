@@ -25,7 +25,7 @@ from setuptools import setup
 import os
 import sys
 
-version = "0.9.1"
+version = "0.9.2"
 
 kw = {}  # Work-around for lack of 'or' requires in setuptools.
 try:
