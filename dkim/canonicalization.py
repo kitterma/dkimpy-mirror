@@ -42,7 +42,7 @@ def compress_whitespace(content):
 
 def strip_trailing_lines(content):
     end = None
-    while content[:end].endswith(b"\r\n"):
+    while content.endswith(b"\r\n", 0, end):
         if end is None:
             end = -2
         else:
