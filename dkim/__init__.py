@@ -403,7 +403,7 @@ def fold(header, namelen=0):
             j = i + 1
         pre += header[:j] + b"\r\n "
         header = header[j:]
-        namelen = 0
+        maxleng = 72
     if len(header) > 2:
         return pre + header
     else:
