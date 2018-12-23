@@ -22,6 +22,7 @@ from dkim.util import (
     DuplicateTag,
     InvalidTagSpec,
     parse_tag_value,
+    get_linesep,
     )
 
 
@@ -73,6 +74,30 @@ class TestParseTagValue(unittest.TestCase):
       sig = parse_tag_value(hval)
       self.assertEqual(sig[b't'],b'1308078492')
       self.assertEqual(len(sig),11)
+
+
+class TestGetLineSep(unittest.TestCase):
+    """Line seperator probing tests."""
+
+    def test_default(self):
+        self.assertEqual(
+            b'\r\n',
+            get_linesep(b'abc'))
+
+    def test_withcrlf(self):
+        self.assertEqual(
+            b'\r\n',
+            get_linesep(b'abc\r\n'))
+
+    def test_withlf(self):
+        self.assertEqual(
+            b'\n',
+            get_linesep(b'abc\n'))
+
+    def test_toosmall(self):
+        self.assertEqual(
+            b'\r\n',
+            get_linesep(b'a'))
 
 
 def test_suite():

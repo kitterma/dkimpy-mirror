@@ -33,6 +33,7 @@ __all__ = [
     'InvalidTagSpec',
     'InvalidTagValueList',
     'parse_tag_value',
+    'get_linesep',
     ]
 
 
@@ -80,3 +81,8 @@ def get_default_logger():
     if not logger.handlers:
         logger.addHandler(NullHandler())
     return logger
+
+def get_linesep(msg):
+    if msg[-2:] != b'\r\n' and msg[-1:] == b'\n':
+        return b'\n'
+    return b'\r\n'

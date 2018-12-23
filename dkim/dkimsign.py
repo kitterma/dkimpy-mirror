@@ -70,8 +70,8 @@ def main():
 
     message = sys.stdin.read()
     try:
-        d = dkim.DKIM(message,logger=logger,
-                      signature_algorithm=args.signalg)
+        d = dkim.DKIM(message,logger=logger, signature_algorithm=args.signalg,
+                      linesep=dkim.util.get_linesep(message))
         sig = d.sign(args.selector, args.domain, open(
                      args.privatekeyfile, "rb").read(), identity = args.identity,
                      canonicalize=canonicalize, include_headers=include_headers,

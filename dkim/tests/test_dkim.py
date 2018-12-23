@@ -46,6 +46,11 @@ class TestFold(unittest.TestCase):
         self.assertEqual(
             b"foo" * 24 + b"\r\n foo", dkim.fold(b"foo" * 25))
 
+    def test_linesep(self):
+        self.assertEqual(
+            b"foo" * 24 + b"\n foo", dkim.fold(b"foo" * 25, linesep=b"\n"))
+
+
 
 class TestSignAndVerify(unittest.TestCase):
     """End-to-end signature and verification tests."""
@@ -201,6 +206,17 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                     canonicalize=(header_algo, body_algo), signature_algorithm=b'rsa-sha256')
                 d = dkim.DKIM(self.message4)
                 res = d.verify(dnsfunc=self.dnsfunc5)
+                self.assertTrue(res)
+
+    def test_verifies_lflinesep(self):
+        # A message verifies after being signed.
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message, b"test", b"example.com", self.key,
+                    canonicalize=(header_algo, body_algo), linesep=b"\n")
+                res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+                self.assertFalse(b'\r\n' in sig)
                 self.assertTrue(res)
 
     def test_implicit_k(self):
