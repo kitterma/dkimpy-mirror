@@ -371,7 +371,7 @@ def fold(header, namelen=0):
     >>> text(fold(b'foo'))
     'foo'
     >>> text(fold(b'foo  '+b'foo'*24).splitlines()[0])
-    'foo  '
+    'foo '
     >>> text(fold(b'foo'*25).splitlines()[-1])
     ' foo'
     >>> len(fold(b'foo'*25).splitlines()[0])
@@ -399,11 +399,12 @@ def fold(header, namelen=0):
         i = header[:maxleng].rfind(b" ")
         if i == -1:
             j = maxleng
+            pre += header[:j] + b"\r\n "
         else:
             j = i + 1
-        pre += header[:j] + b"\r\n "
+            pre += header[:i] + b"\r\n "
         header = header[j:]
-        namelen = 0
+        maxleng = 72
     if len(header) > 2:
         return pre + header
     else:
