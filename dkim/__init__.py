@@ -462,6 +462,7 @@ class DomainSigner(object):
   #: (with either \\n or \\r\\n line endings)
   #: @param logger: a logger to which debug info will be written (default None)
   #: @param signature_algorithm: the signing algorithm to use when signing
+  #: @param debug_content: log headers and body after canonicalization (default False)
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256',
         minkey=1024, debug_content=False):
     self.set_message(message)
