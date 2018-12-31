@@ -4,6 +4,9 @@ UNRELEASED Version 0.9.2
       Bastien-Filiatrault for the change)
     - Refactor header folding for more consistent results, including reduced
       stray whitespace (Also Jonathan Bastien-Filiatrault)
+    - Don't log message headers and body unless explicitely requested. This
+      should also reduce memory usage on large messages. (Jonathan
+      Bastien-Filiatrault).
 2018-12-09 Version 0.9.1
     - Fixed ARC verification to fail if h= tag is present in Arc-Seal and
       added tests
