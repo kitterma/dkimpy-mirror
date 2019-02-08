@@ -127,25 +127,21 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "dkimverify 1"
 .TH dkimverify 1 "2017-01-23"
 .SH "NAME"
 dkimverify
 \-
 Script for DKIM verifying messages on stdin
 .SH "VERSION"
-.IX Header "VERSION"
 0\.6\.0
 
 .SH "DESCRIPTION"
-.IX Header "DESCRIPTION"
 
 dkimverify reads an RFC822 message on standard input, and returns with exit
 code 0 if the signature verifies successfully. Otherwise, it returns with exit
 code 1.
 
 .SH "AUTHORS"
-.IX Header "AUTHORS"
 This version of \fBarcverify\fR was written by Brandon Long <blong@google.com>
 and is derived from \fBdkimverify\fR, written by Greg Hewgill
 <greg@hewgill.com>.
