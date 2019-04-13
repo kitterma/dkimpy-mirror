@@ -368,7 +368,8 @@ def text(s):
 
 
 def fold(header, namelen=0):
-    """Fold a header line into multiple crlf-separated lines at column 72.
+    """Fold a header line into multiple crlf-separated lines of text at column
+     72.  The crlf does not count for line length.
 
     >>> text(fold(b'foo'))
     'foo'
@@ -382,6 +383,8 @@ def fold(header, namelen=0):
     'x'
     >>> text(fold(b'xyz'*24))
     'xyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyz'
+    >>> len(fold('abxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxy\\r\\n'))
+    78
     """
     # 72 is the max line length we actually want, but the header field name
     # has to fit in the first line too (See Debian Bug #863690).
