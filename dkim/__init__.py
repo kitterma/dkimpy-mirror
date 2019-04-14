@@ -383,8 +383,8 @@ def fold(header, namelen=0):
     'x'
     >>> text(fold(b'xyz'*24))
     'xyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyz'
-    >>> len(fold('abxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxy\\r\\n'))
-    78
+    >>> len(fold(b'xyz'*48))
+    150
     """
     # 72 is the max line length we actually want, but the header field name
     # has to fit in the first line too (See Debian Bug #863690).
@@ -409,7 +409,7 @@ def fold(header, namelen=0):
             j = i + 1
             pre += header[:i] + b"\r\n "
         header = header[j:]
-        maxleng = 72
+        maxleng = 71
     if len(header) > 2:
         return pre + header
     else:
