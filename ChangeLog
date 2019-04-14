@@ -6,9 +6,10 @@ UNRELEASED Version 0.9.2
       stray whitespace (Also Jonathan Bastien-Filiatrault)
     - Don't log message headers and body unless explicitely requested. This
       should also reduce memory usage on large messages. (Jonathan
-      Bastien-Filiatrault).
+      Bastien-Filiatrault)
     - Clarify the crlf does not count towards line length in fold
-      (LP: #1823008)
+    - Adjust fold maxlen to one shorter for lines after the first, since they
+      already have a leading space (LP: #1823008)
 
 2018-12-09 Version 0.9.1
     - Fixed ARC verification to fail if h= tag is present in Arc-Seal and
