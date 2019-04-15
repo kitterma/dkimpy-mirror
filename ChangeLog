@@ -6,6 +6,8 @@
     - Fix cv=none processing for initial signature in chain
     - Add additional text documenting use of srv_id for ARC signing to
       docstrings and man 1 arcsign (LP: #1808301)
+    - Use same line seperator for output as input in dkimsign/arcsign
+      (LP: #1808686)
     - Refactor canonicalization.py strip_trailing_lines to avoid using re for
       more consistent processing across python versions (Thanks to Jonathan
       Bastien-Filiatrault for the change)
