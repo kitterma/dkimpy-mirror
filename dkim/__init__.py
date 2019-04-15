@@ -1284,7 +1284,7 @@ def arc_sign(message, selector, domain, privkey,
     @param selector: the DKIM selector value for the signature
     @param domain: the DKIM domain value for the signature
     @param privkey: a PKCS#1 private key in base64-encoded text form
-    @param srv_id: the authserv_id used to identify the ADMD's AR headers
+    @param srv_id: the authserv_id used to identify the ADMD's AR headers and to use for ARC authserv_id
     @param signature_algorithm: the signing algorithm to use when signing
     @param include_headers: a list of strings indicating which headers are to be signed (default all headers not listed as SHOULD NOT sign)
     @param timestamp: the time in integer seconds when the message is sealed (default is int(time.time) based on platform, can be string or int)
