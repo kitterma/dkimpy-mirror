@@ -3,6 +3,7 @@ UNRELEASED Version 0.9.2
       srv_id option is the authserv_id to use in the ARC signatures - Only AR
       fields with an authserv-id that matches srv_id will be considered for
       ARC signing)
+    - Fix cv=none processing for initial signature in chain
     - Refactor canonicalization.py strip_trailing_lines to avoid using re for
       more consistent processing across python versions (Thanks to Jonathan
       Bastien-Filiatrault for the change)

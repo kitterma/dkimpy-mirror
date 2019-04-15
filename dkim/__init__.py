@@ -967,8 +967,7 @@ class ARC(DomainSigner):
     parsed_auth_results = AuthenticationResultsHeader.parse('Authentication-Results: ' + auth_results.decode('utf-8'))
     arc_results = [res for res in parsed_auth_results.results if res.method == 'arc']
     if len(arc_results) == 0:
-      self.logger.debug("no AR arc stamps found, chain terminated")
-      return []
+      chain_validation_status = CV_None
     elif len(arc_results) != 1:
       self.logger.debug("multiple AR arc stamps found, failing chain")
       chain_validation_status = CV_Fail
@@ -1003,7 +1002,8 @@ class ARC(DomainSigner):
     if instance == 1 and chain_validation_status != CV_None:
         raise ParameterError("No existing chain found on message, cv should be none")
     elif instance != 1 and chain_validation_status == CV_None:
-      raise ParameterError("cv=none not allowed on instance %d" % instance)
+      self.logger.debug("no previous AR arc results found and instance > 1, chain terminated")
+      return []
 
     new_arc_set = []
     if chain_validation_status != CV_Fail:
