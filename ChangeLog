@@ -1,4 +1,4 @@
-UNRELEASED Version 0.9.2
+2019-04-14 Version 0.9.2
     - Fix the arcsign script so it works with the current API (Note: the new
       srv_id option is the authserv_id to use in the ARC signatures - Only AR
       fields with an authserv-id that matches srv_id will be considered for
