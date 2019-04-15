@@ -127,13 +127,13 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.TH arcsign 1 "2017-01-23"
+.TH arcsign 1 "2019-04-14"
 .SH "NAME"
 arcsign
 \-
 Script for ARC signing messages on stdin
 .SH "VERSION"
-0\.6\.0
+0\.9\.2
 
 .SH "DESCRIPTION"
 
@@ -144,7 +144,10 @@ the same message on standard output with a ARC-Signature lines prepended.
 
 The signing options are specified on the command line:
 
-arcsign selector domain privatekeyfile
+arcsign selector domain privatekeyfile srv_id
+
+Note: arcsign will only use authentication results header fields with an
+authserv-id that matches srv_id as the input fields for the ARC chain.
 
 .SH "AUTHORS"
 This version of \fBarcsign\fR was written by Brandon Long <blong@google.com>
