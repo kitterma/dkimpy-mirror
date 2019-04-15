@@ -24,6 +24,13 @@
 # This has been modified from the original software.
 # Copyright (c) 2016 Google, Inc.
 # Contact: Brandon Long <blong@google.com>
+# This has been modified from the original software.
+# Copyright (c) 2017, 2018, 2019 Scott Kitterman <scott@kitterman.com>
+#
+# This has been modified from the original software.
+# Copyright (c) 2017 Valimail Inc
+# Contact: Gene Shuman <gene@valimail.com>
+
 
 from __future__ import print_function
 

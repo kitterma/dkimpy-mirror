@@ -24,7 +24,7 @@
 # Contact: Brandon Long <blong@google.com>
 #
 # This has been modified from the original software.
-# Copyright (c) 2016, 2017, 2018 Scott Kitterman <scott@kitterman.com>
+# Copyright (c) 2016, 2017, 2018, 2019 Scott Kitterman <scott@kitterman.com>
 #
 # This has been modified from the original software.
 # Copyright (c) 2017 Valimail Inc
