@@ -37,8 +37,8 @@ logging.basicConfig(level=10)
 
 
 def main():
-    if len(sys.argv) != 4:
-        print("Usage: arcsign.py selector domain privatekeyfile", file=sys.stderr)
+    if len(sys.argv) != 5:
+        print("Usage: arcsign.py selector domain privatekeyfile srv_id", file=sys.stderr)
         sys.exit(1)
 
     if sys.version_info[0] >= 3:
@@ -49,17 +49,18 @@ def main():
     selector = sys.argv[1].encode('ascii')
     domain = sys.argv[2].encode('ascii')
     privatekeyfile = sys.argv[3]
+    srv_id = sys.argv[4].encode('ascii')
 
     message = sys.stdin.read()
 
     # Pick a cv status
     cv = dkim.CV_None
-    if re.search('arc-seal', message, re.IGNORECASE):
+    if re.search(b'arc-seal', message, re.IGNORECASE):
         cv = dkim.CV_Pass
 
     #try:
     sig = dkim.arc_sign(message, selector, domain, open(privatekeyfile, "rb").read(),
-                   domain + ": none", cv, dkim.util.get_linesep(message))
+                   srv_id, cv, dkim.util.get_linesep(message))
     for line in sig:
         sys.stdout.write(line)
     sys.stdout.write(message)
