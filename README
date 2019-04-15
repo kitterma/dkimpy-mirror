@@ -11,7 +11,7 @@ signing and verification.
 
 VERSION
 
-This is dkimpy 0.9.0.
+This is dkimpy 0.9.2.
 
 REQUIREMENTS
 
@@ -67,20 +67,12 @@ and using:
 The included ARC tests are very limited.  The primary testing method for ARC
 is using the ARC test suite: https://github.com/ValiMail/arc_test_suite
 
-As of 0.6.0, all tests except as_fields_b_512 pass for both python2.7 and
-python3.5. The test suite ships with test runners for dkimpy.  After
-downloading the test suite, you can run the signing and validation tests like
-this:
+As of 0.6.0, all tests pass for both python2.7 and python3. The test suite
+ ships with test runners for dkimpy.  After downloading the test suite, you
+ can run the signing and validation tests like this:
 
 python2.7 ./testarc.py sign runners/arcsigntest.py
 python2.7 ./testarc.py validate runners/arcverifytest.py
-
-The reason for the test failure is that the ARC specification (as of 20170120)
-sets the minimum key size to 512 bits.  This is operationally inappropriate,
-so dkimpy sets the default minkey=1024, the same as is used for DKIM.  This
-can be overridden, but that is not recommended.  The minimum key size
-requirement for DKIM (and thus ARC) has recently been updated to require at
-least a 1024 bit key.  See RFC 8301.
 
 USAGE
 
@@ -124,15 +116,11 @@ signatures is supported as described in draft-ietf-dcrup-dkim-crypto:
 
 https://datatracker.ietf.org/doc/draft-ietf-dcrup-dkim-crypto/
 
-The dkimpy 0.7 implementation matches the -08 revision of the draft, except it
-uses Ed25519 vice Ed25519ph (a change to Ed25519 is planned for -09, but that
-had not been published yet as of the release of dkimpy 0.7).
-
-draft-ietf-dcrup-dkim-crypto-09 has been released and dkimpy 0.7 and later are
-aligned to its requirements.  As of 0.8, ed25519 need not be considered
-experimental.  The dkimpy implementation has successfully interoperated with
-three other implementations and the technical parameters for ed25519-sha256
-are defined and stable.
+The RFC that documents ed25519 DKIM signatures, RFC 8463, has been released
+and dkimpy 0.7 and later are aligned to its requirements.  As of 0.8, ed25519
+need not be considered experimental.  The dkimpy implementation has
+successfully interoperated with three other implementations and the technical
+parameters for ed25519-sha256 are defined and stable.
 
 Three helper programs are also supplied: dknewkey, dkimsign and
 dkimverify
@@ -156,11 +144,12 @@ code 1.
 As of version 0.6.0, dkimpy provides experimental support for ARC (Authenticated
 Received Chain):
 
-https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-18
+https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-23
 
 This new functionality is marked experimental because the protocol is still
 under development.  There are no guarantees about API stability or
-compatibility.
+compatibility.  Since the draft is through IETF last call, further changes are
+unlikely.
 
 In addition to arcsign and arcverify, the dkim module now provides
 arc_sign and arc_verify functions as well as an ARC class.
