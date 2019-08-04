@@ -67,7 +67,7 @@ def main():
 
     #try:
     sig = dkim.arc_sign(message, selector, domain, open(privatekeyfile, "rb").read(),
-                   srv_id, cv, dkim.util.get_linesep(message))
+                   srv_id, cv, linesep=dkim.util.get_linesep(message))
     for line in sig:
         sys.stdout.write(line)
     sys.stdout.write(message)

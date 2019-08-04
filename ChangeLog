@@ -1,3 +1,7 @@
+UNRELEASED Version 0.9.3
+    - Fix linesep setting in arcsign script (LP: #1838262) (Thanks to Gowtham
+      Gopalakrishnan for the report and the patch)
+
 2019-04-14 Version 0.9.2
     - Fix the arcsign script so it works with the current API (Note: the new
       srv_id option is the authserv_id to use in the ARC signatures - Only AR
