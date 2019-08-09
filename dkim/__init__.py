@@ -667,7 +667,7 @@ class DomainSigner(object):
       return False
 
     try:
-        canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c', b'relaxed/relaxed'))
+        canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c', b'simple/simple'))
     except InvalidCanonicalizationPolicyError as e:
         raise MessageFormatError("invalid c= value: %s" % e.args[0])
 
@@ -1189,6 +1189,9 @@ class ARC(DomainSigner):
     # and this can use simple canonicalization
     raw_ams_header = [(x, y) for (x, y) in self.headers if x.lower() == b'arc-message-signature'][0]
 
+    # Only relaxed canonicalization used by ARC
+    if b'c' not in sig:
+        sig[b'c'] = b'relaxed/relaxed'
     try:
       ams_valid = self.verify_sig(sig, include_headers, raw_ams_header, dnsfunc)
     except DKIMException as e:
@@ -1217,6 +1220,9 @@ class ARC(DomainSigner):
     as_include_headers = [x[0].lower() for x in arc_headers]
     as_include_headers.reverse()
     as_header = (b'ARC-Seal', b' ' + as_value)
+    # Only relaxed canonicalization used by ARC
+    if b'c' not in sig:
+        sig[b'c'] = b'relaxed/relaxed'
     try:
       as_valid = self.verify_sig(sig, as_include_headers[:-1], as_header, dnsfunc)
     except DKIMException as e:
