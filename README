@@ -36,7 +36,7 @@ installing using setup.py, the following incantation is required because
 setuptools developers decided not being able to do this by default is a
 feature:
 
-python setup.py install --single-version-externally-managed --record=/dev/null
+python3 setup.py install --single-version-externally-managed --record=/dev/null
 
 DOCUMENTATION
 
@@ -48,11 +48,11 @@ TESTING
 
 To run dkimpy's test suite:
 
-    PYTHONPATH=. python dkim
+    PYTHONPATH=. python3 dkim
 or
-    python test.py
+    python3 test.py
 or
-    PYTHONPATH=. python -m unittest dkim.tests.test_suite
+    PYTHONPATH=. python3 -m unittest dkim.tests.test_suite
 
 Alternatively, if you have testrepository installed:
 
@@ -153,6 +153,8 @@ unlikely.
 
 In addition to arcsign and arcverify, the dkim module now provides
 arc_sign and arc_verify functions as well as an ARC class.
+
+Both DKIM ed25519 and ARC are now considered stable (no longer experimantal).
 
 FEEDBACK
 

@@ -1,4 +1,4 @@
-UNRELEASED Version 0.9.3
+2019-08-09 Version 0.9.3
     - Fix linesep setting in arcsign script (LP: #1838262) (Thanks to Gowtham
       Gopalakrishnan for the report and the patch)
     - Fix default canonicalization for DKIM signature verification to be
