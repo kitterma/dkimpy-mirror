@@ -1,3 +1,7 @@
+2019-09-25 Verstion 0.9.4
+    - Add LICENSE to MANIFEST.in so it is included in the tarball (LP:
+      #1845318)
+
 2019-08-09 Version 0.9.3
     - Fix linesep setting in arcsign script (LP: #1838262) (Thanks to Gowtham
       Gopalakrishnan for the report and the patch)
