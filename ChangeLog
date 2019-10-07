@@ -1,3 +1,10 @@
+2019-10-07 Version 0.9.5
+    - Ignore unknown service types in key records (LP: #1847020)
+      - This is required by RFC 6376 and predecessors.  It becomes important
+        now that RFC 8460, which defines a new DKIM service type exists.  This
+	change is required to avoid processing tlsrpt keys like regular email
+	keys, which is incorrect, they have different requirements.
+
 2019-09-25 Verstion 0.9.4
     - Add LICENSE to MANIFEST.in so it is included in the tarball (LP:
       #1845318)

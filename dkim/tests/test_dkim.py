@@ -64,7 +64,7 @@ class TestSignAndVerify(unittest.TestCase):
 
     def dnsfunc(self, domain):
         sample_dns = """\
-k=rsa; \
+k=rsa; s=email;\
 p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
 b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
 

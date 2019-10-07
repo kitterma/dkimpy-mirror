@@ -453,6 +453,16 @@ def load_pk_from_dns(name, dnsfunc=get_txt):
       ktag = b'rsa'
   if pub[b'k'] != b'rsa' and pub[b'k'] != b'ed25519':
       raise KeyFormatError('unknown algorithm in k= tag: {0}'.format(pub[b'k']))
+  try:
+      # Ignore unknown service types, RFC 6376 3.6.1
+      if pub[b's'] != b'*' and pub[b's'] != b'email':
+          pk = None
+          keysize = None
+          ktag = None
+          raise KeyFormatError('unknown service type in s= tag: {0}'.format(pub[b's']))
+  except:
+      # Default is '*' - all service types, so no error if missing from key record
+      pass
   return pk, keysize, ktag
 
 
