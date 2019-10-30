@@ -477,6 +477,7 @@ class DomainSigner(object):
   #: @param signature_algorithm: the signing algorithm to use when signing
   #: @param debug_content: log headers and body after canonicalization (default False)
   #: @param linesep: use this line seperator for folding the headers
+  #: @param timeout: number of seconds for DNS lookup timeout (default = 5)
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256',
         minkey=1024, linesep=b'\r\n', debug_content=False, timeout=5):
     self.set_message(message)

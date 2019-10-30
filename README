@@ -144,12 +144,7 @@ code 1.
 As of version 0.6.0, dkimpy provides experimental support for ARC (Authenticated
 Received Chain):
 
-https://tools.ietf.org/html/draft-ietf-dmarc-arc-protocol-23
-
-This new functionality is marked experimental because the protocol is still
-under development.  There are no guarantees about API stability or
-compatibility.  Since the draft is through IETF last call, further changes are
-unlikely.
+https://tools.ietf.org/html/rfc8617
 
 In addition to arcsign and arcverify, the dkim module now provides
 arc_sign and arc_verify functions as well as an ARC class.
