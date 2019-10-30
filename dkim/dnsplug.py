@@ -25,10 +25,10 @@ __all__ = [
     ]
 
 
-def get_txt_dnspython(name):
+def get_txt_dnspython(name, timeout=5):
     """Return a TXT record associated with a DNS name."""
     try:
-      a = dns.resolver.query(name, dns.rdatatype.TXT,raise_on_no_answer=False)
+      a = dns.resolver.query(name, dns.rdatatype.TXT,raise_on_no_answer=False, lifetime=timeout)
       for r in a.response.answer:
           if r.rdtype == dns.rdatatype.TXT:
               return b"".join(r.items[0].strings)
@@ -36,18 +36,18 @@ def get_txt_dnspython(name):
     return None
 
 
-def get_txt_pydns(name):
+def get_txt_pydns(name, timeout=5):
     """Return a TXT record associated with a DNS name."""
     # Older pydns releases don't like a trailing dot.
     if name.endswith('.'):
         name = name[:-1]
-    response = DNS.DnsRequest(name, qtype='txt').req()
+    response = DNS.DnsRequest(name, qtype='txt', timeout=timeout).req()
     if not response.answers:
         return None
     return b''.join(response.answers[0]['data'])
 
 
-def get_txt_Milter_dns(name):
+def get_txt_Milter_dns(name, timeout=5):
     """Return a TXT record associated with a DNS name."""
     # Older pydns releases don't like a trailing dot.
     if name.endswith('.'):
@@ -64,15 +64,14 @@ try:
     _get_txt = get_txt_dnspython
 except ImportError:
     try:
-        from Milter.dns import Session
-        _get_txt = get_txt_Milter_dns
-    except ImportError:
         import DNS
         DNS.DiscoverNameServers()
         _get_txt = get_txt_pydns
+    except:
+        raise
 
 
-def get_txt(name):
+def get_txt(name, timeout=5):
     """Return a TXT record associated with a DNS name.
 
     @param name: The bytestring domain name to look up.
@@ -82,7 +81,7 @@ def get_txt(name):
         unicode_name = name.decode('UTF-8')
     except UnicodeDecodeError:
         return None
-    txt = _get_txt(unicode_name)
+    txt = _get_txt(unicode_name, timeout)
     if type(txt) is str:
       txt = txt.encode('utf-8')
     return txt

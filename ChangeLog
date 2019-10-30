@@ -1,3 +1,8 @@
+Version 1.0.0
+    - Add new timeout parameter to enable DNS lookup timeouts to be adjusted
+    - Drop usage of pymilter Milter.dns in dnsplug since it doesn't support
+      havine a timeout passed to it
+
 2019-10-07 Version 0.9.5
     - Ignore unknown service types in key records (LP: #1847020)
       - This is required by RFC 6376 and predecessors.  It becomes important

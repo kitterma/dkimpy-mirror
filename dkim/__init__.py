@@ -419,8 +419,8 @@ def fold(header, namelen=0, linesep=b'\r\n'):
             return pre + header
 
 
-def load_pk_from_dns(name, dnsfunc=get_txt):
-  s = dnsfunc(name)
+def load_pk_from_dns(name, dnsfunc=get_txt, timeout=5):
+  s = dnsfunc(name, timeout=timeout)
   if not s:
       raise KeyFormatError("missing public key: %s"%name)
   try:
@@ -478,7 +478,7 @@ class DomainSigner(object):
   #: @param debug_content: log headers and body after canonicalization (default False)
   #: @param linesep: use this line seperator for folding the headers
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256',
-        minkey=1024, linesep=b'\r\n', debug_content=False):
+        minkey=1024, linesep=b'\r\n', debug_content=False, timeout=5):
     self.set_message(message)
     if logger is None:
         logger = get_default_logger()
@@ -502,6 +502,7 @@ class DomainSigner(object):
     self.minkey = minkey
     # use this line seperator for output
     self.linesep = linesep
+    self.timeout = timeout
 
 
   #: Header fields to protect from additions by default.
@@ -671,7 +672,7 @@ class DomainSigner(object):
   def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
     name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
     try:
-      pk, self.keysize, ktag = load_pk_from_dns(name, dnsfunc)
+      pk, self.keysize, ktag = load_pk_from_dns(name, dnsfunc, timeout=self.timeout)
     except KeyFormatError as e:
       self.logger.error("%s" % e)
       return False
@@ -1270,14 +1271,14 @@ def sign(message, selector, domain, privkey, identity=None,
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
 
-def verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
+def verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5):
     """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
     @return: True if signature verifies or False otherwise
     """
     # type: (bytes, any, function, int) -> bool
-    d = DKIM(message,logger=logger,minkey=minkey)
+    d = DKIM(message,logger=logger,minkey=minkey,timeout=timeout)
     try:
         return d.verify(dnsfunc=dnsfunc)
     except DKIMException as x:
@@ -1317,7 +1318,7 @@ def arc_sign(message, selector, domain, privkey,
                   timestamp=timestamp, standardize=standardize)
 
 
-def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
+def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5):
     # type: (bytes, any, function, int) -> tuple
     """Verify the ARC chain on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
@@ -1327,7 +1328,7 @@ def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024):
     @return: three-tuple of (CV Result (CV_Pass, CV_Fail or CV_None), list of
     result dictionaries, result reason)
     """
-    a = ARC(message,logger=logger,minkey=minkey)
+    a = ARC(message,logger=logger,minkey=minkey,timeout=5)
     try:
         return a.verify(dnsfunc=dnsfunc)
     except DKIMException as x:

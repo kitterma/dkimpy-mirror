@@ -59,7 +59,7 @@ class TestSignAndVerify(unittest.TestCase):
         self.key = read_test_data("ed25519test.key")
         self.rfckey = read_test_data("rfc8032_7_1.key")
 
-    def dnsfunc(self, domain):
+    def dnsfunc(self, domain, timeout=5):
         sample_dns = """\
 k=ed25519; \
 p=yi50DjK5O9pqbFpNHklsv9lqaS0ArSYu02qp1S0DW1Y="""

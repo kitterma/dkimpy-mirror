@@ -62,7 +62,7 @@ class TestSignAndVerify(unittest.TestCase):
         self.key = read_test_data("test.private")
         self.rfckey = read_test_data("rfc8032_7_1.key")
 
-    def dnsfunc(self, domain):
+    def dnsfunc(self, domain, timeout=5):
         sample_dns = """\
 k=rsa; s=email;\
 p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
@@ -86,7 +86,7 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
-    def dnsfunc2(self, domain):
+    def dnsfunc2(self, domain, timeout=5):
         sample_dns = """\
 k=rsa; \
 p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
@@ -110,7 +110,7 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
-    def dnsfunc3(self, domain):
+    def dnsfunc3(self, domain, timeout=5):
         sample_dns = """\
 k=rsa; \
 p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
@@ -134,7 +134,7 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
-    def dnsfunc4(self, domain):
+    def dnsfunc4(self, domain, timeout=5):
         sample_dns = """\
 k=rsa; \
 p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
@@ -158,7 +158,7 @@ Y+vtSBczUiKERHv1yRbcaQtZFh5wtiRrN04BLUTD21MycBX5jYchHjPY/wIDAQAB"""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
-    def dnsfunc5(self, domain):
+    def dnsfunc5(self, domain, timeout=5):
         sample_dns = """\
 k=rsa; \
 p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\

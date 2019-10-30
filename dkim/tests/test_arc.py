@@ -42,7 +42,7 @@ class TestSignAndVerify(unittest.TestCase):
         self.message = read_test_data("test.message")
         self.key = read_test_data("test.private")
 
-    def dnsfunc(self, domain):
+    def dnsfunc(self, domain, timeout=5):
         sample_dns = """\
 k=rsa; \
 p=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
