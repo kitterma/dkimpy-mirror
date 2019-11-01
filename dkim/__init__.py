@@ -70,7 +70,7 @@ from dkim.crypto import (
 try:
     from dkim.dnsplug import get_txt
 except ImportError:
-    def get_txt(s):
+    def get_txt(s,timeout=5):
         raise RuntimeError("DKIM.verify requires DNS or dnspython module")
 from dkim.util import (
     get_default_logger,
@@ -485,7 +485,8 @@ class DomainSigner(object):
   #: False: Not a tlsrpt, True: Is a tlsrpt, 'strict': tlsrpt, invalid if
   #: service type is missing. For signing, if True, length is never used.
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256',
-        minkey=1024, linesep=b'\r\n', debug_content=False, timeout=5, tlsrpt=False):
+        minkey=1024, linesep=b'\r\n', debug_content=False, timeout=5,
+        tlsrpt=False):
     self.set_message(message)
     if logger is None:
         logger = get_default_logger()
@@ -682,7 +683,8 @@ class DomainSigner(object):
   def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
     name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
     try:
-      pk, self.keysize, ktag, self.seqtlsrpt = load_pk_from_dns(name, dnsfunc, timeout=self.timeout)
+      pk, self.keysize, ktag, self.seqtlsrpt = load_pk_from_dns(name, dnsfunc,
+              timeout=self.timeout)
     except KeyFormatError as e:
       self.logger.error("%s" % e)
       return False

@@ -47,6 +47,7 @@ def get_txt_pydns(name, timeout=5):
     return b''.join(response.answers[0]['data'])
 
 
+# No longer used since it doesn't support timeout
 def get_txt_Milter_dns(name, timeout=5):
     """Return a TXT record associated with a DNS name."""
     # Older pydns releases don't like a trailing dot.
