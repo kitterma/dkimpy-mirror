@@ -289,6 +289,18 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                     sig + self.message + b"foo", dnsfunc=self.dnsfunc)
                 self.assertFalse(res)
 
+    def test_l_verify(self):
+        # Sign with l=, add text, should verify
+        for header_algo in (b"simple", b"relaxed"):
+            for body_algo in (b"simple", b"relaxed"):
+                sig = dkim.sign(
+                    self.message, b"test", b"example.com", self.key,
+                    canonicalize=(header_algo, body_algo), length=True)
+                self.message += b'added more text\n'
+                res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
+                self.assertTrue(res)
+
+
     def test_badly_encoded_domain_fails(self):
         # Domains should be ASCII. Bad ASCII causes verification to fail.
         sig = dkim.sign(self.message, b"test", b"example.com\xe9", self.key)
