@@ -453,17 +453,20 @@ def load_pk_from_dns(name, dnsfunc=get_txt, timeout=5):
       ktag = b'rsa'
   if pub[b'k'] != b'rsa' and pub[b'k'] != b'ed25519':
       raise KeyFormatError('unknown algorithm in k= tag: {0}'.format(pub[b'k']))
+  seqtlsrpt = False
   try:
       # Ignore unknown service types, RFC 6376 3.6.1
-      if pub[b's'] != b'*' and pub[b's'] != b'email':
+      if pub[b's'] != b'*' and pub[b's'] != b'email' and pub[b's'] != b'tlsrpt':
           pk = None
           keysize = None
           ktag = None
           raise KeyFormatError('unknown service type in s= tag: {0}'.format(pub[b's']))
+      elif pub[b's'] == b'tlsrpt':
+          seqtlsrpt = True
   except:
       # Default is '*' - all service types, so no error if missing from key record
       pass
-  return pk, keysize, ktag
+  return pk, keysize, ktag, seqtlsrpt
 
 
 #: Abstract base class for holding messages and options during DKIM/ARC signing and verification.
@@ -478,8 +481,11 @@ class DomainSigner(object):
   #: @param debug_content: log headers and body after canonicalization (default False)
   #: @param linesep: use this line seperator for folding the headers
   #: @param timeout: number of seconds for DNS lookup timeout (default = 5)
+  #: @param tlsrpt: message is an RFC 8460 TLS report (default False)
+  #: False: Not a tlsrpt, True: Is a tlsrpt, 'strict': tlsrpt, invalid if
+  #: service type is missing. For signing, if True, length is never used.
   def __init__(self,message=None,logger=None,signature_algorithm=b'rsa-sha256',
-        minkey=1024, linesep=b'\r\n', debug_content=False, timeout=5):
+        minkey=1024, linesep=b'\r\n', debug_content=False, timeout=5, tlsrpt=False):
     self.set_message(message)
     if logger is None:
         logger = get_default_logger()
@@ -504,6 +510,9 @@ class DomainSigner(object):
     # use this line seperator for output
     self.linesep = linesep
     self.timeout = timeout
+    self.tlsrpt = tlsrpt
+    # Service type in DKIM record is s=tlsrpt
+    self.seqtlsrpt = False
 
 
   #: Header fields to protect from additions by default.
@@ -673,10 +682,18 @@ class DomainSigner(object):
   def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
     name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
     try:
-      pk, self.keysize, ktag = load_pk_from_dns(name, dnsfunc, timeout=self.timeout)
+      pk, self.keysize, ktag, self.seqtlsrpt = load_pk_from_dns(name, dnsfunc, timeout=self.timeout)
     except KeyFormatError as e:
       self.logger.error("%s" % e)
       return False
+
+    # RFC 8460 MAY ignore signatures without tlsrpt Service Type
+    if self.tlsrpt == 'strict' and not self.seqtlsrpt:
+        raise ValidationError("Message is tlsrpt and Service Type is not tlsrpt")
+
+    # Inferred requirement from both RFC 8460 and RFC 6376
+    if not self.tlsrpt and self.seqtlsrpt:
+        raise ValidationError("Message is not tlsrpt and Service Type is tlsrpt")
 
     try:
         canon_policy = CanonicalizationPolicy.from_c_value(sig.get(b'c', b'simple/simple'))
@@ -690,7 +707,7 @@ class DomainSigner(object):
       h = HashThrough(hasher(), self.debug_content)
 
       body = canon_policy.canonicalize_body(self.body)
-      if b'l' in sig:
+      if b'l' in sig and not self.tlsrpt:
         body = body[:int(sig[b'l'])]
       h.update(body)
       if self.debug_content:
@@ -807,6 +824,10 @@ class DKIM(DomainSigner):
     include_headers = tuple([x.lower() for x in include_headers])
     # record what verify should extract
     self.include_headers = include_headers
+
+    if self.tlsrpt:
+        # RFC 8460 MUST NOT
+        length = False
 
     # rfc4871 says FROM is required
     if b'from' not in include_headers:
@@ -1250,7 +1271,7 @@ def sign(message, selector, domain, privkey, identity=None,
          canonicalize=(b'relaxed', b'simple'),
          signature_algorithm=b'rsa-sha256',
          include_headers=None, length=False, logger=None,
-         linesep=b'\r\n'):
+         linesep=b'\r\n', tlsrpt=False):
     # type: (bytes, bytes, bytes, bytes, bytes, tuple, bytes, list, bool, any) -> bytes
     """Sign an RFC822 message and return the DKIM-Signature header line.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
@@ -1264,22 +1285,29 @@ def sign(message, selector, domain, privkey, identity=None,
     @param length: true if the l= tag should be included to indicate body length (default False)
     @param logger: a logger to which debug info will be written (default None)
     @param linesep: use this line seperator for folding the headers
+    @param tlsrpt: message is an RFC 8460 TLS report (default False)
+     False: Not a tlsrpt, True: Is a tlsrpt, 'strict': tlsrpt, invalid if
+     service type is missing. For signing, if True, length is never used.
     @return: DKIM-Signature header field terminated by \\r\\n
     @raise DKIMException: when the message, include_headers, or key are badly formed.
     """
 
-    d = DKIM(message,logger=logger,signature_algorithm=signature_algorithm,linesep=linesep)
+    d = DKIM(message,logger=logger,signature_algorithm=signature_algorithm,linesep=linesep,tlsrpt=tlsrpt)
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
 
-def verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5):
+def verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5, tlsrpt=False):
     """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
+    @param timeout: number of seconds for DNS lookup timeout (default = 5)
+    @param tlsrpt: message is an RFC 8460 TLS report (default False)
+     False: Not a tlsrpt, True: Is a tlsrpt, 'strict': tlsrpt, invalid if
+     service type is missing. For signing, if True, length is never used.
     @return: True if signature verifies or False otherwise
     """
     # type: (bytes, any, function, int) -> bool
-    d = DKIM(message,logger=logger,minkey=minkey,timeout=timeout)
+    d = DKIM(message,logger=logger,minkey=minkey,timeout=timeout,tlsrpt=tlsrpt)
     try:
         return d.verify(dnsfunc=dnsfunc)
     except DKIMException as x:
@@ -1326,6 +1354,7 @@ def arc_verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5):
     @param logger: a logger to which debug info will be written (default None)
     @param dnsfunc: an optional function to lookup TXT resource records
     @param minkey: the minimum key size to accept
+    @param timeout: number of seconds for DNS lookup timeout (default = 5)
     @return: three-tuple of (CV Result (CV_Pass, CV_Fail or CV_None), list of
     result dictionaries, result reason)
     """
