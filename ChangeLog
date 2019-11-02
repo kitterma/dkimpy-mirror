@@ -1,6 +1,8 @@
 Version 1.0.0
     - Add support for RFC 8460 tlsrpt DKIM signature processing (LP: #1847020)
     - Add new timeout parameter to enable DNS lookup timeouts to be adjusted
+    - Add async support with aiodns for DKIM verification (ARC not supported)
+      (LP: #1847002)
     - Drop usage of pymilter Milter.dns in dnsplug since it doesn't support
       havine a timeout passed to it
 

@@ -19,6 +19,8 @@ Dependencies will be automatically included for normal DKIM usage.  The
 extras_requires feature 'ed25519' will add the dependencies needed for signing
 and verifying using the new DCRUP ed25519-sha256 algorithm.  The
 extras_requires feature 'ARC' will add the extra dependencies needed for ARC.
+Similarly, extras_requires feature 'asyncio' will add the extra dependencies
+needed for asyncio.
 
  - Python 2.x >= 2.7, or Python 3.x >= 3.5.  Recent versions have not been
    tested on python < 2.7 or python3 < 3.5, but may still work on python2.6
@@ -28,6 +30,7 @@ extras_requires feature 'ARC' will add the extra dependencies needed for ARC.
  - argparse.  Standard library in python2.7 and later.
  - authres.  Needed for ARC.
  - PyNaCl.  Needed for use of ed25519 capability.
+ - aiodns.  Needed for asycnio (Required python3.5 or later)
 
 INSTALLATION
 

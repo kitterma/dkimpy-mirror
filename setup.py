@@ -86,7 +86,8 @@ verification.""",
             'pynacl',
         ],
         'ed25519':  ['pynacl'],
-        'ARC': ['authres']
+        'ARC': ['authres'],
+        'asyncio': ['aiodns']
     },
     **kw
 )

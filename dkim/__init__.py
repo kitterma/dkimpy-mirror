@@ -36,6 +36,7 @@ import base64
 import hashlib
 import logging
 import re
+import sys
 import time
 
 # only needed for arc
@@ -70,8 +71,13 @@ from dkim.crypto import (
 try:
     from dkim.dnsplug import get_txt
 except ImportError:
-    def get_txt(s,timeout=5):
-        raise RuntimeError("DKIM.verify requires DNS or dnspython module")
+    try:
+        import aiodns
+        from dkim.asyncsupport import get_txt_async as get_txt
+    except:
+        # Only true if not using async
+        def get_txt(s,timeout=5):
+            raise RuntimeError("DKIM.verify requires DNS or dnspython module")
 from dkim.util import (
     get_default_logger,
     InvalidTagValueList,
@@ -419,7 +425,7 @@ def fold(header, namelen=0, linesep=b'\r\n'):
             return pre + header
 
 
-def load_pk_from_dns(name, dnsfunc=get_txt, timeout=5):
+def load_pk_from_dns(name, dnsfunc, timeout=5):
   s = dnsfunc(name, timeout=timeout)
   if not s:
       raise KeyFormatError("missing public key: %s"%name)
@@ -1298,7 +1304,8 @@ def sign(message, selector, domain, privkey, identity=None,
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
 
-def verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5, tlsrpt=False):
+def verify(message, logger=None, dnsfunc=get_txt, minkey=1024,
+        timeout=5, tlsrpt=False):
     """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
@@ -1316,6 +1323,18 @@ def verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5, tlsrpt
         if logger is not None:
             logger.error("%s" % x)
         return False
+
+
+# aiodns requires Python 3.5+, so no async before that
+if sys.version_info >= (3, 5):
+    try:
+        import aiodns
+        from dkim.asyncsupport import verify_async
+        dkim_verify_async = verify_async
+    except ImportError:
+        # If aiodns is not installed, then async verification is not available
+        pass
+
 
 # For consistency with ARC
 dkim_sign = sign
