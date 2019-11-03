@@ -872,6 +872,11 @@ class DKIM(DomainSigner):
     self.signature_fields = dict(sigfields)
     return b'DKIM-Signature: ' + res
 
+  #: Checks if any DKIM signature is present
+  #: @return: True if there is one or more DKIM signatures present or False otherwise
+  def present(self):
+    return (len([(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]) > 0)
+
   #: Verify a DKIM signature.
   #: @type idx: int
   #: @param idx: which signature to verify.  The first (topmost) signature is 0.

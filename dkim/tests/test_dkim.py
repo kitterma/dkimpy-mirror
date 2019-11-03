@@ -300,6 +300,16 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
+    def test_present(self):
+        # Test DKIM.present().
+        d = dkim.DKIM(self.message,signature_algorithm=b'rsa-sha256')
+        present = d.present()
+        self.assertFalse(present)
+        sig = d.sign(b"test", b"example.com", self.key)
+        signed = sig + self.message
+        d2 = dkim.DKIM(signed)
+        present = d2.present()
+        self.assertTrue(present)
 
     def test_badly_encoded_domain_fails(self):
         # Domains should be ASCII. Bad ASCII causes verification to fail.
