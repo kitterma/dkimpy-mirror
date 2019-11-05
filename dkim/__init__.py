@@ -425,8 +425,7 @@ def fold(header, namelen=0, linesep=b'\r\n'):
             return pre + header
 
 
-def load_pk_from_dns(name, dnsfunc, timeout=5):
-  s = dnsfunc(name, timeout=timeout)
+def evaluate_pk(name, s):
   if not s:
       raise KeyFormatError("missing public key: %s"%name)
   try:
@@ -472,6 +471,12 @@ def load_pk_from_dns(name, dnsfunc, timeout=5):
   except:
       # Default is '*' - all service types, so no error if missing from key record
       pass
+  return pk, keysize, ktag, seqtlsrpt
+
+
+def load_pk_from_dns(name, dnsfunc=get_txt, timeout=5):
+  s = dnsfunc(name, timeout=timeout)
+  pk, keysize, ktag, seqtlsrpt = evaluate_pk(name, s)
   return pk, keysize, ktag, seqtlsrpt
 
 
