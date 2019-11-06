@@ -888,15 +888,11 @@ class DKIM(DomainSigner):
     self.signature_fields = dict(sigfields)
     return b'DKIM-Signature: ' + res
 
-  #: Verify a DKIM signature.
-  #: @type idx: int
-  #: @param idx: which signature to verify.  The first (topmost) signature is 0.
-  #: @type dnsfunc: callable
-  #: @param dnsfunc: an option function to lookup TXT resource records
-  #: for a DNS domain.  The default uses dnspython or pydns.
-  #: @return: True if signature verifies or False otherwise
-  #: @raise DKIMException: when the message, signature, or key are badly formed
-  def verify(self,idx=0,dnsfunc=get_txt):
+
+  def verify_headerprep(self, idx=0):
+    """Non-DNS verify parts to minimize asyncio code duplication."""
+
+
     sigheaders = [(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]
     if len(sigheaders) <= idx:
         return False
@@ -916,7 +912,18 @@ class DKIM(DomainSigner):
 
     include_headers = [x.lower() for x in re.split(br"\s*:\s*", sig[b'h'])]
     self.include_headers = tuple(include_headers)
+    return sig, include_headers, sigheaders
 
+  #: Verify a DKIM signature.
+  #: @type idx: int
+  #: @param idx: which signature to verify.  The first (topmost) signature is 0.
+  #: @type dnsfunc: callable
+  #: @param dnsfunc: an option function to lookup TXT resource records
+  #: for a DNS domain.  The default uses dnspython or pydns.
+  #: @return: True if signature verifies or False otherwise
+  #: @raise DKIMException: when the message, signature, or key are badly formed
+  def verify(self,idx=0,dnsfunc=get_txt):
+    sig, include_headers, sigheaders = self.verify_headerprep(idx=0)
     return self.verify_sig(sig, include_headers, sigheaders[idx], dnsfunc)
 
 

@@ -94,26 +94,7 @@ class DKIM(dkim.DKIM):
 
 
   async def verify(self,idx=0,dnsfunc=get_txt_async):
-    sigheaders = [(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]
-    if len(sigheaders) <= idx:
-        return False
-
-    # By default, we validate the first DKIM-Signature line found.
-    try:
-        sig = dkim.parse_tag_value(sigheaders[idx][1])
-        self.signature_fields = sig
-    except dkim.InvalidTagValueList as e:
-        raise dkim.MessageFormatError(e)
-
-    self.logger.debug("sig: %r" % sig)
-
-    dkim.validate_signature_fields(sig)
-    self.domain = sig[b'd']
-    self.selector = sig[b's']
-
-    include_headers = [x.lower() for x in re.split(br"\s*:\s*", sig[b'h'])]
-    self.include_headers = tuple(include_headers)
-
+    sig, include_headers, sigheaders = self.verify_headerprep(idx=0)
     return await self.verify_sig(sig, include_headers, sigheaders[idx], dnsfunc)
 
 
