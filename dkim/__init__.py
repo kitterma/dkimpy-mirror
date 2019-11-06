@@ -686,24 +686,13 @@ class DomainSigner(object):
 
     return header_value
 
-  # Abstract helper method to verify a signed header
-  #: @param sig: List of (key, value) tuples containing tag=values of the header
-  #: @param include_headers: headers to validate b= signature against
-  #: @param sig_header: (header_name, header_value)
-  #: @param dnsfunc: interface to dns
-  def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
-    name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
-    try:
-      pk, self.keysize, ktag, self.seqtlsrpt = load_pk_from_dns(name, dnsfunc,
-              timeout=self.timeout)
-    except KeyFormatError as e:
-      self.logger.error("%s" % e)
-      return False
 
+  def verify_sig_process(self, sig, include_headers, sig_header, dnsfunc):
+    """Non-async sensitive verify_sig elements.  Separated to avoid async code
+    duplication."""
     # RFC 8460 MAY ignore signatures without tlsrpt Service Type
     if self.tlsrpt == 'strict' and not self.seqtlsrpt:
         raise ValidationError("Message is tlsrpt and Service Type is not tlsrpt")
-
     # Inferred requirement from both RFC 8460 and RFC 6376
     if not self.tlsrpt and self.seqtlsrpt:
         raise ValidationError("Message is not tlsrpt and Service Type is tlsrpt")
@@ -751,24 +740,40 @@ class DomainSigner(object):
     if self.debug_content:
         self.logger.debug("signed for %s: %r" % (sig_header[0], h.hashed()))
     signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
-    if ktag == b'rsa':
+    if self.ktag == b'rsa':
         try:
-            res = RSASSA_PKCS1_v1_5_verify(h, signature, pk)
+            res = RSASSA_PKCS1_v1_5_verify(h, signature, self.pk)
             self.logger.debug("%s valid: %s" % (sig_header[0], res))
             if res and self.keysize < self.minkey:
                 raise KeyFormatError("public key too small: %d" % self.keysize)
             return res
         except (TypeError,DigestTooLargeError) as e:
             raise KeyFormatError("digest too large for modulus: %s"%e)
-    elif ktag == b'ed25519':
+    elif self.ktag == b'ed25519':
         try:
-            pk.verify(h.digest(), signature)
+            self.pk.verify(h.digest(), signature)
             self.logger.debug("%s valid" % (sig_header[0]))
             return True
         except (nacl.exceptions.BadSignatureError) as e:
             return False
     else:
-        raise UnknownKeyTypeError(ktag)
+        raise UnknownKeyTypeError(self.ktag)
+
+
+  # Abstract helper method to verify a signed header
+  #: @param sig: List of (key, value) tuples containing tag=values of the header
+  #: @param include_headers: headers to validate b= signature against
+  #: @param sig_header: (header_name, header_value)
+  #: @param dnsfunc: interface to dns
+  def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
+    name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
+    try:
+      self.pk, self.keysize, self.ktag, self.seqtlsrpt = load_pk_from_dns(name,
+              dnsfunc, timeout=self.timeout)
+    except KeyFormatError as e:
+      self.logger.error("%s" % e)
+      return False
+    return self.verify_sig_process(sig, include_headers, sig_header, dnsfunc)
 
 
 #: Hold messages and options during DKIM signing and verification.

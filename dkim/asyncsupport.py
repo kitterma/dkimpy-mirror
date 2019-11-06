@@ -74,39 +74,8 @@ async def load_pk_from_dns_async(name, dnsfunc, timeout=5):
 class DKIM(dkim.DKIM):
   #: Sign an RFC822 message and return the DKIM-Signature header line.
   #:
-  #: The include_headers option gives full control over which header fields
-  #: are signed.  Note that signing a header field that doesn't exist prevents
-  #: that field from being added without breaking the signature.  Repeated
-  #: fields (such as Received) can be signed multiple times.  Instances
-  #: of the field are signed from bottom to top.  Signing a header field more
-  #: times than are currently present prevents additional instances
-  #: from being added without breaking the signature.
-  #:
-  #: The length option allows the message body to be appended to by MTAs
-  #: enroute (e.g. mailing lists that append unsubscribe information)
-  #: without breaking the signature.
-  #:
-  #: The default include_headers for this method differs from the backward
-  #: compatible sign function, which signs all headers not
-  #: in should_not_sign.  The default list for this method can be modified
-  #: by tweaking should_sign and frozen_sign (or even should_not_sign).
-  #: It is only necessary to pass an include_headers list when precise control
-  #: is needed.
-  #:
-  #: @param selector: the DKIM selector value for the signature
-  #: @param domain: the DKIM domain value for the signature
-  #: @param privkey: a PKCS#1 private key in base64-encoded text form
-  #: @param identity: the DKIM identity value for the signature
-  #: (default "@"+domain)
-  #: @param canonicalize: the canonicalization algorithms to use
-  #: (default (Simple, Simple))
-  #: @param include_headers: a list of strings indicating which headers
-  #: are to be signed (default rfc4871 recommended headers)
-  #: @param length: true if the l= tag should be included to indicate
-  #: body length signed (default False).
-  #: @return: DKIM-Signature header field terminated by '\r\n'
-  #: @raise DKIMException: when the message, include_headers, or key are badly
-  #: formed.
+  #: Identical to dkim.DKIM, except uses aiodns and can be awaited in an
+  #: ascyncio context.  See dkim.DKIM for details.
 
   # Abstract helper method to verify a signed header
   #: @param sig: List of (key, value) tuples containing tag=values of the header
@@ -116,81 +85,13 @@ class DKIM(dkim.DKIM):
   async def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
     name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
     try:
-      pk, self.keysize, ktag, self.seqtlsrpt = await load_pk_from_dns_async(name, dnsfunc,
-              timeout=self.timeout)
+      self.pk, self.keysize, self.ktag, self.seqtlsrpt = await load_pk_from_dns_async(name,
+              dnsfunc, timeout=self.timeout)
     except dkim.KeyFormatError as e:
       self.logger.error("%s" % e)
       return False
+    return self.verify_sig_process(sig, include_headers, sig_header, dnsfunc)
 
-    # RFC 8460 MAY ignore signatures without tlsrpt Service Type
-    if self.tlsrpt == 'strict' and not self.seqtlsrpt:
-        raise ValidationError("Message is tlsrpt and Service Type is not tlsrpt")
-
-    # Inferred requirement from both RFC 8460 and RFC 6376
-    if not self.tlsrpt and self.seqtlsrpt:
-        raise ValidationError("Message is not tlsrpt and Service Type is tlsrpt")
-
-    try:
-        canon_policy = dkim.CanonicalizationPolicy.from_c_value(sig.get(b'c', b'simple/simple'))
-    except dkim.InvalidCanonicalizationPolicyError as e:
-        raise dkim.MessageFormatError("invalid c= value: %s" % e.args[0])
-
-    hasher = dkim.HASH_ALGORITHMS[sig[b'a']]
-
-    # validate body if present
-    if b'bh' in sig:
-      h = dkim.HashThrough(hasher(), self.debug_content)
-
-      body = canon_policy.canonicalize_body(self.body)
-      if b'l' in sig and not self.tlsrpt:
-        body = body[:int(sig[b'l'])]
-      h.update(body)
-      if self.debug_content:
-          self.logger.debug("body hashed: %r" % h.hashed())
-      bodyhash = h.digest()
-
-      self.logger.debug("bh: %s" % base64.b64encode(bodyhash))
-      try:
-          bh = base64.b64decode(re.sub(br"\s+", b"", sig[b'bh']))
-      except TypeError as e:
-          raise dkim.MessageFormatError(str(e))
-      if bodyhash != bh:
-          raise dkim.ValidationError(
-              "body hash mismatch (got %s, expected %s)" %
-              (base64.b64encode(bodyhash), sig[b'bh']))
-
-    # address bug#644046 by including any additional From header
-    # fields when verifying.  Since there should be only one From header,
-    # this shouldn't break any legitimate messages.  This could be
-    # generalized to check for extras of other singleton headers.
-    if b'from' in include_headers:
-      include_headers.append(b'from')
-    h = dkim.HashThrough(hasher(), self.debug_content)
-
-    headers = canon_policy.canonicalize_headers(self.headers)
-    self.signed_headers = dkim.hash_headers(
-        h, canon_policy, headers, include_headers, sig_header, sig)
-    if self.debug_content:
-        self.logger.debug("signed for %s: %r" % (sig_header[0], h.hashed()))
-    signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
-    if ktag == b'rsa':
-        try:
-            res = dkim.RSASSA_PKCS1_v1_5_verify(h, signature, pk)
-            self.logger.debug("%s valid: %s" % (sig_header[0], res))
-            if res and self.keysize < self.minkey:
-                raise dkim.KeyFormatError("public key too small: %d" % self.keysize)
-            return res
-        except (TypeError,dkim.DigestTooLargeError) as e:
-            raise dkim.KeyFormatError("digest too large for modulus: %s"%e)
-    elif ktag == b'ed25519':
-        try:
-            pk.verify(h.digest(), signature)
-            self.logger.debug("%s valid" % (sig_header[0]))
-            return True
-        except (nacl.exceptions.BadSignatureError) as e:
-            return False
-    else:
-        raise dkim.UnknownKeyTypeError(ktag)
 
   async def verify(self,idx=0,dnsfunc=get_txt_async):
     sigheaders = [(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]
