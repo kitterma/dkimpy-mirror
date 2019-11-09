@@ -118,8 +118,11 @@ def parse_public_key(data):
         # Not sure why the [1:] is necessary to skip a byte.
         x = asn1_parse(ASN1_Object, data)
         pkd = asn1_parse(ASN1_RSAPublicKey, x[0][1][1:])
-    except ASN1FormatError as e:
-        raise UnparsableKeyError('Unparsable public key: ' + str(e))
+    except ASN1FormatError as e_spki:
+        try:
+            pkd = asn1_parse(ASN1_RSAPublicKey, data)
+        except ASN1FormatError as e_rsa:
+            raise UnparsableKeyError('Unparsable public key; SubjectPublicKeyInfo: ' + str(e_spki) + '; RSAPublicKey: ' + str(e_rsa))
     pk = {
         'modulus': pkd[0][0],
         'publicExponent': pkd[0][1],
