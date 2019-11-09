@@ -3,6 +3,8 @@ Version 1.0.0
     - Add new timeout parameter to enable DNS lookup timeouts to be adjusted
     - Add async support with aiodns for DKIM verification (ARC not supported)
       (LP: #1847002)
+    - Support signature verification with SubjectPublicKeyInfo formatted keys
+      since, although rare, they are RFC 6376 specified (LP: #1851862)
     - Drop usage of pymilter Milter.dns in dnsplug since it doesn't support
       havine a timeout passed to it
 
