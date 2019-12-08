@@ -7,6 +7,7 @@ Version 1.0.0
       since, although rare, they are RFC 6376 specified (LP: #1851862)
     - Drop usage of pymilter Milter.dns in dnsplug since it doesn't support
       havine a timeout passed to it
+    - Can binascii related key format errors (LP: #1854477)
 
 2019-10-07 Version 0.9.5
     - Ignore unknown service types in key records (LP: #1847020)

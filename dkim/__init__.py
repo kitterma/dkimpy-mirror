@@ -37,6 +37,7 @@ import hashlib
 import logging
 import re
 import time
+import binascii
 
 # only needed for arc
 try:
@@ -687,6 +688,9 @@ class DomainSigner(object):
               timeout=self.timeout)
     except KeyFormatError as e:
       self.logger.error("%s" % e)
+      return False
+    except binascii.Error as e:
+      self.logger.error('KeyFormatError: {0}'.format(e))
       return False
 
     # RFC 8460 MAY ignore signatures without tlsrpt Service Type
