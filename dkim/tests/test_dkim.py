@@ -59,6 +59,7 @@ class TestSignAndVerify(unittest.TestCase):
         self.message = read_test_data("test.message")
         self.message3 = read_test_data("rfc6376.msg")
         self.message4 = read_test_data("rfc6376.signed.msg")
+        self.message5 = read_test_data("rfc6376.signed.rsa.msg")
         self.key = read_test_data("test.private")
         self.rfckey = read_test_data("rfc8032_7_1.key")
 
@@ -177,6 +178,24 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
         self.assertTrue(domain in _dns_responses,domain)
         return _dns_responses[domain]
 
+    def dnsfunc6(self, domain, timeout=5):
+        sample_dns = """\
+k=rsa; \
+p=MFwwDQYJKoZIhvNAQEBBQADSwAwSAJBANmBe10IgY+u7h3enWTukkqtUD5PR52T\
+b/mPfjC0QJTocVBq6Za/PlzfV+Py92VaCak19F4WrbVTK5Gg5tW220MCAwEAAQ=="""
+
+        _dns_responses = {
+          'test._domainkey.football.example.com.': sample_dns,
+          'brisbane._domainkey.football.example.com.': """v=DKIM1; k=ed25519; \
+p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
+        }
+        try:
+            domain = domain.decode('ascii')
+        except UnicodeDecodeError:
+            return None
+        self.assertTrue(domain in _dns_responses,domain)
+        return _dns_responses[domain]
+
     def test_verifies(self):
         # A message verifies after being signed.
         for header_algo in (b"simple", b"relaxed"):
@@ -207,6 +226,12 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                 d = dkim.DKIM(self.message4)
                 res = d.verify(dnsfunc=self.dnsfunc5)
                 self.assertTrue(res)
+
+    def test_catch_bad_key(self):
+        # Raise correct error for defective public key.
+        d = dkim.DKIM(self.message5)
+        res = d.verify(dnsfunc=self.dnsfunc6)
+        self.assertFalse(res)
 
     def test_verifies_lflinesep(self):
         # A message verifies after being signed.
@@ -300,6 +325,16 @@ p=11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="""
                 res = dkim.verify(sig + self.message, dnsfunc=self.dnsfunc)
                 self.assertTrue(res)
 
+    def test_present(self):
+        # Test DKIM.present().
+        d = dkim.DKIM(self.message,signature_algorithm=b'rsa-sha256')
+        present = d.present()
+        self.assertFalse(present)
+        sig = d.sign(b"test", b"example.com", self.key)
+        signed = sig + self.message
+        d2 = dkim.DKIM(signed)
+        present = d2.present()
+        self.assertTrue(present)
 
     def test_badly_encoded_domain_fails(self):
         # Domains should be ASCII. Bad ASCII causes verification to fail.
