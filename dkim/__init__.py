@@ -36,6 +36,7 @@ import base64
 import hashlib
 import logging
 import re
+import sys
 import time
 import binascii
 
@@ -71,8 +72,13 @@ from dkim.crypto import (
 try:
     from dkim.dnsplug import get_txt
 except ImportError:
-    def get_txt(s,timeout=5):
-        raise RuntimeError("DKIM.verify requires DNS or dnspython module")
+    try:
+        import aiodns
+        from dkim.asyncsupport import get_txt_async as get_txt
+    except:
+        # Only true if not using async
+        def get_txt(s,timeout=5):
+            raise RuntimeError("DKIM.verify requires DNS or dnspython module")
 from dkim.util import (
     get_default_logger,
     InvalidTagValueList,
@@ -420,8 +426,7 @@ def fold(header, namelen=0, linesep=b'\r\n'):
             return pre + header
 
 
-def load_pk_from_dns(name, dnsfunc=get_txt, timeout=5):
-  s = dnsfunc(name, timeout=timeout)
+def evaluate_pk(name, s):
   if not s:
       raise KeyFormatError("missing public key: %s"%name)
   try:
@@ -467,6 +472,12 @@ def load_pk_from_dns(name, dnsfunc=get_txt, timeout=5):
   except:
       # Default is '*' - all service types, so no error if missing from key record
       pass
+  return pk, keysize, ktag, seqtlsrpt
+
+
+def load_pk_from_dns(name, dnsfunc=get_txt, timeout=5):
+  s = dnsfunc(name, timeout=timeout)
+  pk, keysize, ktag, seqtlsrpt = evaluate_pk(name, s)
   return pk, keysize, ktag, seqtlsrpt
 
 
@@ -676,27 +687,12 @@ class DomainSigner(object):
 
     return header_value
 
-  # Abstract helper method to verify a signed header
-  #: @param sig: List of (key, value) tuples containing tag=values of the header
-  #: @param include_headers: headers to validate b= signature against
-  #: @param sig_header: (header_name, header_value)
-  #: @param dnsfunc: interface to dns
-  def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
-    name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
-    try:
-      pk, self.keysize, ktag, self.seqtlsrpt = load_pk_from_dns(name, dnsfunc,
-              timeout=self.timeout)
-    except KeyFormatError as e:
-      self.logger.error("%s" % e)
-      return False
-    except binascii.Error as e:
-      self.logger.error('KeyFormatError: {0}'.format(e))
-      return False
-
+  def verify_sig_process(self, sig, include_headers, sig_header, dnsfunc):
+    """Non-async sensitive verify_sig elements.  Separated to avoid async code
+    duplication."""
     # RFC 8460 MAY ignore signatures without tlsrpt Service Type
     if self.tlsrpt == 'strict' and not self.seqtlsrpt:
         raise ValidationError("Message is tlsrpt and Service Type is not tlsrpt")
-
     # Inferred requirement from both RFC 8460 and RFC 6376
     if not self.tlsrpt and self.seqtlsrpt:
         raise ValidationError("Message is not tlsrpt and Service Type is tlsrpt")
@@ -744,24 +740,43 @@ class DomainSigner(object):
     if self.debug_content:
         self.logger.debug("signed for %s: %r" % (sig_header[0], h.hashed()))
     signature = base64.b64decode(re.sub(br"\s+", b"", sig[b'b']))
-    if ktag == b'rsa':
+    if self.ktag == b'rsa':
         try:
-            res = RSASSA_PKCS1_v1_5_verify(h, signature, pk)
+            res = RSASSA_PKCS1_v1_5_verify(h, signature, self.pk)
             self.logger.debug("%s valid: %s" % (sig_header[0], res))
             if res and self.keysize < self.minkey:
                 raise KeyFormatError("public key too small: %d" % self.keysize)
             return res
         except (TypeError,DigestTooLargeError) as e:
             raise KeyFormatError("digest too large for modulus: %s"%e)
-    elif ktag == b'ed25519':
+    elif self.ktag == b'ed25519':
         try:
-            pk.verify(h.digest(), signature)
+            self.pk.verify(h.digest(), signature)
             self.logger.debug("%s valid" % (sig_header[0]))
             return True
         except (nacl.exceptions.BadSignatureError) as e:
             return False
     else:
-        raise UnknownKeyTypeError(ktag)
+        raise UnknownKeyTypeError(self.ktag)
+
+
+  # Abstract helper method to verify a signed header
+  #: @param sig: List of (key, value) tuples containing tag=values of the header
+  #: @param include_headers: headers to validate b= signature against
+  #: @param sig_header: (header_name, header_value)
+  #: @param dnsfunc: interface to dns
+  def verify_sig(self, sig, include_headers, sig_header, dnsfunc):
+    name = sig[b's'] + b"._domainkey." + sig[b'd'] + b"."
+    try:
+      self.pk, self.keysize, self.ktag, self.seqtlsrpt = load_pk_from_dns(name,
+              dnsfunc, timeout=self.timeout)
+    except KeyFormatError as e:
+      self.logger.error("%s" % e)
+      return False
+    except binascii.Error as e:
+      self.logger.error('KeyFormatError: {0}'.format(e))
+      return False
+    return self.verify_sig_process(sig, include_headers, sig_header, dnsfunc)
 
 
 #: Hold messages and options during DKIM signing and verification.
@@ -881,15 +896,9 @@ class DKIM(DomainSigner):
   def present(self):
     return (len([(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]) > 0)
 
-  #: Verify a DKIM signature.
-  #: @type idx: int
-  #: @param idx: which signature to verify.  The first (topmost) signature is 0.
-  #: @type dnsfunc: callable
-  #: @param dnsfunc: an option function to lookup TXT resource records
-  #: for a DNS domain.  The default uses dnspython or pydns.
-  #: @return: True if signature verifies or False otherwise
-  #: @raise DKIMException: when the message, signature, or key are badly formed
-  def verify(self,idx=0,dnsfunc=get_txt):
+  def verify_headerprep(self, idx=0):
+    """Non-DNS verify parts to minimize asyncio code duplication."""
+
     sigheaders = [(x,y) for x,y in self.headers if x.lower() == b"dkim-signature"]
     if len(sigheaders) <= idx:
         return False
@@ -909,7 +918,18 @@ class DKIM(DomainSigner):
 
     include_headers = [x.lower() for x in re.split(br"\s*:\s*", sig[b'h'])]
     self.include_headers = tuple(include_headers)
+    return sig, include_headers, sigheaders
 
+  #: Verify a DKIM signature.
+  #: @type idx: int
+  #: @param idx: which signature to verify.  The first (topmost) signature is 0.
+  #: @type dnsfunc: callable
+  #: @param dnsfunc: an option function to lookup TXT resource records
+  #: for a DNS domain.  The default uses dnspython or pydns.
+  #: @return: True if signature verifies or False otherwise
+  #: @raise DKIMException: when the message, signature, or key are badly formed
+  def verify(self,idx=0,dnsfunc=get_txt):
+    sig, include_headers, sigheaders = self.verify_headerprep(idx=0)
     return self.verify_sig(sig, include_headers, sigheaders[idx], dnsfunc)
 
 
@@ -1307,7 +1327,8 @@ def sign(message, selector, domain, privkey, identity=None,
     return d.sign(selector, domain, privkey, identity=identity, canonicalize=canonicalize, include_headers=include_headers, length=length)
 
 
-def verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5, tlsrpt=False):
+def verify(message, logger=None, dnsfunc=get_txt, minkey=1024,
+        timeout=5, tlsrpt=False):
     """Verify the first (topmost) DKIM signature on an RFC822 formatted message.
     @param message: an RFC822 formatted message (with either \\n or \\r\\n line endings)
     @param logger: a logger to which debug info will be written (default None)
@@ -1325,6 +1346,18 @@ def verify(message, logger=None, dnsfunc=get_txt, minkey=1024, timeout=5, tlsrpt
         if logger is not None:
             logger.error("%s" % x)
         return False
+
+
+# aiodns requires Python 3.5+, so no async before that
+if sys.version_info >= (3, 5):
+    try:
+        import aiodns
+        from dkim.asyncsupport import verify_async
+        dkim_verify_async = verify_async
+    except ImportError:
+        # If aiodns is not installed, then async verification is not available
+        pass
+
 
 # For consistency with ARC
 dkim_sign = sign

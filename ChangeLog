@@ -1,5 +1,7 @@
 Version 1.0.0
     - Add support for RFC 8460 tlsrpt DKIM signature processing (LP: #1847020)
+    - Add async support with aiodns for DKIM verification (ARC not supported)
+      (LP: #1847002)
     - Add new timeout parameter to enable DNS lookup timeouts to be adjusted
     - Add new DKIM.present function to allow applications to test if a DKIM
       signature is present without doing validation (LP: #1851141)
